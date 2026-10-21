@@ -1,0 +1,17 @@
+{
+  "name": "smart-todo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart TODO Application Monorepo",
+  "scripts": {
+    "db:up": "podman-compose up -d",
+    "db:down": "podman-compose down",
+    "db:status": "podman-compose ps",
+    "api": "pnpm --prefix smart-todo-api start:dev",
+    "api:build": "pnpm --prefix smart-todo-api build",
+    "api:test": "pnpm --prefix smart-todo-api test",
+    "api:lint": "pnpm --prefix smart-todo-api lint",
+    "web": "pnpm --prefix smart-todo start",
+    "web:build": "pnpm --prefix smart-todo build"
+  }
+}
