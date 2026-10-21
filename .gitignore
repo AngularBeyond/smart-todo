@@ -22,7 +22,6 @@
 .tmp
 
 # Docker Files
-docker-compose.yml
 Dockerfile
 docker-compose.override.yml
 
