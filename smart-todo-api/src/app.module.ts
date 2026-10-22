@@ -8,6 +8,7 @@ import { ApiResponseInterceptor } from './common/interceptors/api-response.inter
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { throttlerConfig } from './config/throttler.config.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
       useFactory: () => throttlerConfig,
     }),
     PrismaModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

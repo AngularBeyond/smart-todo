@@ -71,4 +71,59 @@ describe('AppController (e2e)', () => {
       statusCode: 429,
     });
   });
+
+  describe('Auth Registration (e2e)', () => {
+    const uniqueEmail = `test_${Date.now()}@example.com`;
+
+    it('POST /v1/auth/register creates user, default list, 5 todos and returns tokens', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/v1/auth/register')
+        .send({
+          name: 'Onboarding',
+          lastName: 'Tester',
+          email: uniqueEmail,
+          password: 'password123',
+        })
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        success: true,
+        data: {
+          accessToken: expect.any(String),
+          user: {
+            id: expect.any(String),
+            name: 'Onboarding',
+            lastName: 'Tester',
+            email: uniqueEmail,
+            preferredTheme: 'light',
+          },
+        },
+      });
+
+      const cookies = response.headers['set-cookie'];
+      expect(cookies).toBeDefined();
+      const hasRefreshTokenCookie = cookies?.some((cookie: string) =>
+        cookie.includes('refresh_token'),
+      );
+      expect(hasRefreshTokenCookie).toBe(true);
+    });
+
+    it('POST /v1/auth/register rejects duplicate email with 409 Conflict', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/v1/auth/register')
+        .send({
+          name: 'Duplicate',
+          lastName: 'Tester',
+          email: uniqueEmail,
+          password: 'password123',
+        })
+        .expect(409);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        statusCode: 409,
+        message: 'An account with this email already exists.',
+      });
+    });
+  });
 });
