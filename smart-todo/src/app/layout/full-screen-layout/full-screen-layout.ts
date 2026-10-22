@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [],
+  imports: [RouterOutlet],
   selector: 'app-full-screen-layout',
   styleUrl: './full-screen-layout.css',
   templateUrl: './full-screen-layout.html',
