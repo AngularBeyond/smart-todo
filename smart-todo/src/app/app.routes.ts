@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard, guestGuard } from '@core';
 
 export const routes: Routes = [
   {
@@ -11,15 +12,33 @@ export const routes: Routes = [
         pathMatch: 'full',
         redirectTo: 'app',
       },
-      // Frameless/unauthenticated pages will be mounted here in future stories (login, register)
+      {
+        path: 'login',
+        canActivate: [guestGuard],
+        children: [],
+      },
+      {
+        path: 'register',
+        canActivate: [guestGuard],
+        children: [],
+      },
     ],
   },
   {
     path: 'app',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('@layout').then((m) => m.Main),
     children: [
-      // Protected dashboard and todo pages will be mounted here in future stories
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'todos',
+      },
+      {
+        path: 'todos',
+        children: [],
+      },
     ],
   },
   {
