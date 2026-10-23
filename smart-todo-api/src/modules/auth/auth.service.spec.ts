@@ -190,5 +190,72 @@ describe('AuthService', () => {
       expect(cookieSpy).toHaveBeenCalledWith('refresh_token', expect.any(String), expect.any(Object));
     });
   });
+
+  describe('changePassword', () => {
+    it('should throw BadRequestException if current password does not match', async () => {
+      const mockPasswordHash = await import('argon2').then((m) => m.hash('correctpassword'));
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        passwordHash: mockPasswordHash,
+      });
+
+      const resMock: any = { cookie: vi.fn() };
+      await expect(
+        service.changePassword(
+          'user-1',
+          { currentPassword: 'wrongpassword', newPassword: 'newsecurepass' },
+          resMock,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('should update password hash, revoke tokens, set cookie, and return new access token', async () => {
+      const mockPasswordHash = await import('argon2').then((m) => m.hash('currentpass'));
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        passwordHash: mockPasswordHash,
+      };
+      prismaMock.user.findUnique.mockResolvedValue(mockUser);
+      prismaMock.$transaction.mockImplementation(async (callback: any) => {
+        const txMock = {
+          user: { update: vi.fn().mockResolvedValue(mockUser) },
+          refreshToken: {
+            updateMany: vi.fn().mockResolvedValue({ count: 2 }),
+            create: vi.fn().mockResolvedValue({ id: 'rt-new' }),
+          },
+        };
+        return callback(txMock);
+      });
+
+      const cookieSpy = vi.fn();
+      const resMock: any = { cookie: cookieSpy };
+
+      const result = await service.changePassword(
+        'user-1',
+        { currentPassword: 'currentpass', newPassword: 'newpassword123' },
+        resMock,
+      );
+
+      expect(result.accessToken).toBe('mock-access-token');
+      expect(cookieSpy).toHaveBeenCalledWith('refresh_token', expect.any(String), expect.any(Object));
+    });
+  });
+
+  describe('logout', () => {
+    it('should revoke refresh token and clear cookie', async () => {
+      prismaMock.refreshToken = {
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      };
+      const clearSpy = vi.fn();
+      const resMock: any = { clearCookie: clearSpy };
+
+      const result = await service.logout('raw-token', resMock);
+      expect(result).toEqual({ success: true });
+      expect(clearSpy).toHaveBeenCalledWith('refresh_token', expect.any(Object));
+      expect(prismaMock.refreshToken.updateMany).toHaveBeenCalled();
+    });
+  });
 });
+
 
