@@ -6,20 +6,24 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ApiResponseInterceptor } from './common/interceptors/api-response.interceptor.js';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { ScheduleModule } from '@nestjs/schedule';
 import { throttlerConfig } from './config/throttler.config.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({
       useFactory: () => throttlerConfig,
     }),
     PrismaModule,
     AuthModule,
+    MaintenanceModule,
   ],
   controllers: [AppController],
   providers: [

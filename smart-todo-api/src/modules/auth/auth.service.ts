@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -7,6 +7,7 @@ import type { Response } from 'express';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 
 export interface UserResponse {
   id: string;
@@ -232,6 +233,70 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync(payload);
 
     return { accessToken };
+  }
+
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+    res: Response,
+  ): Promise<RefreshResult> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    const isCurrentValid = await argon2.verify(user.passwordHash, dto.currentPassword);
+    if (!isCurrentValid) {
+      throw new BadRequestException('Current password is incorrect.');
+    }
+
+    const newPasswordHash = await argon2.hash(dto.newPassword);
+    const newRawRefreshToken = randomBytes(40).toString('hex');
+    const newTokenHash = createHash('sha256').update(newRawRefreshToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { passwordHash: newPasswordHash },
+      });
+
+      await tx.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
+      await tx.refreshToken.create({
+        data: {
+          userId,
+          tokenHash: newTokenHash,
+          expiresAt,
+        },
+      });
+    });
+
+    this.setRefreshTokenCookie(res, newRawRefreshToken);
+
+    const payload = { sub: user.id, email: user.email };
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    return { accessToken };
+  }
+
+  async logout(rawRefreshToken: string | undefined, res: Response): Promise<{ success: boolean }> {
+    if (rawRefreshToken) {
+      const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+      await this.prisma.refreshToken.updateMany({
+        where: { tokenHash, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+
+    this.clearRefreshTokenCookie(res);
+    return { success: true };
   }
 
   private setRefreshTokenCookie(res: Response, rawRefreshToken: string): void {

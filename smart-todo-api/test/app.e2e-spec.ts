@@ -226,5 +226,111 @@ describe('AppController (e2e)', () => {
       const newCookies = refreshRes.headers['set-cookie'] as unknown as string[];
       expect(newCookies?.some((c: string) => c.startsWith('refresh_token='))).toBe(true);
     });
+
+    it('PATCH /v1/auth/change-password rejects incorrect current password with 400', async () => {
+      const loginRes = await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({
+          email: uniqueEmail,
+          password: 'password123',
+        })
+        .expect(201);
+
+      const token = loginRes.body.data.accessToken;
+
+      const response = await request(app.getHttpServer())
+        .patch('/v1/auth/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          currentPassword: 'wrong-current-password',
+          newPassword: 'newsecurepassword',
+        })
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        statusCode: 400,
+        message: 'Current password is incorrect.',
+      });
+    });
+
+    it('PATCH /v1/auth/change-password updates password and allows login with new password', async () => {
+      const loginRes = await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({
+          email: uniqueEmail,
+          password: 'password123',
+        })
+        .expect(201);
+
+      const token = loginRes.body.data.accessToken;
+
+      const changeRes = await request(app.getHttpServer())
+        .patch('/v1/auth/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          currentPassword: 'password123',
+          newPassword: 'updatedpassword123',
+        })
+        .expect(200);
+
+      expect(changeRes.body).toMatchObject({
+        success: true,
+        data: {
+          accessToken: expect.any(String),
+        },
+      });
+
+      // Login with old password fails
+      await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({
+          email: uniqueEmail,
+          password: 'password123',
+        })
+        .expect(401);
+
+      // Login with new password succeeds
+      await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({
+          email: uniqueEmail,
+          password: 'updatedpassword123',
+        })
+        .expect(201);
+    });
+
+    it('POST /v1/auth/logout clears refresh cookie and revokes token', async () => {
+      const loginRes = await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({
+          email: uniqueEmail,
+          password: 'updatedpassword123',
+        })
+        .expect(201);
+
+      const token = loginRes.body.data.accessToken;
+      const cookies = loginRes.headers['set-cookie'] as unknown as string[];
+      const refreshCookie = cookies?.find((c: string) => c.startsWith('refresh_token='));
+
+      const logoutRes = await request(app.getHttpServer())
+        .post('/v1/auth/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', [refreshCookie!])
+        .expect(201);
+
+      expect(logoutRes.body).toMatchObject({
+        success: true,
+        data: {
+          success: true,
+        },
+      });
+
+      // Old refresh token is revoked
+      await request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .set('Cookie', [refreshCookie!])
+        .expect(401);
+    });
   });
 });
