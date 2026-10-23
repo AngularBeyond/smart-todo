@@ -108,4 +108,87 @@ describe('AuthService', () => {
       }),
     );
   });
+
+  describe('login', () => {
+    it('should throw UnauthorizedException if user not found', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
+      const resMock: any = { cookie: vi.fn() };
+
+      await expect(
+        service.login({ email: 'unknown@example.com', password: 'password123' }, resMock),
+      ).rejects.toThrow();
+    });
+
+    it('should login user, update lastLoginAt, set cookie and return tokens', async () => {
+      const mockPasswordHash = await import('argon2').then((m) => m.hash('password123'));
+      const mockUser = {
+        id: 'user-1',
+        name: 'Jane',
+        lastName: 'Doe',
+        email: 'jane@example.com',
+        passwordHash: mockPasswordHash,
+        preferredTheme: 'light',
+      };
+      prismaMock.user.findUnique.mockResolvedValue(mockUser);
+      prismaMock.$transaction.mockImplementation(async (callback: any) => {
+        const txMock = {
+          user: { update: vi.fn().mockResolvedValue(mockUser) },
+          refreshToken: { create: vi.fn().mockResolvedValue({ id: 'rt-2' }) },
+        };
+        return callback(txMock);
+      });
+
+      const cookieSpy = vi.fn();
+      const resMock: any = { cookie: cookieSpy };
+
+      const result = await service.login(
+        { email: 'jane@example.com', password: 'password123' },
+        resMock,
+      );
+
+      expect(result.accessToken).toBe('mock-access-token');
+      expect(result.user.email).toBe('jane@example.com');
+      expect(cookieSpy).toHaveBeenCalledWith('refresh_token', expect.any(String), expect.any(Object));
+    });
+  });
+
+  describe('refresh', () => {
+    it('should throw UnauthorizedException if refresh token is missing', async () => {
+      const resMock: any = { cookie: vi.fn(), clearCookie: vi.fn() };
+      await expect(service.refresh(undefined, resMock)).rejects.toThrow();
+    });
+
+    it('should rotate refresh token and return new access token', async () => {
+      const storedToken = {
+        id: 'stored-rt-id',
+        userId: 'user-1',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 100000),
+        user: { id: 'user-1', email: 'jane@example.com' },
+      };
+      prismaMock.refreshToken = {
+        findUnique: vi.fn().mockResolvedValue(storedToken),
+      };
+      prismaMock.$transaction.mockImplementation(async (callback: any) => {
+        const txMock = {
+          refreshToken: {
+            update: vi.fn().mockResolvedValue({}),
+            create: vi.fn().mockResolvedValue({}),
+          },
+          user: {
+            update: vi.fn().mockResolvedValue({}),
+          },
+        };
+        return callback(txMock);
+      });
+
+      const cookieSpy = vi.fn();
+      const resMock: any = { cookie: cookieSpy };
+
+      const result = await service.refresh('raw-token-string', resMock);
+      expect(result.accessToken).toBe('mock-access-token');
+      expect(cookieSpy).toHaveBeenCalledWith('refresh_token', expect.any(String), expect.any(Object));
+    });
+  });
 });
+
