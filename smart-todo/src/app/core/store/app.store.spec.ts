@@ -1,0 +1,180 @@
+import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
+import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
+import { HTTP_ERROR_MESSAGES, HttpService } from '@core';
+import { AppStore } from './app.store';
+import { profileSynced, themeChanged, userAuthenticated, userLogout } from './events';
+import { ApiResponse } from '../http/api-response.model';
+import { UserProfile } from '../models/user-profile.model';
+
+describe('AppStore', () => {
+  let store: InstanceType<typeof AppStore>;
+  let httpMock: {
+    get: ReturnType<typeof vi.fn>;
+    post: ReturnType<typeof vi.fn>;
+  };
+  let dispatcher: Dispatcher;
+  let router: Router;
+
+  const mockProfile: UserProfile = {
+    id: 'user-123',
+    name: 'Jane',
+    lastName: 'Doe',
+    email: 'jane.doe@example.com',
+    preferredTheme: 'dark',
+  };
+
+  const mockProfileResponse: ApiResponse<{ profile: UserProfile }> = {
+    success: true,
+    data: { profile: mockProfile },
+  };
+
+  beforeEach(() => {
+    httpMock = {
+      get: vi.fn(),
+      post: vi.fn(),
+    };
+    vi.clearAllMocks();
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideDispatcher(),
+        AppStore,
+        { provide: HttpService, useValue: httpMock },
+      ],
+    });
+
+    store = TestBed.inject(AppStore);
+    dispatcher = TestBed.inject(Dispatcher);
+    router = TestBed.inject(Router);
+
+    vi.spyOn(router, 'navigate').mockImplementation(() => Promise.resolve(true));
+    store.clear();
+  });
+
+  describe('Initial State', () => {
+    it('should initialize with null profile, false isAuthenticated, and light theme', () => {
+      expect(store.profile()).toBeNull();
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.accessToken()).toBeNull();
+      expect(store.theme()).toBe('light');
+      expect(store.isPending()).toBe(false);
+      expect(store.error()).toBeNull();
+      expect(store.userDisplayName()).toBe('Guest');
+      expect(store.isReady()).toBe(false);
+    });
+  });
+
+  describe('userAuthenticated Event', () => {
+    it('should load profile, update theme, and set authenticated on success', () => {
+      httpMock.get.mockReturnValue(of(mockProfileResponse));
+
+      dispatcher.dispatch(userAuthenticated());
+
+      expect(httpMock.get).toHaveBeenCalledWith('/v1/profile');
+      expect(store.isAuthenticated()).toBe(true);
+      expect(store.profile()).toEqual(mockProfile);
+      expect(store.theme()).toBe('dark');
+      expect(store.userDisplayName()).toBe('Jane Doe');
+      expect(store.isReady()).toBe(true);
+      expect(store.isFulfilled()).toBe(true);
+      expect(store.isPending()).toBe(false);
+    });
+
+    it('should capture error when profile request fails', () => {
+      const errorResponse = new HttpErrorResponse({
+        status: 500,
+        error: { message: 'Profile service unavailable' },
+      });
+      httpMock.get.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(userAuthenticated());
+
+      expect(store.profile()).toBeNull();
+      expect(store.isPending()).toBe(false);
+      expect(store.error()).toBe('Profile service unavailable');
+    });
+
+    it('should fallback to UNKNOWN_ERROR on unformatted errors', () => {
+      const errorResponse = new HttpErrorResponse({ status: 502 });
+      httpMock.get.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(userAuthenticated());
+
+      expect(store.error()).toBe(HTTP_ERROR_MESSAGES.UNKNOWN_ERROR);
+    });
+  });
+
+  describe('userLogout Event', () => {
+    it('should clear state, reset theme to light, and navigate to /login on success', () => {
+      httpMock.get.mockReturnValue(of(mockProfileResponse));
+      dispatcher.dispatch(userAuthenticated());
+      expect(store.isAuthenticated()).toBe(true);
+
+      httpMock.post.mockReturnValue(of({ success: true, data: { loggedOut: true } }));
+      dispatcher.dispatch(userLogout());
+
+      expect(httpMock.post).toHaveBeenCalledWith('/v1/auth/logout', {});
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.profile()).toBeNull();
+      expect(store.accessToken()).toBeNull();
+      expect(store.theme()).toBe('light');
+      expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should reset state and navigate to /login even if logout API fails', () => {
+      httpMock.get.mockReturnValue(of(mockProfileResponse));
+      dispatcher.dispatch(userAuthenticated());
+
+      httpMock.post.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      dispatcher.dispatch(userLogout());
+
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.profile()).toBeNull();
+      expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    });
+  });
+
+  describe('profileSynced Event', () => {
+    it('should update profile and theme when profileSynced is dispatched', () => {
+      const updatedProfile: UserProfile = {
+        ...mockProfile,
+        name: 'Janet',
+        preferredTheme: 'light',
+      };
+
+      dispatcher.dispatch(profileSynced({ profile: updatedProfile }));
+
+      expect(store.profile()).toEqual(updatedProfile);
+      expect(store.theme()).toBe('light');
+      expect(store.userDisplayName()).toBe('Janet Doe');
+    });
+  });
+
+  describe('themeChanged Event', () => {
+    it('should update theme when themeChanged is dispatched', () => {
+      expect(store.theme()).toBe('light');
+
+      dispatcher.dispatch(themeChanged({ mode: 'dark' }));
+      expect(store.theme()).toBe('dark');
+
+      dispatcher.dispatch(themeChanged({ mode: 'light' }));
+      expect(store.theme()).toBe('light');
+    });
+  });
+
+  describe('Direct methods', () => {
+    it('should set access token and clear store', () => {
+      store.setAccessToken('sample-jwt-token');
+      expect(store.accessToken()).toBe('sample-jwt-token');
+      expect(store.isAuthenticated()).toBe(true);
+
+      store.clear();
+      expect(store.accessToken()).toBeNull();
+      expect(store.isAuthenticated()).toBe(false);
+    });
+  });
+});
