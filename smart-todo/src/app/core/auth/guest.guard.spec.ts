@@ -28,12 +28,12 @@ describe('guestGuard', () => {
     expect(result).toBe(true);
   });
 
-  it('should redirect authenticated users to /app/todos', () => {
+  it('should redirect authenticated users to /', () => {
     appStore.setAuthenticated(true);
 
     const result = TestBed.runInInjectionContext(() => guestGuard({} as any, {} as any));
 
     expect(result instanceof UrlTree).toBe(true);
-    expect((result as UrlTree).toString()).toBe('/app/todos');
+    expect((result as UrlTree).toString()).toBe('/');
   });
 });

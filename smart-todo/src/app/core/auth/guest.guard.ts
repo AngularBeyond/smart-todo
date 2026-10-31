@@ -7,7 +7,7 @@ export const guestGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (appStore.isAuthenticated()) {
-    return router.createUrlTree(['/app/todos']);
+    return router.createUrlTree(['/']);
   }
 
   return true;
