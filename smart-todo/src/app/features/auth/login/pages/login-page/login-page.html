@@ -1,0 +1,131 @@
+<main class="flex min-h-screen bg-background text-foreground">
+  <section class="hidden w-[43%] flex-col justify-between border-r border-border bg-sidebar p-10 lg:flex">
+    <a routerLink="/" class="flex items-center gap-3">
+      <span class="flex size-9 items-center justify-center bg-primary text-primary-foreground shadow-sm">
+        <svg lucideSparkles class="size-4"></svg>
+      </span>
+      <span>
+        <span class="block font-mono text-[10px] uppercase tracking-[0.22em] text-foreground">Smart Todo</span>
+        <span class="block text-xs text-muted-foreground">A calmer way to get things done</span>
+      </span>
+    </a>
+
+    <div class="max-w-md">
+      <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">Make space for what matters</p>
+      <h1 class="mt-4 text-4xl font-semibold leading-tight tracking-tight xl:text-5xl">
+        Your best work starts with a clearer mind.
+      </h1>
+      <p class="mt-5 max-w-sm text-sm leading-6 text-muted-foreground">
+        Capture the details, find your rhythm, and move through your day with less noise.
+      </p>
+      <div class="mt-8 flex flex-col gap-3 text-sm text-muted-foreground">
+        @for (item of features; track item) {
+          <div class="flex items-center gap-3">
+            <span class="flex size-5 items-center justify-center bg-primary/10 text-primary">
+              <svg lucideCheck class="size-3"></svg>
+            </span>
+            <span>{{ item }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Small steps. Real momentum.</p>
+  </section>
+
+  <section class="flex flex-1 items-center justify-center px-6 py-10 sm:px-10">
+    <div class="w-full max-w-[420px]">
+      <div class="mb-10 lg:hidden">
+        <a routerLink="/" class="flex items-center gap-3">
+          <span class="flex size-9 items-center justify-center bg-primary text-primary-foreground">
+            <svg lucideSparkles class="size-4"></svg>
+          </span>
+          <span>
+            <span class="block font-mono text-[10px] uppercase tracking-[0.22em]">Smart Todo</span>
+            <span class="block text-xs text-muted-foreground">A calmer way to get things done</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="mb-8">
+        <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Welcome back</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight">Sign in to your space</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Pick up right where you left off.</p>
+      </div>
+
+      <form (submit)="handleSubmit($event)" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-2">
+          <label for="email" class="text-sm font-medium">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+            hlmInput
+            class="h-11"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label for="password" class="text-sm font-medium">Password</label>
+            <button type="button" class="text-xs text-primary hover:underline">Forgot password?</button>
+          </div>
+          <div class="relative">
+            <input
+              id="password"
+              name="password"
+              [type]="store.showPassword() ? 'text' : 'password'"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              hlmInput
+              class="h-11 pr-11"
+            />
+            <button
+              type="button"
+              (click)="store.toggleShowPassword()"
+              [attr.aria-label]="store.showPassword() ? 'Hide password' : 'Show password'"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              @if (store.showPassword()) {
+                <svg lucideEyeOff class="size-4"></svg>
+              } @else {
+                <svg lucideEye class="size-4"></svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        <button hlmBtn type="submit" class="mt-2 h-11 w-full gap-2">
+          <span>{{ store.submitted() ? 'You’re in' : 'Sign in' }}</span>
+          <svg lucideArrowRight class="size-4"></svg>
+        </button>
+
+        @if (store.submitted()) {
+          <p role="status" class="text-center text-xs text-primary">
+            Demo sign-in complete. Authentication can be connected next.
+          </p>
+        }
+      </form>
+
+      <div class="my-8 flex items-center gap-4">
+        <div class="h-px flex-1 bg-border"></div>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">New here?</span>
+        <div class="h-px flex-1 bg-border"></div>
+      </div>
+
+      <a hlmBtn variant="outline" class="h-11 w-full" routerLink="/">Create an account</a>
+
+      <p class="mt-8 text-center text-[11px] leading-5 text-muted-foreground">
+        By continuing, you agree to our Terms of Service and Privacy Policy.
+      </p>
+    </div>
+  </section>
+</main>

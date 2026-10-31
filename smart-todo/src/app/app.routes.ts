@@ -15,7 +15,8 @@ export const routes: Routes = [
       {
         path: 'login',
         canActivate: [guestGuard],
-        children: [],
+        loadComponent: () =>
+          import('./features/auth/login/pages/login-page/login-page').then((m) => m.LoginPage),
       },
       {
         path: 'register',
