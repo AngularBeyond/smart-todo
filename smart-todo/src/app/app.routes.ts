@@ -36,6 +36,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/pages/settings-page/settings-page').then((m) => m.SettingsPage),
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/pages/profile-page/profile-page').then((m) => m.ProfilePage),
+      },
     ],
   },
   {
