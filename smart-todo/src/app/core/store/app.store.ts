@@ -44,6 +44,13 @@ export const AppStore = signalStore(
       const p = profile();
       return p ? `${p.name ?? ''} ${p.lastName ?? ''}`.trim() || p.email : 'Guest';
     }),
+    userInitials: computed(() => {
+      const p = profile();
+      if (!p) return 'JD';
+      const first = p.name ? p.name.charAt(0).toUpperCase() : '';
+      const last = p.lastName ? p.lastName.charAt(0).toUpperCase() : '';
+      return `${first}${last}` || p.email.charAt(0).toUpperCase();
+    }),
     isReady: computed(() => isAuthenticated() && profile() !== null),
     preferredTheme: computed(() => theme()),
   })),
@@ -132,6 +139,11 @@ export const AppStore = signalStore(
       setTheme(theme: ThemeMode): void {
         themeService.applyTheme(theme);
         patchState(store, { theme });
+      },
+      toggleTheme(): void {
+        const nextTheme: ThemeMode = store.theme() === 'dark' ? 'light' : 'dark';
+        themeService.applyTheme(nextTheme);
+        patchState(store, { theme: nextTheme });
       },
       clear(): void {
         patchState(store, initialAppState, setIdle());

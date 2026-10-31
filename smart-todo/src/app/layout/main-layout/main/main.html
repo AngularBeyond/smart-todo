@@ -1,10 +1,9 @@
-<div class="flex flex-col min-h-screen bg-background text-foreground">
+<div class="min-h-screen bg-background text-foreground transition-colors">
   <app-header />
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex w-full">
     <app-sidebar />
-    <main class="flex-1 overflow-y-auto">
+    <main class="min-w-0 flex-1 px-5 py-7 md:px-10 lg:px-16">
       <router-outlet />
     </main>
   </div>
-  <app-footer />
 </div>

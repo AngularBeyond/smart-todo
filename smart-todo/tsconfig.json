@@ -20,6 +20,7 @@
       "@layout/*": ["./src/app/layout/*"],
       "@ui": ["./src/app/ui/index.ts"],
       "@ui/*": ["./src/app/ui/*"],
+      "@spartan-ng/helm/*": ["./src/app/ui/spartan-ui/*", "./src/app/ui/spartan-ui/*/index.ts"],
       "@pattern": ["./src/app/pattern/index.ts"],
       "@pattern/*": ["./src/app/pattern/*"],
       "@features/*": ["./src/app/features/*"]
