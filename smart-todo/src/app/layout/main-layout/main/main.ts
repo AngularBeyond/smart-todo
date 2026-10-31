@@ -1,12 +1,12 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Header } from '../header/header';
 import { Sidebar } from '../sidebar/sidebar';
-import { Footer } from '../footer/footer';
 
 @Component({
-  imports: [Header, Sidebar, Footer, RouterOutlet],
   selector: 'app-main',
+  imports: [Header, Sidebar, RouterOutlet],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './main.css',
   templateUrl: './main.html',
 })
