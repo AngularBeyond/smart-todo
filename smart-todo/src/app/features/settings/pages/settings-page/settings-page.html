@@ -1,0 +1,126 @@
+<div class="mx-auto w-full max-w-5xl px-5 py-8 md:px-10 md:py-12">
+  <a
+    routerLink="/"
+    class="mb-8 flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+  >
+    <svg lucideArrowLeft class="size-4"></svg> Back to tasks
+  </a>
+
+  <!-- Header -->
+  <div class="mb-9 border-b border-border pb-8">
+    <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Workspace control</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Settings<span class="text-primary">.</span></h1>
+    <p class="mt-2 text-sm text-muted-foreground">Tune Smart Todo to fit the way you work.</p>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+    <!-- Workspace Preferences Card -->
+    <section class="border border-border bg-card p-6">
+      <div class="mb-6">
+        <h2 class="font-semibold">Workspace preferences</h2>
+        <p class="mt-1 text-sm text-muted-foreground">Make your daily planning feel more natural.</p>
+      </div>
+
+      <div class="flex flex-col">
+        <!-- Appearance Option -->
+        <button
+          type="button"
+          (click)="store.setAppearance(store.settings().appearance === 'light' ? 'dark' : 'light')"
+          class="flex items-center gap-3 py-3 text-left"
+        >
+          <span class="flex size-9 items-center justify-center bg-primary/10 text-primary">
+            <svg lucidePalette class="size-4"></svg>
+          </span>
+          <span class="flex-1">
+            <span class="block text-sm font-medium">Appearance</span>
+            <span class="block text-xs text-muted-foreground">
+              {{ store.settings().appearance | titlecase }} theme is active
+            </span>
+          </span>
+          <span hlmBadge variant="secondary" class="capitalize">{{ store.settings().appearance }}</span>
+          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
+        </button>
+
+        <div hlmSeparator></div>
+
+        <!-- Start of Week Option -->
+        <button
+          type="button"
+          (click)="store.toggleStartOfWeek()"
+          class="flex items-center gap-3 py-3 text-left"
+        >
+          <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground">
+            <svg lucideClock3 class="size-4"></svg>
+          </span>
+          <span class="flex-1">
+            <span class="block text-sm font-medium">Start of week</span>
+            <span class="block text-xs text-muted-foreground">Choose how your weekly rhythm begins</span>
+          </span>
+          <span class="text-xs text-muted-foreground">{{ store.settings().startOfWeek }}</span>
+          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
+        </button>
+
+        <div hlmSeparator></div>
+
+        <!-- Notifications Option -->
+        <button
+          type="button"
+          (click)="store.toggleNotifications()"
+          class="flex items-center gap-3 py-3 text-left"
+        >
+          <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground">
+            <svg lucideBell class="size-4"></svg>
+          </span>
+          <span class="flex-1">
+            <span class="block text-sm font-medium">Notifications</span>
+            <span class="block text-xs text-muted-foreground">Reminders and daily progress updates</span>
+          </span>
+          <span hlmBadge variant="secondary">{{ store.settings().notifications ? 'On' : 'Off' }}</span>
+          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Task Defaults & Security Side Cards -->
+    <div class="flex flex-col gap-6">
+      <!-- Task Defaults -->
+      <section class="border border-border bg-card p-6">
+        <div class="mb-5">
+          <h2 class="font-semibold">Task defaults</h2>
+          <p class="text-sm text-muted-foreground">Keep new tasks quick and consistent.</p>
+        </div>
+        <div class="flex flex-col gap-4 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-muted-foreground">Default list</span>
+            <span class="font-medium">{{ store.settings().defaultList }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-muted-foreground">Daily task limit</span>
+            <span class="font-medium">{{ store.settings().dailyTaskLimit }} tasks</span>
+          </div>
+          <button hlmBtn variant="outline" class="mt-2 gap-2" (click)="store.markSaved()">
+            <svg lucideCheck class="size-4"></svg> Preferences saved
+          </button>
+        </div>
+      </section>
+
+      <!-- Privacy & Security -->
+      <section class="border border-border bg-card p-6">
+        <div class="mb-5">
+          <h2 class="font-semibold">Privacy & security</h2>
+          <p class="text-sm text-muted-foreground">Your workspace is private by default.</p>
+        </div>
+        <button type="button" class="flex w-full items-center gap-3 text-left">
+          <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground">
+            <svg lucideShield class="size-4"></svg>
+          </span>
+          <span class="flex-1">
+            <span class="block text-sm font-medium">Account security</span>
+            <span class="block text-xs text-muted-foreground">Password and sign-in preferences</span>
+          </span>
+          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
+        </button>
+      </section>
+    </div>
+  </div>
+</div>
