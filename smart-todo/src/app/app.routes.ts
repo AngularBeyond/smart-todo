@@ -26,6 +26,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/todos/pages/todos-page/todos-page').then((m) => m.TodosPage),
       },
+      {
+        path: 'tags',
+        loadComponent: () =>
+          import('./features/tags/pages/tags-page/tags-page').then((m) => m.TagsPage),
+      },
     ],
   },
   {

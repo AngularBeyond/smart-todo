@@ -1,0 +1,105 @@
+<div class="mx-auto w-full max-w-5xl px-5 py-8 md:px-10 md:py-12">
+  <a
+    routerLink="/"
+    class="mb-8 flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+  >
+    <svg lucideArrowLeft class="size-4"></svg> Back to tasks
+  </a>
+
+  <!-- Header -->
+  <div class="mb-9 flex flex-col justify-between gap-5 border-b border-border pb-8 sm:flex-row sm:items-end">
+    <div>
+      <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Organize your space</p>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Tags<span class="text-primary">.</span></h1>
+      <p class="mt-2 text-sm text-muted-foreground">Give every task the right context, at a glance.</p>
+    </div>
+    <div class="flex size-14 items-center justify-center bg-primary/10 text-primary">
+      <svg lucideTag class="size-6"></svg>
+    </div>
+  </div>
+
+  <!-- Search / New Tag Bar -->
+  <div class="mb-8 flex flex-col gap-3 border border-primary/25 bg-card p-2 shadow-sm sm:flex-row">
+    <div class="relative flex-1">
+      <svg lucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"></svg>
+      <input
+        hlmInput
+        type="text"
+        [ngModel]="store.query()"
+        (ngModelChange)="store.setQuery($event)"
+        placeholder="Search tags"
+        class="h-10 border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0"
+      />
+    </div>
+    <button hlmBtn class="shrink-0 gap-2">
+      <svg lucidePlus class="size-4"></svg> New tag
+    </button>
+  </div>
+
+  <!-- Tag List -->
+  <section class="border-y border-border">
+    <div class="flex items-center justify-between py-4">
+      <div class="flex items-center gap-3">
+        <h2 class="font-semibold">Your tags</h2>
+        <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
+          {{ store.tags().length }} total
+        </span>
+      </div>
+      <span class="text-xs text-muted-foreground">{{ store.totalTasksCount() }} tasks organized</span>
+    </div>
+    <div hlmSeparator></div>
+
+    @for (tag of store.visibleTags(); track tag.name) {
+      <div class="group flex items-center gap-4 border-b border-border/70 py-5 last:border-b-0">
+        <span [class]="'size-3 shrink-0 rounded-full ' + tag.color"></span>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <h3 class="font-medium">{{ tag.name }}</h3>
+            <span hlmBadge variant="secondary" class="font-mono text-[10px]">{{ tag.tasks }}</span>
+          </div>
+          <p class="mt-1 truncate text-xs text-muted-foreground">{{ tag.description }}</p>
+        </div>
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          class="opacity-0 transition-opacity group-hover:opacity-100"
+          (click)="store.deleteTag(tag.name)"
+          [attr.aria-label]="'Delete ' + tag.name + ' tag'"
+        >
+          <svg lucideTrash2 class="size-4"></svg>
+        </button>
+        <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
+      </div>
+    }
+
+    @if (store.visibleTags().length === 0) {
+      <div class="py-12 text-center text-sm text-muted-foreground">
+        No tags match your search query.
+      </div>
+    }
+  </section>
+
+  <!-- Metrics Grid -->
+  <div class="mt-8 grid gap-4 sm:grid-cols-3">
+    <div class="border border-border bg-card p-5">
+      <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Tagged tasks</p>
+      <p class="mt-2 text-2xl font-semibold">{{ store.totalTasksCount() }}</p>
+      <p class="mt-1 text-xs text-muted-foreground">Across your workspace</p>
+    </div>
+    <div class="border border-border bg-card p-5">
+      <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Most used</p>
+      <p class="mt-2 flex items-center gap-2 text-2xl font-semibold">
+        <span class="size-2 rounded-full bg-chart-2"></span>Work
+      </p>
+      <p class="mt-1 text-xs text-muted-foreground">12 active tasks</p>
+    </div>
+    <div class="border border-border bg-card p-5">
+      <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Coverage</p>
+      <p class="mt-2 flex items-center gap-2 text-2xl font-semibold">
+        <svg lucideCheck class="size-5 text-chart-2"></svg> 100%
+      </p>
+      <p class="mt-1 text-xs text-muted-foreground">Every task has context</p>
+    </div>
+  </div>
+</div>
