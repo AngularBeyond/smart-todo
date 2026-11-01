@@ -104,7 +104,7 @@ describe('AuthService', () => {
       expect.any(String),
       expect.objectContaining({
         httpOnly: true,
-        path: '/v1/auth',
+        path: '/api/v1/auth',
       }),
     );
   });

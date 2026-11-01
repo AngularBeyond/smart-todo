@@ -14,7 +14,7 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('v1');
+    app.setGlobalPrefix('api/v1');
     app.use(cookieParser());
     app.useGlobalPipes(
       new ValidationPipe({
@@ -30,9 +30,9 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('GET /v1/health returns wrapped { success: true, data: { status: "ok" } }', async () => {
+  it('GET /api/v1/health returns wrapped { success: true, data: { status: "ok" } }', async () => {
     const response = await request(app.getHttpServer())
-      .get('/v1/health')
+      .get('/api/v1/health')
       .expect(200);
 
     expect(response.body).toEqual({
@@ -43,9 +43,9 @@ describe('AppController (e2e)', () => {
     });
   });
 
-  it('POST /v1/test-validation rejects non-whitelisted properties with 400', async () => {
+  it('POST /api/v1/test-validation rejects non-whitelisted properties with 400', async () => {
     const response = await request(app.getHttpServer())
-      .post('/v1/test-validation')
+      .post('/api/v1/test-validation')
       .send({
         title: 'Valid title',
         extraField: 'Malicious or non-whitelisted payload',
@@ -59,13 +59,13 @@ describe('AppController (e2e)', () => {
     expect(JSON.stringify(response.body.message)).toContain('property extraField should not exist');
   });
 
-  it('GET /v1/test-throttle returns 429 when rate limit is exceeded', async () => {
+  it('GET /api/v1/test-throttle returns 429 when rate limit is exceeded', async () => {
     // limit is 2
-    await request(app.getHttpServer()).get('/v1/test-throttle').expect(200);
-    await request(app.getHttpServer()).get('/v1/test-throttle').expect(200);
+    await request(app.getHttpServer()).get('/api/v1/test-throttle').expect(200);
+    await request(app.getHttpServer()).get('/api/v1/test-throttle').expect(200);
 
     const response = await request(app.getHttpServer())
-      .get('/v1/test-throttle')
+      .get('/api/v1/test-throttle')
       .expect(429);
 
     expect(response.body).toMatchObject({
@@ -77,9 +77,9 @@ describe('AppController (e2e)', () => {
   describe('Auth Registration (e2e)', () => {
     const uniqueEmail = `test_${Date.now()}@example.com`;
 
-    it('POST /v1/auth/register creates user, default list, 5 todos and returns tokens', async () => {
+    it('POST /api/v1/auth/register creates user, default list, 5 todos and returns tokens', async () => {
       const response = await request(app.getHttpServer())
-        .post('/v1/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'Onboarding',
           lastName: 'Tester',
@@ -110,9 +110,9 @@ describe('AppController (e2e)', () => {
       expect(hasRefreshTokenCookie).toBe(true);
     });
 
-    it('POST /v1/auth/register rejects duplicate email with 409 Conflict', async () => {
+    it('POST /api/v1/auth/register rejects duplicate email with 409 Conflict', async () => {
       const response = await request(app.getHttpServer())
-        .post('/v1/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'Duplicate',
           lastName: 'Tester',
@@ -128,9 +128,9 @@ describe('AppController (e2e)', () => {
       });
     });
 
-    it('POST /v1/auth/login logs in user and returns tokens', async () => {
+    it('POST /api/v1/auth/login logs in user and returns tokens', async () => {
       const response = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'password123',
@@ -151,9 +151,9 @@ describe('AppController (e2e)', () => {
       expect(cookies).toBeDefined();
     });
 
-    it('POST /v1/auth/login with wrong password returns 401 Unauthorized', async () => {
+    it('POST /api/v1/auth/login with wrong password returns 401 Unauthorized', async () => {
       const response = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'wrongpassword',
@@ -167,15 +167,15 @@ describe('AppController (e2e)', () => {
       });
     });
 
-    it('GET /v1/auth/authenticated requires valid Bearer token', async () => {
+    it('GET /api/v1/auth/authenticated requires valid Bearer token', async () => {
       // 401 without token
       await request(app.getHttpServer())
-        .get('/v1/auth/authenticated')
+        .get('/api/v1/auth/authenticated')
         .expect(401);
 
       // Login to get token
       const loginRes = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'password123',
@@ -186,7 +186,7 @@ describe('AppController (e2e)', () => {
 
       // 200 with token
       const authRes = await request(app.getHttpServer())
-        .get('/v1/auth/authenticated')
+        .get('/api/v1/auth/authenticated')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
@@ -198,9 +198,9 @@ describe('AppController (e2e)', () => {
       });
     });
 
-    it('POST /v1/auth/refresh rotates refresh token and returns new access token', async () => {
+    it('POST /api/v1/auth/refresh rotates refresh token and returns new access token', async () => {
       const loginRes = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'password123',
@@ -212,7 +212,7 @@ describe('AppController (e2e)', () => {
       expect(refreshCookie).toBeDefined();
 
       const refreshRes = await request(app.getHttpServer())
-        .post('/v1/auth/refresh')
+        .post('/api/v1/auth/refresh')
         .set('Cookie', [refreshCookie!])
         .expect(201);
 
@@ -227,9 +227,9 @@ describe('AppController (e2e)', () => {
       expect(newCookies?.some((c: string) => c.startsWith('refresh_token='))).toBe(true);
     });
 
-    it('PATCH /v1/auth/change-password rejects incorrect current password with 400', async () => {
+    it('PATCH /api/v1/auth/change-password rejects incorrect current password with 400', async () => {
       const loginRes = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'password123',
@@ -239,7 +239,7 @@ describe('AppController (e2e)', () => {
       const token = loginRes.body.data.accessToken;
 
       const response = await request(app.getHttpServer())
-        .patch('/v1/auth/change-password')
+        .patch('/api/v1/auth/change-password')
         .set('Authorization', `Bearer ${token}`)
         .send({
           currentPassword: 'wrong-current-password',
@@ -254,9 +254,9 @@ describe('AppController (e2e)', () => {
       });
     });
 
-    it('PATCH /v1/auth/change-password updates password and allows login with new password', async () => {
+    it('PATCH /api/v1/auth/change-password updates password and allows login with new password', async () => {
       const loginRes = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'password123',
@@ -266,7 +266,7 @@ describe('AppController (e2e)', () => {
       const token = loginRes.body.data.accessToken;
 
       const changeRes = await request(app.getHttpServer())
-        .patch('/v1/auth/change-password')
+        .patch('/api/v1/auth/change-password')
         .set('Authorization', `Bearer ${token}`)
         .send({
           currentPassword: 'password123',
@@ -283,7 +283,7 @@ describe('AppController (e2e)', () => {
 
       // Login with old password fails
       await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'password123',
@@ -292,7 +292,7 @@ describe('AppController (e2e)', () => {
 
       // Login with new password succeeds
       await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'updatedpassword123',
@@ -300,9 +300,9 @@ describe('AppController (e2e)', () => {
         .expect(201);
     });
 
-    it('POST /v1/auth/logout clears refresh cookie and revokes token', async () => {
+    it('POST /api/v1/auth/logout clears refresh cookie and revokes token', async () => {
       const loginRes = await request(app.getHttpServer())
-        .post('/v1/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: uniqueEmail,
           password: 'updatedpassword123',
@@ -314,7 +314,7 @@ describe('AppController (e2e)', () => {
       const refreshCookie = cookies?.find((c: string) => c.startsWith('refresh_token='));
 
       const logoutRes = await request(app.getHttpServer())
-        .post('/v1/auth/logout')
+        .post('/api/v1/auth/logout')
         .set('Authorization', `Bearer ${token}`)
         .set('Cookie', [refreshCookie!])
         .expect(201);
@@ -328,7 +328,7 @@ describe('AppController (e2e)', () => {
 
       // Old refresh token is revoked
       await request(app.getHttpServer())
-        .post('/v1/auth/refresh')
+        .post('/api/v1/auth/refresh')
         .set('Cookie', [refreshCookie!])
         .expect(401);
     });

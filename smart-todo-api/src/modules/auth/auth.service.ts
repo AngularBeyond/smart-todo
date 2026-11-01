@@ -305,7 +305,7 @@ export class AuthService {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
-      path: '/v1/auth',
+      path: '/api/v1/auth',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
@@ -316,7 +316,7 @@ export class AuthService {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
-      path: '/v1/auth',
+      path: '/api/v1/auth',
     });
   }
 }

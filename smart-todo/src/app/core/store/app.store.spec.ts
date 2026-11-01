@@ -74,7 +74,7 @@ describe('AppStore', () => {
 
       dispatcher.dispatch(userAuthenticated());
 
-      expect(httpMock.get).toHaveBeenCalledWith('/v1/profile');
+      expect(httpMock.get).toHaveBeenCalledWith('/api/v1/profile');
       expect(store.isAuthenticated()).toBe(true);
       expect(store.profile()).toEqual(mockProfile);
       expect(store.theme()).toBe('dark');
@@ -117,7 +117,7 @@ describe('AppStore', () => {
       httpMock.post.mockReturnValue(of({ success: true, data: { loggedOut: true } }));
       dispatcher.dispatch(userLogout());
 
-      expect(httpMock.post).toHaveBeenCalledWith('/v1/auth/logout', {});
+      expect(httpMock.post).toHaveBeenCalledWith('/api/v1/auth/logout', {});
       expect(store.isAuthenticated()).toBe(false);
       expect(store.profile()).toBeNull();
       expect(store.accessToken()).toBeNull();

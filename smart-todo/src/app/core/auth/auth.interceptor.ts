@@ -20,9 +20,9 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const token = appStore.accessToken();
   let authReq = req;
 
-  const isApiRequest = req.url.includes('/v1/');
-  const isRefreshRequest = req.url.includes('/v1/auth/refresh');
-  const isAuthPublicRequest = req.url.includes('/v1/auth/login') || req.url.includes('/v1/auth/register');
+  const isApiRequest = req.url.includes('/api/v1/') || req.url.includes('/v1/');
+  const isRefreshRequest = req.url.includes('/auth/refresh');
+  const isAuthPublicRequest = req.url.includes('/auth/login') || req.url.includes('/auth/register');
 
   if (isApiRequest && token && !isAuthPublicRequest) {
     authReq = req.clone({
@@ -47,7 +47,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         !isAuthPublicRequest
       ) {
         return http
-          .post<ApiResponse<{ accessToken: string }>>('/v1/auth/refresh', {}, { withCredentials: true })
+          .post<ApiResponse<{ accessToken: string }>>('/api/v1/auth/refresh', {}, { withCredentials: true })
           .pipe(
             switchMap((refreshRes) => {
               const newAccessToken = refreshRes?.data?.accessToken;
