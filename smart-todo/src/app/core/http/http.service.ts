@@ -1,6 +1,7 @@
 import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { ApiResponse } from './api-response.model';
 
 export interface RequestOptions {
@@ -16,30 +17,43 @@ export interface RequestOptions {
 })
 export class HttpService {
   private readonly http = inject(HttpClient);
+  readonly apiUrl = environment.apiUrl;
+
+  private buildUrl(url: string): string {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    const base = (this.apiUrl ?? '').replace(/\/+$/, '');
+    if (!base || url.startsWith(base)) {
+      return url;
+    }
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${base}${cleanPath}`;
+  }
 
   get<T>(url: string, options?: RequestOptions): Observable<ApiResponse<T>> {
-    return this.http.get<ApiResponse<T>>(url, {
+    return this.http.get<ApiResponse<T>>(this.buildUrl(url), {
       withCredentials: true,
       ...options,
     });
   }
 
   post<T>(url: string, body: unknown, options?: RequestOptions): Observable<ApiResponse<T>> {
-    return this.http.post<ApiResponse<T>>(url, body, {
+    return this.http.post<ApiResponse<T>>(this.buildUrl(url), body, {
       withCredentials: true,
       ...options,
     });
   }
 
   patch<T>(url: string, body: unknown, options?: RequestOptions): Observable<ApiResponse<T>> {
-    return this.http.patch<ApiResponse<T>>(url, body, {
+    return this.http.patch<ApiResponse<T>>(this.buildUrl(url), body, {
       withCredentials: true,
       ...options,
     });
   }
 
   delete<T>(url: string, options?: RequestOptions): Observable<ApiResponse<T>> {
-    return this.http.delete<ApiResponse<T>>(url, {
+    return this.http.delete<ApiResponse<T>>(this.buildUrl(url), {
       withCredentials: true,
       ...options,
     });

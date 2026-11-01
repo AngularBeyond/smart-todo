@@ -36,70 +36,90 @@ describe('HttpService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should call get with withCredentials: true', () => {
+  it('should call get with apiUrl prefix and withCredentials: true', () => {
     const mockResponse: ApiResponse<{ name: string }> = {
       success: true,
       data: { name: 'Test' },
     };
     httpClientMock.get.mockReturnValue(of(mockResponse));
 
-    service.get('/api/test').subscribe((res) => {
+    service.get('/test').subscribe((res) => {
       expect(res).toEqual(mockResponse);
     });
 
-    expect(httpClientMock.get).toHaveBeenCalledWith('/api/test', {
+    expect(httpClientMock.get).toHaveBeenCalledWith('/api/v1/test', {
       withCredentials: true,
     });
   });
 
-  it('should call post with withCredentials: true', () => {
+  it('should call post with apiUrl prefix and withCredentials: true', () => {
     const mockResponse: ApiResponse<{ id: string }> = {
       success: true,
       data: { id: '123' },
     };
     httpClientMock.post.mockReturnValue(of(mockResponse));
 
-    service.post('/api/test', { key: 'value' }).subscribe((res) => {
+    service.post('/test', { key: 'value' }).subscribe((res) => {
       expect(res).toEqual(mockResponse);
     });
 
     expect(httpClientMock.post).toHaveBeenCalledWith(
-      '/api/test',
+      '/api/v1/test',
       { key: 'value' },
       { withCredentials: true },
     );
   });
 
-  it('should call patch with withCredentials: true', () => {
+  it('should call patch with apiUrl prefix and withCredentials: true', () => {
     const mockResponse: ApiResponse<{ updated: boolean }> = {
       success: true,
       data: { updated: true },
     };
     httpClientMock.patch.mockReturnValue(of(mockResponse));
 
-    service.patch('/api/test/1', { updated: true }).subscribe((res) => {
+    service.patch('/test/1', { updated: true }).subscribe((res) => {
       expect(res).toEqual(mockResponse);
     });
 
     expect(httpClientMock.patch).toHaveBeenCalledWith(
-      '/api/test/1',
+      '/api/v1/test/1',
       { updated: true },
       { withCredentials: true },
     );
   });
 
-  it('should call delete with withCredentials: true', () => {
+  it('should call delete with apiUrl prefix and withCredentials: true', () => {
     const mockResponse: ApiResponse<null> = {
       success: true,
       data: null,
     };
     httpClientMock.delete.mockReturnValue(of(mockResponse));
 
-    service.delete('/api/test/1').subscribe((res) => {
+    service.delete('/test/1').subscribe((res) => {
       expect(res).toEqual(mockResponse);
     });
 
-    expect(httpClientMock.delete).toHaveBeenCalledWith('/api/test/1', {
+    expect(httpClientMock.delete).toHaveBeenCalledWith('/api/v1/test/1', {
+      withCredentials: true,
+    });
+  });
+
+  it('should preserve URL when it already starts with apiUrl', () => {
+    httpClientMock.get.mockReturnValue(of({ success: true, data: null }));
+
+    service.get('/api/v1/custom').subscribe();
+
+    expect(httpClientMock.get).toHaveBeenCalledWith('/api/v1/custom', {
+      withCredentials: true,
+    });
+  });
+
+  it('should preserve absolute external URLs', () => {
+    httpClientMock.get.mockReturnValue(of({ success: true, data: null }));
+
+    service.get('https://external.api/data').subscribe();
+
+    expect(httpClientMock.get).toHaveBeenCalledWith('https://external.api/data', {
       withCredentials: true,
     });
   });
