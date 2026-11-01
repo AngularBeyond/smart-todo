@@ -1,6 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import {
+  form,
+  FormField,
+  submit,
+  required,
+  email as emailValidator,
+  minLength,
+  maxLength,
+} from '@angular/forms/signals';
 import {
   LucideSparkles,
   LucideCheck,
@@ -20,7 +28,7 @@ import { INITIAL_REGISTER_FEATURES } from '../../constants';
   selector: 'app-register-page',
   imports: [
     RouterLink,
-    ReactiveFormsModule,
+    FormField,
     LucideSparkles,
     LucideCheck,
     LucideEye,
@@ -40,51 +48,50 @@ import { INITIAL_REGISTER_FEATURES } from '../../constants';
 export class RegisterPage {
   protected readonly store = inject(RegisterStore);
 
-  readonly registerForm = new FormGroup({
-    name: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(50)],
-    }),
-    lastName: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.maxLength(50)],
-    }),
-    email: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    password: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.minLength(8)],
-    }),
+  readonly registerModel = signal({
+    name: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
+
+  readonly registerForm = form(this.registerModel, (schemaPath) => {
+    required(schemaPath.name, { message: 'First name is required.' });
+    maxLength(schemaPath.name, 50, { message: 'First name must not exceed 50 characters.' });
+
+    maxLength(schemaPath.lastName, 50, { message: 'Last name must not exceed 50 characters.' });
+
+    required(schemaPath.email, { message: 'Email is required.' });
+    emailValidator(schemaPath.email, { message: 'Please enter a valid email address.' });
+
+    required(schemaPath.password, { message: 'Password is required.' });
+    minLength(schemaPath.password, 8, { message: 'Password must be at least 8 characters.' });
   });
 
   readonly features = INITIAL_REGISTER_FEATURES;
 
-  handleSubmit(): void {
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
-      return;
-    }
-    const val = this.registerForm.getRawValue();
-    // Parse single or double name if lastName is blank
-    let firstName = val.name.trim();
-    let lastName = val.lastName.trim();
-    if (!lastName) {
-      const parts = firstName.split(' ');
-      if (parts.length > 1) {
-        firstName = parts[0];
-        lastName = parts.slice(1).join(' ');
-      } else {
-        lastName = 'User';
+  handleSubmit(event?: Event): void {
+    event?.preventDefault();
+    submit(this.registerForm, async () => {
+      const val = this.registerModel();
+      let firstName = val.name.trim();
+      let lastName = val.lastName.trim();
+      if (!lastName) {
+        const parts = firstName.split(' ');
+        if (parts.length > 1) {
+          firstName = parts[0];
+          lastName = parts.slice(1).join(' ');
+        } else {
+          lastName = 'User';
+        }
       }
-    }
 
-    this.store.register({
-      name: firstName,
-      lastName,
-      email: val.email.trim().toLowerCase(),
-      password: val.password,
+      this.store.register({
+        name: firstName,
+        lastName,
+        email: val.email.trim().toLowerCase(),
+        password: val.password,
+      });
     });
   }
 }
