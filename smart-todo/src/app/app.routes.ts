@@ -16,6 +16,24 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'signup',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('@layout').then((m) => m.FullScreenLayout),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/auth/register/pages/register-page/register-page').then((m) => m.RegisterPage),
+      },
+    ],
+  },
+  {
+    path: 'register',
+    redirectTo: 'signup',
+    pathMatch: 'full',
+  },
+  {
     path: '',
     loadComponent: () =>
       import('@layout').then((m) => m.Main),
