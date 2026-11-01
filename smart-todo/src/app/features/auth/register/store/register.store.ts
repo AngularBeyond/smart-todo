@@ -54,7 +54,7 @@ export const RegisterStore = signalStore(
         pipe(
           tap(() => patchState(store, setPending())),
           switchMap((request) =>
-            http.post<AuthSuccessPayload>('/api/v1/auth/register', request).pipe(
+            http.post<AuthSuccessPayload>('/auth/register', request).pipe(
               tap({
                 next: (response) => {
                   patchState(store, setFulfilled());
