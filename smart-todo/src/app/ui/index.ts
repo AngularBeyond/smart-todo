@@ -12,3 +12,4 @@ export * from './spartan-ui/table';
 export * from './spartan-ui/switch';
 export * from './spartan-ui/sonner';
 export * from './spartan-ui/pagination';
+export * from './spartan-ui/alert';

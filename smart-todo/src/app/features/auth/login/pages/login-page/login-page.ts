@@ -1,29 +1,35 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   LucideSparkles,
   LucideCheck,
   LucideEye,
   LucideEyeOff,
   LucideArrowRight,
+  LucideAlertCircle,
+  LucideX,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmAlertImports } from '@spartan-ng/helm/alert';
 import { LoginStore } from '../../store/login.store';
 
 @Component({
   selector: 'app-login-page',
   imports: [
     RouterLink,
-    FormsModule,
+    ReactiveFormsModule,
     LucideSparkles,
     LucideCheck,
     LucideEye,
     LucideEyeOff,
     LucideArrowRight,
+    LucideAlertCircle,
+    LucideX,
     HlmButton,
     HlmInput,
+    HlmAlertImports,
   ],
   providers: [LoginStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,10 +38,17 @@ import { LoginStore } from '../../store/login.store';
 })
 export class LoginPage {
   protected readonly store = inject(LoginStore);
-  private readonly router = inject(Router);
 
-  readonly email = signal('');
-  readonly password = signal('');
+  readonly loginForm = new FormGroup({
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
 
   readonly features = [
     'A focused home for every task',
@@ -43,8 +56,16 @@ export class LoginPage {
     'Progress you can actually feel',
   ];
 
-  handleSubmit(event: Event): void {
-    event.preventDefault();
-    this.store.setSubmitted(true);
+  handleSubmit(): void {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+    const val = this.loginForm.getRawValue();
+    this.store.login({
+      email: val.email.trim().toLowerCase(),
+      password: val.password,
+    });
   }
 }
+

@@ -53,21 +53,41 @@
         <p class="mt-2 text-sm text-muted-foreground">Pick up right where you left off.</p>
       </div>
 
-      <form (submit)="handleSubmit($event)" class="flex flex-col gap-5">
+      @if (store.error(); as errorMessage) {
+        <div hlmAlert variant="destructive" class="mb-6 flex items-start gap-3">
+          <svg lucideAlertCircle class="size-4 shrink-0 mt-0.5 text-destructive"></svg>
+          <div class="flex-1">
+            <h4 hlmAlertTitle>Sign-in failed</h4>
+            <p hlmAlertDescription>{{ errorMessage }}</p>
+          </div>
+          <button
+            type="button"
+            (click)="store.clearError()"
+            aria-label="Dismiss error"
+            class="text-muted-foreground hover:text-foreground"
+          >
+            <svg lucideX class="size-4"></svg>
+          </button>
+        </div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="handleSubmit()" class="flex flex-col gap-5">
         <div class="flex flex-col gap-2">
           <label for="email" class="text-sm font-medium">Email address</label>
           <input
             id="email"
-            name="email"
             type="email"
-            [ngModel]="email()"
-            (ngModelChange)="email.set($event)"
+            formControlName="email"
             placeholder="you@example.com"
             autocomplete="email"
-            required
             hlmInput
             class="h-11"
           />
+          @if (loginForm.controls.email.touched && loginForm.controls.email.errors?.['required']) {
+            <p class="text-xs text-destructive">Email is required.</p>
+          } @else if (loginForm.controls.email.touched && loginForm.controls.email.errors?.['email']) {
+            <p class="text-xs text-destructive">Please enter a valid email address.</p>
+          }
         </div>
 
         <div class="flex flex-col gap-2">
@@ -78,13 +98,10 @@
           <div class="relative">
             <input
               id="password"
-              name="password"
               [type]="store.showPassword() ? 'text' : 'password'"
-              [ngModel]="password()"
-              (ngModelChange)="password.set($event)"
+              formControlName="password"
               placeholder="Enter your password"
               autocomplete="current-password"
-              required
               hlmInput
               class="h-11 pr-11"
             />
@@ -101,18 +118,15 @@
               }
             </button>
           </div>
+          @if (loginForm.controls.password.touched && loginForm.controls.password.errors?.['required']) {
+            <p class="text-xs text-destructive">Password is required.</p>
+          }
         </div>
 
-        <button hlmBtn type="submit" class="mt-2 h-11 w-full gap-2">
-          <span>{{ store.submitted() ? 'You’re in' : 'Sign in' }}</span>
+        <button hlmBtn type="submit" [disabled]="store.isPending()" class="mt-2 h-11 w-full gap-2">
+          <span>{{ store.isPending() ? 'Signing in...' : 'Sign in' }}</span>
           <svg lucideArrowRight class="size-4"></svg>
         </button>
-
-        @if (store.submitted()) {
-          <p role="status" class="text-center text-xs text-primary">
-            Demo sign-in complete. Authentication can be connected next.
-          </p>
-        }
       </form>
 
       <div class="my-8 flex items-center gap-4">
