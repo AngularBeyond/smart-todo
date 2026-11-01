@@ -3,10 +3,7 @@
   "version": 1,
   "cli": {
     "packageManager": "pnpm",
-    "analytics": false,
-    "completion": {
-      "prompted": true
-    }
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
