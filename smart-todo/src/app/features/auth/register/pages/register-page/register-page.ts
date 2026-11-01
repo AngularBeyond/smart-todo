@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import {
   form,
   FormField,
-  submit,
   required,
   email as emailValidator,
   minLength,
@@ -71,28 +70,29 @@ export class RegisterPage {
 
   handleSubmit(event?: Event): void {
     event?.preventDefault();
-    void submit(this.registerForm, () => {
-      const val = this.registerModel();
-      let firstName = val.name.trim();
-      let lastName = val.lastName.trim();
-      if (!lastName) {
-        const parts = firstName.split(' ');
-        if (parts.length > 1) {
-          firstName = parts[0];
-          lastName = parts.slice(1).join(' ');
-        } else {
-          lastName = 'User';
-        }
+    if (this.registerForm().invalid()) {
+      this.registerForm().markAsTouched();
+      return;
+    }
+
+    const val = this.registerModel();
+    let firstName = val.name.trim();
+    let lastName = val.lastName.trim();
+    if (!lastName) {
+      const parts = firstName.split(' ');
+      if (parts.length > 1) {
+        firstName = parts[0];
+        lastName = parts.slice(1).join(' ');
+      } else {
+        lastName = 'User';
       }
+    }
 
-      this.store.register({
-        name: firstName,
-        lastName,
-        email: val.email.trim().toLowerCase(),
-        password: val.password,
-      });
-
-      return Promise.resolve();
+    this.store.register({
+      name: firstName,
+      lastName,
+      email: val.email.trim().toLowerCase(),
+      password: val.password,
     });
   }
 }

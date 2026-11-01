@@ -200,4 +200,32 @@ describe('RegisterPage with Signal Forms', () => {
     dismissBtn?.click();
     expect(storeMock.clearError).toHaveBeenCalled();
   });
+
+  it('should display primary asterisk suffix for required field labels', () => {
+    const nameLabel = element.querySelector('label[for="name"]');
+    const lastNameLabel = element.querySelector('label[for="lastName"]');
+    const emailLabel = element.querySelector('label[for="email"]');
+    const passwordLabel = element.querySelector('label[for="password"]');
+
+    expect(nameLabel?.querySelector('.text-primary')?.textContent?.trim()).toBe('*');
+    expect(lastNameLabel?.querySelector('.text-primary')).toBeNull();
+    expect(emailLabel?.querySelector('.text-primary')?.textContent?.trim()).toBe('*');
+    expect(passwordLabel?.querySelector('.text-primary')?.textContent?.trim()).toBe('*');
+  });
+
+  it('should disable submit button when form is invalid and enable when form is valid', async () => {
+    const submitBtn = element.querySelector<HTMLButtonElement>('button[type="submit"]');
+    expect(submitBtn?.disabled).toBe(true);
+
+    component.registerModel.set({
+      name: 'Jordan',
+      lastName: 'Davis',
+      email: 'jordan@example.com',
+      password: 'password123',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(submitBtn?.disabled).toBe(false);
+  });
 });
