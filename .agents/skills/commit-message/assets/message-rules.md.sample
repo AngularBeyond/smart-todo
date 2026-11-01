@@ -1,0 +1,106 @@
+# Commit Message Rules Configuration
+
+This file defines the project-specific rules and conventions for generating git commit messages.
+Copy this sample file to `message-rules.md` in this directory (or in your project's `.agents/skills/commit-message/assets/message-rules.md`) and customize the sections below.
+
+---
+
+## Active Configuration
+
+### 1. Format Pattern
+Define the structure of the single-line message.
+Choose one pattern or define your own:
+- **Plain Action**: `<Verb> <concise description of change>` (e.g., `Updating the angular skills`)
+- **Ticket + Plain**: `[<TICKET-ID>] <Verb> <concise description>` (e.g., `[PROJ-102] Refactor registration form`)
+- **Ticket + Conventional**: `<TICKET-ID>: <type>(<scope>): <description>` (e.g., `PROJ-102: feat(auth): add signal forms`)
+- **Standard Conventional**: `<type>(<scope>): <description>` (e.g., `feat(auth): add signal forms`)
+
+### 2. Ticket / Issue Prefix
+- **Enabled**: `false` | `true`
+- **Format**: `NONE` | `TICKET-123:` | `[TICKET-123]`
+- **Source**: Extract from current branch name (e.g., `feature/PROJ-123-login` -> `PROJ-123`) or prompt context.
+- **Rule**: If `false`, never include story IDs, ticket numbers, or epic codes in the commit title.
+
+### 3. Conventional Commit Prefix
+- **Enabled**: `false` | `true`
+- **Allowed Types**: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`, `perf`, `build`
+- **Scope**: `optional` | `forbidden` | `required`
+
+### 4. Verb Tense & Grammar
+- **Grammar Style**:
+  - `gerund`: Present participle verbs ending in `-ing` (e.g., `Refactoring`, `Updating`, `Fixing`, `Implementing`, `Aligning`, `Adding`)
+  - `imperative`: Base verb form (e.g., `Refactor`, `Update`, `Fix`, `Implement`, `Align`, `Add`)
+- **Capitalization**:
+  - `capitalize-first`: Capitalize the first letter of the message (e.g., `Refactoring the register page...`)
+  - `lowercase`: Keep the first letter lowercase (standard in conventional commits, e.g., `feat: update dependencies`)
+- **Punctuation**: Never end the single-line commit message with a period or semicolon.
+
+### 5. Constraints
+- **Line Count**: Exactly 1 line. No multi-line body, footer, or bullet points.
+- **Max Words**: 15 words maximum.
+- **Tone**: Concise, focusing on the *what* and *why*, not implementation minutiae or file paths (unless the file is the subject).
+- **Emojis**: Forbidden.
+
+---
+
+## Preset Configurations (Copy one into your message-rules.md)
+
+### Preset A: Plain Descriptive / Action-Oriented (No tickets, no types)
+```markdown
+# Rules
+- Prefix: None (No Jira/Story ID, no conventional commit type)
+- Verb Style: Gerund (-ing) or Imperative (e.g., "Refactoring", "Updating", "Implementing", "Fixing", "Adding")
+- Capitalization: Capitalize the first word
+- Constraints: 1 line, max 15 words, no trailing period, no emojis
+
+# Examples
+- Refactoring the register page to angular signal forms
+- Updating the angular skills
+- Fixing the trigger input validator error styles on blur and submit instead of load
+- Aligning button and input styles with design tokens to fix visual mismatch
+- Connect login and register forms to backend endpoints with state management
+- Implement signup feature page and registration state with Spartan UI
+- Adding change password, logout endpoints and 90-day inactivity purge cron
+```
+
+### Preset B: JIRA Ticket + Conventional Commits
+```markdown
+# Rules
+- Prefix: Required JIRA ticket followed by colon and conventional commit type (e.g., "PROJ-123: feat: ...")
+- Types: feat, fix, refactor, test, chore, docs, perf
+- Verb Style: Imperative mood ("add", "fix", "refactor")
+- Capitalization: Lowercase after type prefix
+- Constraints: 1 line, max 15 words, no trailing period, no emojis
+
+# Examples
+- PROJ-2041: feat: add user profile picture upload with S3 storage
+- PROJ-2042: fix: prevent duplicate token refresh on parallel 401 responses
+- PROJ-2045: refactor: extract mock repository into test utilities
+```
+
+### Preset C: JIRA Ticket + Plain Imperative
+```markdown
+# Rules
+- Prefix: Bracketed JIRA ticket (e.g., "[PROJ-123] ...")
+- Verb Style: Imperative mood, capitalized first word
+- Constraints: 1 line, max 15 words, no trailing period, no emojis
+
+# Examples
+- [PROJ-2041] Add user profile picture upload with S3 storage
+- [PROJ-2042] Fix duplicate token refresh on parallel 401 responses
+- [PROJ-2045] Refactor database connection pool initialization
+```
+
+### Preset D: Standard Conventional Commits (No ticket)
+```markdown
+# Rules
+- Prefix: Conventional commit type with optional scope (e.g., "feat(auth): ...")
+- Types: feat, fix, refactor, test, chore, docs, perf
+- Verb Style: Imperative mood, lowercase
+- Constraints: 1 line, max 15 words, no trailing period, no emojis
+
+# Examples
+- feat(auth): add refresh token rotation and session verification guard
+- fix(input): trigger validator errors on blur instead of initial load
+- refactor(store): migrate register page to angular signal forms
+```
