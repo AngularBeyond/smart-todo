@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   form,
@@ -15,7 +15,7 @@ import {
   LucideEye,
   LucideEyeOff,
   LucideArrowRight,
-  LucideAlertCircle,
+  LucideCircleAlert,
   LucideX,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -34,14 +34,13 @@ import { INITIAL_REGISTER_FEATURES } from '../../constants';
     LucideEye,
     LucideEyeOff,
     LucideArrowRight,
-    LucideAlertCircle,
+    LucideCircleAlert,
     LucideX,
     HlmButton,
     HlmInput,
     HlmAlertImports,
   ],
   providers: [RegisterStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './register-page.css',
   templateUrl: './register-page.html',
 })
@@ -72,7 +71,7 @@ export class RegisterPage {
 
   handleSubmit(event?: Event): void {
     event?.preventDefault();
-    submit(this.registerForm, async () => {
+    void submit(this.registerForm, () => {
       const val = this.registerModel();
       let firstName = val.name.trim();
       let lastName = val.lastName.trim();
@@ -92,6 +91,8 @@ export class RegisterPage {
         email: val.email.trim().toLowerCase(),
         password: val.password,
       });
+
+      return Promise.resolve();
     });
   }
 }
