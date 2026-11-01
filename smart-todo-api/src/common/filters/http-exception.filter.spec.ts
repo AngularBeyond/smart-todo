@@ -11,7 +11,7 @@ describe('GlobalHttpExceptionFilter', () => {
     const host: any = {
       switchToHttp: () => ({
         getResponse: () => ({ status: statusMock }),
-        getRequest: () => ({ url: '/v1/test-endpoint' }),
+        getRequest: () => ({ url: '/api/v1/test-endpoint' }),
       }),
     };
 
@@ -24,7 +24,7 @@ describe('GlobalHttpExceptionFilter', () => {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
         message: 'Bad Request',
-        path: '/v1/test-endpoint',
+        path: '/api/v1/test-endpoint',
       }),
     );
   });
@@ -37,7 +37,7 @@ describe('GlobalHttpExceptionFilter', () => {
     const host: any = {
       switchToHttp: () => ({
         getResponse: () => ({ status: statusMock }),
-        getRequest: () => ({ url: '/v1/crash' }),
+        getRequest: () => ({ url: '/api/v1/crash' }),
       }),
     };
 
@@ -50,7 +50,7 @@ describe('GlobalHttpExceptionFilter', () => {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Internal server error',
         errorCode: 'INTERNAL_SERVER_ERROR',
-        path: '/v1/crash',
+        path: '/api/v1/crash',
       }),
     );
   });

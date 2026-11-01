@@ -55,7 +55,7 @@ describe('authGuard', () => {
       allowed = res;
     });
 
-    expect(httpMock.get).toHaveBeenCalledWith('/v1/auth/authenticated');
+    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/auth/authenticated');
     expect(allowed).toBe(true);
     expect(dispatcher.dispatch).toHaveBeenCalled();
   });

@@ -55,7 +55,7 @@ export const LoginStore = signalStore(
         pipe(
           tap(() => patchState(store, setPending())),
           switchMap((credentials) =>
-            http.post<AuthSuccessPayload>('/v1/auth/login', credentials).pipe(
+            http.post<AuthSuccessPayload>('/api/v1/auth/login', credentials).pipe(
               tap({
                 next: (response) => {
                   patchState(store, setFulfilled());

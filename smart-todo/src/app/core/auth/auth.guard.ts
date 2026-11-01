@@ -16,7 +16,7 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  return http.get<{ success: boolean }>('/v1/auth/authenticated').pipe(
+  return http.get<{ success: boolean }>('/api/v1/auth/authenticated').pipe(
     map((res) => {
       if (res.success) {
         dispatcher.dispatch(userAuthenticated());

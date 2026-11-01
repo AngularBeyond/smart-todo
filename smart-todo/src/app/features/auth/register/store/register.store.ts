@@ -6,7 +6,6 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Dispatcher } from '@ngrx/signals/events';
 import { catchError, EMPTY, pipe, switchMap, tap } from 'rxjs';
 import {
-  ApiResponse,
   HTTP_ERROR_MESSAGES,
   HttpService,
   setError,
@@ -55,7 +54,7 @@ export const RegisterStore = signalStore(
         pipe(
           tap(() => patchState(store, setPending())),
           switchMap((request) =>
-            http.post<AuthSuccessPayload>('/v1/auth/register', request).pipe(
+            http.post<AuthSuccessPayload>('/api/v1/auth/register', request).pipe(
               tap({
                 next: (response) => {
                   patchState(store, setFulfilled());

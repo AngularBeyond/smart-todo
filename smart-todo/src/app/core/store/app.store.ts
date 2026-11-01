@@ -64,7 +64,7 @@ export const AppStore = signalStore(
       loadProfile$: events.on(userAuthenticated).pipe(
         tap(() => patchState(store, { isAuthenticated: true }, setPending())),
         switchMap(() =>
-          httpService.get<{ profile: UserProfile }>('/v1/profile').pipe(
+          httpService.get<{ profile: UserProfile }>('/api/v1/profile').pipe(
             tap({
               next: (res) => {
                 const profile = res.data.profile;
@@ -88,7 +88,7 @@ export const AppStore = signalStore(
       logout$: events.on(userLogout).pipe(
         tap(() => patchState(store, setPending())),
         switchMap(() =>
-          httpService.post<{ loggedOut: boolean }>('/v1/auth/logout', {}).pipe(
+          httpService.post<{ loggedOut: boolean }>('/api/v1/auth/logout', {}).pipe(
             tap({
               next: (res) => {
                 if (res.success) {
