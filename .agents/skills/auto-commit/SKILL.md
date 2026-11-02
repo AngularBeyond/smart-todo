@@ -1,11 +1,17 @@
 ---
 name: auto-commit
-description: Executes an automated, verified git commit workflow after completing a meaningful unit of work, story sub-phase, refactor, or bug fix. Verifies code quality via compilation and unit tests, stages intentional changes, generates a project-compliant commit message via the commit-message skill and assets/message-rules.md, and creates the commit. Use whenever the user requests an auto-commit or upon completing relevant development work. Do not use for broken, unverified, or in-progress changes that fail tests or compilation.
+description: Executes an automated, verified git commit workflow after completing a meaningful unit of work, story sub-phase, refactor, or bug fix. Verifies code quality via compilation and unit tests, stages intentional changes, generates a project-compliant commit message via the commit-message skill and assets/message-rules.md, and creates local commits without pushing. Use whenever the user requests an auto-commit or upon completing relevant development work. Do not use for broken, unverified, or in-progress changes that fail tests or compilation.
 ---
 
 # Auto-Commit Workflow
 
 Execute a verified, automated git commit sequence after completing any relevant unit of work.
+
+## Core Rules & Constraints
+
+> [!CRITICAL]
+> **NEVER PUSH COMMITS (`git push` IS STRICTLY FORBIDDEN)**:
+> All commits created by this workflow must remain strictly local. Under no circumstances should `git push` or pushing to any remote branch be executed. Only the user may push changes to remote.
 
 ## Procedure
 
@@ -43,6 +49,7 @@ Execute a verified, automated git commit sequence after completing any relevant 
    ```bash
    git log -n 1 --oneline
    ```
+3. **DO NOT PUSH**: Never run `git push`. Stop after creating the local commit.
 
 ### Step 5: Report Summary
 1. Display the commit hash and single-line message.
