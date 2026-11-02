@@ -13,6 +13,19 @@ Execute a verified, automated git commit sequence after completing any relevant 
 > **NEVER PUSH COMMITS (`git push` IS STRICTLY FORBIDDEN)**:
 > All commits created by this workflow must remain strictly local. Under no circumstances should `git push` or pushing to any remote branch be executed. Only the user may push changes to remote.
 
+## Defining "Relevant Work" & Commit Boundaries
+
+A unit of work that warrants an individual commit must satisfy the **Atomic Verifiable Slice** rule:
+
+1. **Single User Intent**: If a feature or story encompasses multiple user actions or distinct concerns (e.g., Profile Details vs. Change Password; List CRUD vs. List Reordering), EACH intent must be implemented and committed in its own sub-phase.
+2. **Cohesive Vertical Slice**: A commit should bundle the cohesive set of files for that single intent:
+   - Model / DTO contracts for the slice
+   - Feature store state and `rxMethod` pipelines
+   - Presentational component and template
+   - Dedicated unit tests verifying that slice
+3. **Zero Regressions & Clean Gate**: The codebase must compile cleanly (`tsc`) and unit tests must pass before each commit is recorded.
+4. **No Batched Multi-Feature Commits**: Never batch multiple independent features, forms, or sub-phases into a single commit.
+
 ## Procedure
 
 ### Step 1: Run Pre-Commit Verification Gate

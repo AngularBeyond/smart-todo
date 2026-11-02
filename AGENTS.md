@@ -1,13 +1,19 @@
 # AGENTS.md — Smart TODO Application (Phase 1)
 
-## 1. Execution Mode: Strict Sub-Phases & Frequent Git Commits/Pushes
+## 1. Execution Mode: Story Sub-Phase Decomposition & Frequent Local Commits
 CRITICAL INSTRUCTION FOR ANTIGRAVITY:
-- We are developing Phase 1 in **incremental sub-phases** (Story-by-Story or Epic sub-phases).
+- We are developing Phase 1 in **incremental sub-phases** (Units of Work).
 - **NEVER** attempt to implement the entire application or jump ahead to unrequested stories in a single run.
 - Only implement the specific Story ID(s) requested in the current prompt.
-- **Git Best Practices & Frequent Checkpoints:**
-  1. After completing each Story (or logical sub-phase), you MUST run all verification checks (`tsc`, `eslint`, unit tests).
-  2. Stop and report a summary of the completed Story, verification output before moving to the next sub-phase.
+- **Mandatory Story Sub-Phase Decomposition:**
+  - Before writing code for any Story containing multiple functional concerns, distinct user actions, or architectural layers, break down the Story into **2–4 atomic Sub-Phases (Units of Work)**.
+  - A sub-phase covers a single user intent (e.g., Sub-Phase 1: Profile Details & Theme Preference; Sub-Phase 2: Change Password).
+  - Each sub-phase must include its models, store methods, component UI, and unit tests.
+- **Git Best Practices & Checkpoint Gates:**
+  1. Complete Sub-Phase 1 &rarr; Run verification checks (`tsc`, unit tests) &rarr; Execute `/auto-commit` (local commit).
+  2. Complete Sub-Phase 2 &rarr; Run verification checks &rarr; Execute `/auto-commit` (local commit).
+  3. **NEVER run `git push`**: All commits must remain strictly local.
+  4. Report a summary with verification outputs and commit hashes after completing each unit.
 
 ## 2. Source of Truth Documentation
 Before planning or writing code for any task, read the relevant specification in `docs/`:
