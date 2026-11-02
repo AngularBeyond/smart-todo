@@ -5,6 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 export interface UserPayload {
   userId: string;
+  sub: string;
   email: string;
 }
 
@@ -24,6 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     return {
       userId: payload.sub,
+      sub: payload.sub,
       email: payload.email,
     };
   }
