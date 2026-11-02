@@ -27,6 +27,7 @@ import {
   profileSynced,
   themeChanged,
   apiErrorOccurred,
+  apiSuccessOccurred,
 } from './events';
 import { UserProfile } from '../models/user-profile.model';
 import { ThemeMode, ThemeService } from '../services/theme.service';
@@ -77,6 +78,14 @@ export const AppStore = signalStore(
       handleApiError$: events.on(apiErrorOccurred).pipe(
         tap((evt) => {
           toast.error(evt.payload.message || HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
+            position: 'top-center',
+          });
+        }),
+      ),
+
+      handleApiSuccess$: events.on(apiSuccessOccurred).pipe(
+        tap((evt) => {
+          toast.success(evt.payload.message, {
             position: 'top-center',
           });
         }),

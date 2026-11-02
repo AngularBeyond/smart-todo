@@ -7,10 +7,12 @@ import {
   AppStore,
   HTTP_ERROR_MESSAGES,
   HttpService,
+  apiSuccessOccurred,
   profileSynced,
   UserProfile,
 } from '@core';
 import { ProfileStore } from './profile.store';
+import { PROFILE_CONSTANTS } from '../constants';
 import {
   ChangePasswordResponseData,
   ProfileResponseData,
@@ -164,6 +166,9 @@ describe('ProfileStore', () => {
       expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
         profileSynced({ profile: updatedUser }),
       );
+      expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+        apiSuccessOccurred({ message: PROFILE_CONSTANTS.PROFILE_SAVED_SUCCESS }),
+      );
     });
 
     it('should capture error message on update failure and reset success flag', () => {
@@ -204,6 +209,9 @@ describe('ProfileStore', () => {
       expect(store.isFulfilled()).toBe(true);
       expect(store.error()).toBeNull();
       expect(appStoreMock.setAccessToken).toHaveBeenCalledWith('new-jwt-token');
+      expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+        apiSuccessOccurred({ message: PROFILE_CONSTANTS.PASSWORD_CHANGED_SUCCESS }),
+      );
     });
 
     it('should capture error message on change password failure', () => {

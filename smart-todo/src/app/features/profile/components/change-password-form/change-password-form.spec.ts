@@ -113,8 +113,5 @@ describe('ChangePasswordFormComponent', () => {
     inputs.forEach((input) => {
       expect(input.getAttribute('data-matches-spartan-invalid')).toBeNull();
     });
-
-    // 6. Verify success banner is visible
-    expect(element.textContent).toContain('Password updated');
   });
 });

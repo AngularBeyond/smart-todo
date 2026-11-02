@@ -9,29 +9,24 @@ import {
 } from '@angular/core';
 import { form, FormField, maxLength } from '@angular/forms/signals';
 import {
-  LucideCheck,
   LucideMail,
   LucideMoon,
   LucideSun,
   LucideUserRound,
-  LucideX,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { UserProfile } from '@core';
-import { PROFILE_CONSTANTS } from '../../constants';
 import { UpdateProfileRequest } from '../../models';
 
 @Component({
   selector: 'app-profile-form',
   imports: [
     FormField,
-    LucideCheck,
     LucideMail,
     LucideMoon,
     LucideSun,
     LucideUserRound,
-    LucideX,
     HlmButton,
     HlmInput,
   ],
@@ -49,8 +44,6 @@ export class ProfileFormComponent {
   readonly save = output<UpdateProfileRequest>();
   readonly themeChange = output<'light' | 'dark'>();
   readonly clearStatus = output<void>();
-
-  protected readonly successMessage = PROFILE_CONSTANTS.PROFILE_SAVED_SUCCESS;
 
   readonly model = signal<{
     name: string;

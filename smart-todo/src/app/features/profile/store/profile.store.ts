@@ -9,6 +9,7 @@ import {
   AppStore,
   HTTP_ERROR_MESSAGES,
   HttpService,
+  apiSuccessOccurred,
   profileSynced,
   setError,
   setFulfilled,
@@ -24,6 +25,7 @@ import {
   ProfileState,
   UpdateProfileRequest,
 } from '../models';
+import { PROFILE_CONSTANTS } from '../constants';
 
 const initialProfileState: ProfileState = {
   profile: null,
@@ -95,6 +97,9 @@ export const ProfileStore = signalStore(
                   const profile = res.data.profile;
                   patchState(store, { profile, profileSuccess: true }, setFulfilled());
                   dispatcher.dispatch(profileSynced({ profile }));
+                  dispatcher.dispatch(
+                    apiSuccessOccurred({ message: PROFILE_CONSTANTS.PROFILE_SAVED_SUCCESS }),
+                  );
                 },
                 error: (error: HttpErrorResponse) => {
                   const message =
@@ -120,6 +125,9 @@ export const ProfileStore = signalStore(
                   if (res.data?.accessToken) {
                     appStore.setAccessToken(res.data.accessToken);
                   }
+                  dispatcher.dispatch(
+                    apiSuccessOccurred({ message: PROFILE_CONSTANTS.PASSWORD_CHANGED_SUCCESS }),
+                  );
                 },
                 error: (error: HttpErrorResponse) => {
                   const message =
