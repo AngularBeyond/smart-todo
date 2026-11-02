@@ -24,7 +24,6 @@ describe('ProfileController', () => {
       name: 'Jane',
       lastName: 'Doe',
       email: 'jane@example.com',
-      preferredTheme: 'light',
       lastLoginAt: new Date('2026-01-01T00:00:00Z'),
       createdAt: new Date('2026-01-01T00:00:00Z'),
       updatedAt: new Date('2026-01-01T00:00:00Z'),
@@ -67,14 +66,12 @@ describe('ProfileController', () => {
       const dto: UpdateProfileDto = {
         name: 'Jane Updated',
         lastName: 'Doe Updated',
-        preferredTheme: 'dark',
       };
       const updatedResponse: ProfileResponse = {
         profile: {
           ...mockResponse.profile,
           name: dto.name ?? mockResponse.profile.name,
           lastName: dto.lastName ?? mockResponse.profile.lastName,
-          preferredTheme: dto.preferredTheme ?? mockResponse.profile.preferredTheme,
         },
       };
       serviceMock.updateProfile.mockResolvedValue(updatedResponse);

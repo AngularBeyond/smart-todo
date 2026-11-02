@@ -14,7 +14,6 @@ export interface UserResponse {
   name: string;
   lastName: string;
   email: string;
-  preferredTheme: string;
 }
 
 export interface AuthResult {
@@ -55,7 +54,6 @@ export class AuthService {
           lastName: dto.lastName,
           email: dto.email,
           passwordHash,
-          preferredTheme: 'light',
           lastLoginAt: new Date(),
         },
       });
@@ -132,7 +130,6 @@ export class AuthService {
         name: user.name,
         lastName: user.lastName,
         email: user.email,
-        preferredTheme: user.preferredTheme,
       },
     };
   }
@@ -182,7 +179,6 @@ export class AuthService {
         name: user.name,
         lastName: user.lastName,
         email: user.email,
-        preferredTheme: user.preferredTheme,
       },
     };
   }
