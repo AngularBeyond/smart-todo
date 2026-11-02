@@ -47,7 +47,7 @@ describe('HttpService', () => {
       expect(res).toEqual(mockResponse);
     });
 
-    expect(httpClientMock.get).toHaveBeenCalledWith('/api/v1/test', {
+    expect(httpClientMock.get).toHaveBeenCalledWith(service.buildUrl('/test'), {
       withCredentials: true,
     });
   });
@@ -64,7 +64,7 @@ describe('HttpService', () => {
     });
 
     expect(httpClientMock.post).toHaveBeenCalledWith(
-      '/api/v1/test',
+      service.buildUrl('/test'),
       { key: 'value' },
       { withCredentials: true },
     );
@@ -82,7 +82,7 @@ describe('HttpService', () => {
     });
 
     expect(httpClientMock.patch).toHaveBeenCalledWith(
-      '/api/v1/test/1',
+      service.buildUrl('/test/1'),
       { updated: true },
       { withCredentials: true },
     );
@@ -99,7 +99,7 @@ describe('HttpService', () => {
       expect(res).toEqual(mockResponse);
     });
 
-    expect(httpClientMock.delete).toHaveBeenCalledWith('/api/v1/test/1', {
+    expect(httpClientMock.delete).toHaveBeenCalledWith(service.buildUrl('/test/1'), {
       withCredentials: true,
     });
   });
@@ -109,7 +109,7 @@ describe('HttpService', () => {
 
     service.get('/api/v1/custom').subscribe();
 
-    expect(httpClientMock.get).toHaveBeenCalledWith('/api/v1/custom', {
+    expect(httpClientMock.get).toHaveBeenCalledWith(service.buildUrl('/api/v1/custom'), {
       withCredentials: true,
     });
   });

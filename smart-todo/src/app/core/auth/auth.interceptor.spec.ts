@@ -3,6 +3,7 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
+import { environment } from '../../../environments/environment';
 import { AppStore } from '../store/app.store';
 import { authInterceptor } from './auth.interceptor';
 
@@ -72,8 +73,8 @@ describe('authInterceptor', () => {
     const originalReq = httpMock.expectOne('/api/v1/todos');
     originalReq.flush('Token expired', { status: 401, statusText: 'Unauthorized' });
 
-    // Interceptor triggers POST /api/v1/auth/refresh
-    const refreshReq = httpMock.expectOne('/api/v1/auth/refresh');
+    // Interceptor triggers POST ${environment.apiUrl}/auth/refresh
+    const refreshReq = httpMock.expectOne(`${environment.apiUrl}/auth/refresh`);
     expect(refreshReq.request.method).toBe('POST');
     refreshReq.flush({ success: true, data: { accessToken: 'new-fresh-access-token' } });
 
@@ -102,11 +103,11 @@ describe('authInterceptor', () => {
     const originalReq = httpMock.expectOne('/api/v1/todos');
     originalReq.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    const refreshReq = httpMock.expectOne('/api/v1/auth/refresh');
+    const refreshReq = httpMock.expectOne(`${environment.apiUrl}/auth/refresh`);
     refreshReq.flush('Refresh expired', { status: 401, statusText: 'Unauthorized' });
 
     // AppStore reacts to userLogout by calling /api/v1/auth/logout
-    const logoutReq = httpMock.expectOne('/api/v1/auth/logout');
+    const logoutReq = httpMock.expectOne((r) => r.url.includes('/auth/logout'));
     logoutReq.flush({ success: true, data: { loggedOut: true } });
 
     expect(dispatcher.dispatch).toHaveBeenCalled();

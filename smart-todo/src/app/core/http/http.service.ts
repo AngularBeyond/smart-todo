@@ -19,13 +19,22 @@ export class HttpService {
   private readonly http = inject(HttpClient);
   readonly apiUrl = environment.apiUrl;
 
-  private buildUrl(url: string): string {
+  buildUrl(url: string): string {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     const base = (this.apiUrl ?? '').replace(/\/+$/, '');
     if (!base || url.startsWith(base)) {
       return url;
+    }
+    try {
+      const basePath = base.startsWith('http') ? new URL(base).pathname : base;
+      if (basePath && (url === basePath || url.startsWith(`${basePath}/`))) {
+        const origin = base.startsWith('http') ? new URL(base).origin : '';
+        return `${origin}${url}`;
+      }
+    } catch {
+      // ignore parsing error
     }
     const cleanPath = url.startsWith('/') ? url : `/${url}`;
     return `${base}${cleanPath}`;
