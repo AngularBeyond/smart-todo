@@ -59,4 +59,12 @@ describe('Sidebar', () => {
     component.logout();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(userLogout());
   });
+
+  it('should have label associated with new-list-input', () => {
+    const label = element.querySelector<HTMLLabelElement>('label[for="new-list-input"]');
+    const input = element.querySelector<HTMLInputElement>('#new-list-input');
+    expect(label).toBeTruthy();
+    expect(input).toBeTruthy();
+    expect(label?.textContent?.trim()).toBe('New list');
+  });
 });

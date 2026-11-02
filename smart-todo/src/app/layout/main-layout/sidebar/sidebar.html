@@ -63,11 +63,12 @@
 
   <div class="mt-8 border-t border-sidebar-border pt-4">
     <div class="flex items-center justify-between text-xs text-muted-foreground">
-      <span>New list</span>
+      <label for="new-list-input">New list</label>
       <span>{{ lists().length }}/3 used</span>
     </div>
     <div class="mt-2 flex gap-2">
       <input
+        id="new-list-input"
         #newListInput
         hlmInput
         [ngModel]="newList()"
@@ -83,6 +84,7 @@
         class="size-9 shrink-0"
         (click)="createList()"
         [disabled]="lists().length >= 3 || !newList().trim()"
+        aria-label="Create list"
       >
         <svg lucidePlus class="size-4"></svg>
       </button>
