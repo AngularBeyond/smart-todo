@@ -97,7 +97,6 @@ describe('AppController (e2e)', () => {
             name: 'Onboarding',
             lastName: 'Tester',
             email: uniqueEmail,
-            preferredTheme: 'light',
           },
         },
       });

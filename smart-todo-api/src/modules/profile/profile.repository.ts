@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Theme } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 export interface UserProfileData {
@@ -7,7 +6,6 @@ export interface UserProfileData {
   name: string;
   lastName: string;
   email: string;
-  preferredTheme: Theme;
   lastLoginAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -25,7 +23,6 @@ export class ProfileRepository {
         name: true,
         lastName: true,
         email: true,
-        preferredTheme: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
@@ -35,7 +32,7 @@ export class ProfileRepository {
 
   async update(
     id: string,
-    data: { name?: string; lastName?: string; preferredTheme?: Theme },
+    data: { name?: string; lastName?: string },
   ): Promise<UserProfileData> {
     return this.prisma.user.update({
       where: { id },
@@ -45,7 +42,6 @@ export class ProfileRepository {
         name: true,
         lastName: true,
         email: true,
-        preferredTheme: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,

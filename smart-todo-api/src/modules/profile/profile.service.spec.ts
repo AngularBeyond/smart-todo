@@ -17,7 +17,6 @@ describe('ProfileService', () => {
     name: 'Jane',
     lastName: 'Doe',
     email: 'jane@example.com',
-    preferredTheme: 'light',
     lastLoginAt: new Date('2026-01-01T00:00:00Z'),
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-01T00:00:00Z'),
@@ -81,14 +80,12 @@ describe('ProfileService', () => {
         ...mockUserProfile,
         name: 'John',
         lastName: 'Smith',
-        preferredTheme: 'dark',
       };
       repositoryMock.update.mockResolvedValue(updatedProfile);
 
       const dto: UpdateProfileDto = {
         name: 'John',
         lastName: 'Smith',
-        preferredTheme: 'dark',
       };
 
       const result = await service.updateProfile('user-123', dto);
@@ -97,7 +94,6 @@ describe('ProfileService', () => {
       expect(repositoryMock.update).toHaveBeenCalledWith('user-123', {
         name: 'John',
         lastName: 'Smith',
-        preferredTheme: 'dark',
       });
       expect(result).toEqual({ profile: updatedProfile });
     });
@@ -106,18 +102,18 @@ describe('ProfileService', () => {
       repositoryMock.findById.mockResolvedValue(mockUserProfile);
       const updatedProfile: UserProfileData = {
         ...mockUserProfile,
-        preferredTheme: 'dark',
+        name: 'John',
       };
       repositoryMock.update.mockResolvedValue(updatedProfile);
 
       const dto: UpdateProfileDto = {
-        preferredTheme: 'dark',
+        name: 'John',
       };
 
       const result = await service.updateProfile('user-123', dto);
 
       expect(repositoryMock.update).toHaveBeenCalledWith('user-123', {
-        preferredTheme: 'dark',
+        name: 'John',
       });
       expect(result).toEqual({ profile: updatedProfile });
     });

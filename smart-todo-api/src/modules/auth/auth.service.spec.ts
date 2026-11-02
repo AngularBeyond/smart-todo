@@ -71,7 +71,6 @@ describe('AuthService', () => {
       name: 'Jane',
       lastName: 'Doe',
       email: 'jane@example.com',
-      preferredTheme: 'light',
     };
 
     prismaMock.$transaction.mockImplementation(async (callback: any) => {
@@ -127,7 +126,6 @@ describe('AuthService', () => {
         lastName: 'Doe',
         email: 'jane@example.com',
         passwordHash: mockPasswordHash,
-        preferredTheme: 'light',
       };
       prismaMock.user.findUnique.mockResolvedValue(mockUser);
       prismaMock.$transaction.mockImplementation(async (callback: any) => {
