@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -7,9 +7,12 @@ import {
   LucideArchive,
   LucideListPlus,
   LucidePlus,
-  LucideTag,
+  LucideUser,
   LucideSettings2,
+  LucideLogOut,
 } from '@lucide/angular';
+import { Dispatcher } from '@ngrx/signals/events';
+import { userLogout } from '@core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -33,18 +36,20 @@ export interface SidebarList {
     LucideArchive,
     LucideListPlus,
     LucidePlus,
-    LucideTag,
+    LucideUser,
     LucideSettings2,
+    LucideLogOut,
     HlmButton,
     HlmBadge,
     HlmInput,
     HlmSeparator,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './sidebar.css',
   templateUrl: './sidebar.html',
 })
 export class Sidebar {
+  private readonly dispatcher = inject(Dispatcher);
+
   readonly activeList = signal('My Tasks');
   readonly newList = signal('');
   readonly lists = signal<SidebarList[]>([
@@ -65,5 +70,9 @@ export class Sidebar {
       { name, count: 0, starred: false, color: 'bg-chart-5' },
     ]);
     this.newList.set('');
+  }
+
+  logout(): void {
+    this.dispatcher.dispatch(userLogout());
   }
 }
