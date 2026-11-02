@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -7,7 +7,7 @@ import {
   LucideEye,
   LucideEyeOff,
   LucideArrowRight,
-  LucideAlertCircle,
+  LucideCircleAlert,
   LucideX,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -25,14 +25,13 @@ import { LoginStore } from '../../store/login.store';
     LucideEye,
     LucideEyeOff,
     LucideArrowRight,
-    LucideAlertCircle,
+    LucideCircleAlert,
     LucideX,
     HlmButton,
     HlmInput,
     HlmAlertImports,
   ],
   providers: [LoginStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './login-page.css',
   templateUrl: './login-page.html',
 })
