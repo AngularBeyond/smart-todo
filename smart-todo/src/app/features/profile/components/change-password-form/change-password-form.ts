@@ -5,6 +5,7 @@ import {
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { form, FormField, minLength, required } from '@angular/forms/signals';
 import {
@@ -76,12 +77,15 @@ export class ChangePasswordFormComponent {
   constructor() {
     effect(() => {
       if (this.success()) {
-        this.model.set({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
+        untracked(() => {
+          this.model.set({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+          });
+          this.passwordForm().reset();
+          this.mismatchError.set(null);
         });
-        this.mismatchError.set(null);
       }
     });
   }
