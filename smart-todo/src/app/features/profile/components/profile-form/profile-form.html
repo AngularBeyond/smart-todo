@@ -105,11 +105,11 @@
           type="button"
           (click)="setTheme('light')"
           class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors"
-          [class.border-primary]="model().preferredTheme === 'light'"
-          [class.bg-primary/10]="model().preferredTheme === 'light'"
-          [class.text-primary]="model().preferredTheme === 'light'"
-          [class.border-border]="model().preferredTheme !== 'light'"
-          [class.text-muted-foreground]="model().preferredTheme !== 'light'"
+          [class.border-primary]="currentTheme() === 'light'"
+          [class.bg-primary/10]="currentTheme() === 'light'"
+          [class.text-primary]="currentTheme() === 'light'"
+          [class.border-border]="currentTheme() !== 'light'"
+          [class.text-muted-foreground]="currentTheme() !== 'light'"
         >
           <svg lucideSun class="size-4"></svg> Light
         </button>
@@ -117,11 +117,11 @@
           type="button"
           (click)="setTheme('dark')"
           class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors"
-          [class.border-primary]="model().preferredTheme === 'dark'"
-          [class.bg-primary/10]="model().preferredTheme === 'dark'"
-          [class.text-primary]="model().preferredTheme === 'dark'"
-          [class.border-border]="model().preferredTheme !== 'dark'"
-          [class.text-muted-foreground]="model().preferredTheme !== 'dark'"
+          [class.border-primary]="currentTheme() === 'dark'"
+          [class.bg-primary/10]="currentTheme() === 'dark'"
+          [class.text-primary]="currentTheme() === 'dark'"
+          [class.border-border]="currentTheme() !== 'dark'"
+          [class.text-muted-foreground]="currentTheme() !== 'dark'"
         >
           <svg lucideMoon class="size-4"></svg> Dark
         </button>

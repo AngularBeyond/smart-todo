@@ -59,11 +59,9 @@ export class ProfileFormComponent {
   readonly model = signal<{
     name: string;
     lastName: string;
-    preferredTheme: 'light' | 'dark';
   }>({
     name: '',
     lastName: '',
-    preferredTheme: 'light',
   });
 
   readonly profileForm = form(this.model, (schemaPath) => {
@@ -74,12 +72,10 @@ export class ProfileFormComponent {
   constructor() {
     effect(() => {
       const p = this.profile();
-      const theme = this.currentTheme();
       untracked(() => {
         this.model.update((current) => ({
           name: p?.name ?? current.name,
           lastName: p?.lastName ?? current.lastName,
-          preferredTheme: theme ?? p?.preferredTheme ?? current.preferredTheme,
         }));
         this.profileForm().reset();
       });
@@ -87,7 +83,6 @@ export class ProfileFormComponent {
   }
 
   setTheme(theme: 'light' | 'dark'): void {
-    this.model.update((current) => ({ ...current, preferredTheme: theme }));
     this.themeChange.emit(theme);
   }
 
@@ -102,7 +97,6 @@ export class ProfileFormComponent {
     this.save.emit({
       name: val.name.trim(),
       lastName: val.lastName.trim(),
-      preferredTheme: val.preferredTheme,
     });
   }
 }

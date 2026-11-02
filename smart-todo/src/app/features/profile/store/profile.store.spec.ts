@@ -35,7 +35,6 @@ describe('ProfileStore', () => {
     name: 'Jordan',
     lastName: 'Davis',
     email: 'jordan@example.com',
-    preferredTheme: 'dark',
   };
 
   const mockProfileResponse: ApiResponse<ProfileResponseData> = {
@@ -80,19 +79,17 @@ describe('ProfileStore', () => {
       expect(store.fullName()).toBe('');
       expect(store.initials()).toBe('U');
       expect(store.email()).toBe('');
-      expect(store.preferredTheme()).toBe('light');
     });
   });
 
   describe('Computed Signals & setProfile', () => {
-    it('should compute fullName, initials, email, and preferredTheme accurately', () => {
+    it('should compute fullName, initials, and email accurately', () => {
       store.setProfile(mockUserProfile);
 
       expect(store.profile()).toEqual(mockUserProfile);
       expect(store.fullName()).toBe('Jordan Davis');
       expect(store.initials()).toBe('JD');
       expect(store.email()).toBe('jordan@example.com');
-      expect(store.preferredTheme()).toBe('dark');
     });
 
     it('should fallback initials to email initial when names are absent', () => {
@@ -101,7 +98,6 @@ describe('ProfileStore', () => {
         name: '',
         lastName: '',
         email: 'alex@example.com',
-        preferredTheme: 'light',
       });
 
       expect(store.fullName()).toBe('alex@example.com');
@@ -144,7 +140,6 @@ describe('ProfileStore', () => {
       const updatedUser: UserProfile = {
         ...mockUserProfile,
         name: 'Jordan Updated',
-        preferredTheme: 'light',
       };
       const response: ApiResponse<ProfileResponseData> = {
         success: true,
@@ -154,7 +149,6 @@ describe('ProfileStore', () => {
 
       const request: UpdateProfileRequest = {
         name: 'Jordan Updated',
-        preferredTheme: 'light',
       };
 
       store.updateProfile(request);

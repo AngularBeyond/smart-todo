@@ -3,7 +3,6 @@ export interface UserProfile {
   name: string;
   lastName: string;
   email: string;
-  preferredTheme: 'light' | 'dark';
   lastLoginAt?: string | null;
   createdAt?: string;
   updatedAt?: string;

@@ -25,7 +25,6 @@ class TestHostComponent {
     name: 'John',
     lastName: 'Smith',
     email: 'john@example.com',
-    preferredTheme: 'light',
   });
   readonly currentTheme = signal<'light' | 'dark'>('light');
   readonly isLoading = signal(false);
@@ -122,7 +121,6 @@ describe('ProfileFormComponent', () => {
     expect(host.lastSavePayload).toEqual({
       name: 'Johnny',
       lastName: 'Smith',
-      preferredTheme: 'light',
     });
   });
 });
