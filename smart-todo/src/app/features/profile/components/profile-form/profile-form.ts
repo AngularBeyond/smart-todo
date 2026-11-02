@@ -10,7 +10,6 @@ import {
 import { form, FormField, maxLength } from '@angular/forms/signals';
 import {
   LucideCheck,
-  LucideCircleAlert,
   LucideMail,
   LucideMoon,
   LucideSun,
@@ -19,7 +18,6 @@ import {
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmAlertImports } from '@spartan-ng/helm/alert';
 import { UserProfile } from '@core';
 import { PROFILE_CONSTANTS } from '../../constants';
 import { UpdateProfileRequest } from '../../models';
@@ -29,7 +27,6 @@ import { UpdateProfileRequest } from '../../models';
   imports: [
     FormField,
     LucideCheck,
-    LucideCircleAlert,
     LucideMail,
     LucideMoon,
     LucideSun,
@@ -37,7 +34,6 @@ import { UpdateProfileRequest } from '../../models';
     LucideX,
     HlmButton,
     HlmInput,
-    HlmAlertImports,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './profile-form.css',

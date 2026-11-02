@@ -81,12 +81,16 @@ function createNormalizedError(error: HttpErrorResponse, message: string): HttpE
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const dispatcher = inject(Dispatcher);
+  const isAuthFormRequest =
+    req.url.includes('/auth/login') || req.url.includes('/auth/register');
 
   return next(req).pipe(
     catchError((error: unknown) => {
       if (!(error instanceof HttpErrorResponse)) {
         const fallbackMsg = HTTP_ERROR_MESSAGES.NETWORK_ERROR;
-        dispatcher.dispatch(apiErrorOccurred({ message: fallbackMsg }));
+        if (!isAuthFormRequest) {
+          dispatcher.dispatch(apiErrorOccurred({ message: fallbackMsg }));
+        }
         return throwError(
           () =>
             new HttpErrorResponse({
@@ -101,9 +105,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       if (error.status === 401) {
         handleUnauthorized(req.url, dispatcher);
+        return throwError(() => createNormalizedError(error, message));
       }
 
-      dispatcher.dispatch(apiErrorOccurred({ message }));
+      if (!isAuthFormRequest) {
+        dispatcher.dispatch(apiErrorOccurred({ message }));
+      }
       return throwError(() => createNormalizedError(error, message));
     }),
   );
