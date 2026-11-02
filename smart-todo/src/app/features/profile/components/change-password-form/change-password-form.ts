@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { form, FormField, minLength, required } from '@angular/forms/signals';
 import {
-  LucideCheck,
   LucideCircleAlert,
   LucideEye,
   LucideEyeOff,
@@ -20,14 +19,12 @@ import {
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmAlertImports } from '@spartan-ng/helm/alert';
-import { PROFILE_CONSTANTS } from '../../constants';
 import { ChangePasswordRequest } from '../../models';
 
 @Component({
   selector: 'app-change-password-form',
   imports: [
     FormField,
-    LucideCheck,
     LucideCircleAlert,
     LucideEye,
     LucideEyeOff,
@@ -49,8 +46,6 @@ export class ChangePasswordFormComponent {
 
   readonly changePassword = output<ChangePasswordRequest>();
   readonly clearStatus = output<void>();
-
-  protected readonly successMessage = PROFILE_CONSTANTS.PASSWORD_CHANGED_SUCCESS;
 
   readonly showCurrent = signal<boolean>(false);
   readonly showNew = signal<boolean>(false);

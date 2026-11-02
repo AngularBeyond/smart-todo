@@ -6,13 +6,21 @@ import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { toast } from '@spartan-ng/brain/sonner';
 import { HTTP_ERROR_MESSAGES, HttpService } from '@core';
 import { AppStore } from './app.store';
-import { apiErrorOccurred, profileSynced, themeChanged, userAuthenticated, userLogout } from './events';
+import {
+  apiErrorOccurred,
+  apiSuccessOccurred,
+  profileSynced,
+  themeChanged,
+  userAuthenticated,
+  userLogout,
+} from './events';
 import { ApiResponse } from '../http/api-response.model';
 import { UserProfile } from '../models/user-profile.model';
 
 vi.mock('@spartan-ng/brain/sonner', () => ({
   toast: {
     error: vi.fn(),
+    success: vi.fn(),
   },
 }));
 
@@ -182,6 +190,15 @@ describe('AppStore', () => {
     it('should fallback to UNKNOWN_ERROR if message is empty', () => {
       dispatcher.dispatch(apiErrorOccurred({ message: '' }));
       expect(toast.error).toHaveBeenCalledWith(HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
+        position: 'top-center',
+      });
+    });
+  });
+
+  describe('apiSuccessOccurred Event', () => {
+    it('should display a success toast when apiSuccessOccurred event is dispatched', () => {
+      dispatcher.dispatch(apiSuccessOccurred({ message: 'Profile updated successfully' }));
+      expect(toast.success).toHaveBeenCalledWith('Profile updated successfully', {
         position: 'top-center',
       });
     });
