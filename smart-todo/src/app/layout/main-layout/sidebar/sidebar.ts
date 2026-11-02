@@ -44,6 +44,9 @@ export interface SidebarList {
     HlmInput,
     HlmSeparator,
   ],
+  host: {
+    class: 'flex shrink-0',
+  },
   styleUrl: './sidebar.css',
   templateUrl: './sidebar.html',
 })
