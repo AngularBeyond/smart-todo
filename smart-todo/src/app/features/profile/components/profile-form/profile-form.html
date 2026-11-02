@@ -1,0 +1,143 @@
+<section class="border border-border bg-card p-6">
+  <div class="mb-6 flex items-center gap-3">
+    <span class="flex size-9 items-center justify-center bg-primary/10 text-primary">
+      <svg lucideUserRound class="size-4"></svg>
+    </span>
+    <div>
+      <h2 class="font-semibold">Personal details</h2>
+      <p class="text-sm text-muted-foreground">How your name and appearance appear across Smart Todo.</p>
+    </div>
+  </div>
+
+  @if (error(); as errorMessage) {
+    <div hlmAlert variant="destructive" class="mb-5 flex items-start gap-3">
+      <svg lucideCircleAlert class="size-4 shrink-0 mt-0.5 text-destructive"></svg>
+      <div class="flex-1">
+        <h4 hlmAlertTitle>Unable to save profile</h4>
+        <p hlmAlertDescription>{{ errorMessage }}</p>
+      </div>
+      <button
+        type="button"
+        (click)="clearStatus.emit()"
+        aria-label="Dismiss error"
+        class="text-muted-foreground hover:text-foreground"
+      >
+        <svg lucideX class="size-4"></svg>
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div class="mb-5 flex items-start gap-3 rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 text-sm text-foreground">
+      <svg lucideCheck class="size-4 shrink-0 mt-0.5 text-primary"></svg>
+      <div class="flex-1">
+        <h4 class="font-medium text-foreground">Changes saved</h4>
+        <p class="text-xs text-muted-foreground">{{ successMessage }}</p>
+      </div>
+      <button
+        type="button"
+        (click)="clearStatus.emit()"
+        aria-label="Dismiss message"
+        class="text-muted-foreground hover:text-foreground"
+      >
+        <svg lucideX class="size-4"></svg>
+      </button>
+    </div>
+  }
+
+  <form (submit)="handleSubmit($event)" class="flex flex-col gap-5">
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-2">
+        <label for="profile-name" class="text-xs font-medium">First name</label>
+        <input
+          id="profile-name"
+          type="text"
+          [formField]="profileForm.name"
+          placeholder="Jordan"
+          autocomplete="given-name"
+          hlmInput
+          class="h-10"
+        />
+        @if (profileForm.name().touched() && profileForm.name().errors().length > 0) {
+          <p class="text-xs text-destructive">{{ profileForm.name().errors()[0].message }}</p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="profile-lastName" class="text-xs font-medium">Last name</label>
+        <input
+          id="profile-lastName"
+          type="text"
+          [formField]="profileForm.lastName"
+          placeholder="Davis"
+          autocomplete="family-name"
+          hlmInput
+          class="h-10"
+        />
+        @if (profileForm.lastName().touched() && profileForm.lastName().errors().length > 0) {
+          <p class="text-xs text-destructive">{{ profileForm.lastName().errors()[0].message }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="profile-email" class="text-xs font-medium">Email address</label>
+      <div class="relative">
+        <svg lucideMail class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"></svg>
+        <input
+          id="profile-email"
+          type="email"
+          [value]="profile()?.email ?? ''"
+          readonly
+          disabled
+          hlmInput
+          class="h-10 pl-9 opacity-70 cursor-not-allowed bg-muted/30"
+        />
+      </div>
+      <p class="text-[11px] text-muted-foreground">Email address is managed by your account and cannot be modified directly.</p>
+    </div>
+
+    <!-- Theme Preference Selector -->
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-medium">Preferred theme</span>
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          (click)="setTheme('light')"
+          class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors"
+          [class.border-primary]="model().preferredTheme === 'light'"
+          [class.bg-primary/10]="model().preferredTheme === 'light'"
+          [class.text-primary]="model().preferredTheme === 'light'"
+          [class.border-border]="model().preferredTheme !== 'light'"
+          [class.text-muted-foreground]="model().preferredTheme !== 'light'"
+        >
+          <svg lucideSun class="size-4"></svg> Light
+        </button>
+        <button
+          type="button"
+          (click)="setTheme('dark')"
+          class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors"
+          [class.border-primary]="model().preferredTheme === 'dark'"
+          [class.bg-primary/10]="model().preferredTheme === 'dark'"
+          [class.text-primary]="model().preferredTheme === 'dark'"
+          [class.border-border]="model().preferredTheme !== 'dark'"
+          [class.text-muted-foreground]="model().preferredTheme !== 'dark'"
+        >
+          <svg lucideMoon class="size-4"></svg> Dark
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-2">
+      <button
+        hlmBtn
+        type="submit"
+        [disabled]="isLoading() || profileForm().invalid()"
+        class="gap-2"
+      >
+        <svg lucideCheck class="size-4"></svg>
+        {{ isLoading() ? 'Saving...' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</section>

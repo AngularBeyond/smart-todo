@@ -2,7 +2,7 @@ import { computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
-import { Events, withEventHandlers } from '@ngrx/signals/events';
+import { Dispatcher, Events, withEventHandlers } from '@ngrx/signals/events';
 import { catchError, EMPTY, switchMap, tap } from 'rxjs';
 import {
   HTTP_ERROR_MESSAGES,
@@ -123,11 +123,31 @@ export const AppStore = signalStore(
           themeService.applyTheme(payload.mode);
           patchState(store, { theme: payload.mode });
         }),
+        switchMap(({ payload }) => {
+          if (store.isAuthenticated()) {
+            return httpService
+              .patch<{ profile: UserProfile }>('/api/v1/profile', {
+                preferredTheme: payload.mode,
+              })
+              .pipe(
+                tap({
+                  next: (res) => {
+                    if (res?.data?.profile) {
+                      patchState(store, { profile: res.data.profile });
+                    }
+                  },
+                }),
+                catchError(() => EMPTY),
+              );
+          }
+          return EMPTY;
+        }),
       ),
     };
   }),
   withMethods((store) => {
     const themeService = inject(ThemeService);
+    const dispatcher = inject(Dispatcher);
 
     return {
       setAccessToken(accessToken: string | null): void {
@@ -137,13 +157,11 @@ export const AppStore = signalStore(
         patchState(store, { isAuthenticated });
       },
       setTheme(theme: ThemeMode): void {
-        themeService.applyTheme(theme);
-        patchState(store, { theme });
+        dispatcher.dispatch(themeChanged({ mode: theme }));
       },
       toggleTheme(): void {
         const nextTheme: ThemeMode = store.theme() === 'dark' ? 'light' : 'dark';
-        themeService.applyTheme(nextTheme);
-        patchState(store, { theme: nextTheme });
+        dispatcher.dispatch(themeChanged({ mode: nextTheme }));
       },
       clear(): void {
         patchState(store, initialAppState, setIdle());

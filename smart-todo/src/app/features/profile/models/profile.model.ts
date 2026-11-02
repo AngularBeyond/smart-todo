@@ -1,6 +1,26 @@
-export interface ProfileData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  workspaceName: string;
+import { UserProfile } from '@core';
+
+export interface UpdateProfileRequest {
+  name?: string;
+  lastName?: string;
+  preferredTheme?: 'light' | 'dark';
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ProfileResponseData {
+  profile: UserProfile;
+}
+
+export interface ChangePasswordResponseData {
+  accessToken: string;
+}
+
+export interface ProfileState {
+  profile: UserProfile | null;
+  profileSuccess: boolean;
+  passwordSuccess: boolean;
 }

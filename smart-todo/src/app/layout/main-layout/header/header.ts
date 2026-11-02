@@ -6,7 +6,8 @@ import {
   LucideSun,
   LucideBell,
 } from '@lucide/angular';
-import { AppStore } from '@core';
+import { AppStore, themeChanged } from '@core';
+import { Dispatcher } from '@ngrx/signals/events';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 
@@ -26,5 +27,11 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
   templateUrl: './header.html',
 })
 export class Header {
+  private readonly dispatcher = inject(Dispatcher);
   protected readonly appStore = inject(AppStore);
+
+  toggleTheme(): void {
+    const nextMode = this.appStore.theme() === 'dark' ? 'light' : 'dark';
+    this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
+  }
 }

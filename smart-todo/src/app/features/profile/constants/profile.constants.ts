@@ -1,8 +1,6 @@
-import { ProfileData } from '../models';
-
-export const DEFAULT_PROFILE: ProfileData = {
-  firstName: 'Jordan',
-  lastName: 'Davis',
-  email: 'jordan.davis@example.com',
-  workspaceName: 'Personal workspace',
-};
+export const PROFILE_CONSTANTS = {
+  TITLE: 'Profile',
+  SUBTITLE: 'Keep your space personal and focused.',
+  PASSWORD_CHANGED_SUCCESS: 'Password updated successfully.',
+  PROFILE_SAVED_SUCCESS: 'Profile updated successfully.',
+} as const;

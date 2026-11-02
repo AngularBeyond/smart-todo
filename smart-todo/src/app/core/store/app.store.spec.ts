@@ -14,6 +14,7 @@ describe('AppStore', () => {
   let httpMock: {
     get: ReturnType<typeof vi.fn>;
     post: ReturnType<typeof vi.fn>;
+    patch: ReturnType<typeof vi.fn>;
   };
   let dispatcher: Dispatcher;
   let router: Router;
@@ -35,6 +36,7 @@ describe('AppStore', () => {
     httpMock = {
       get: vi.fn(),
       post: vi.fn(),
+      patch: vi.fn().mockReturnValue(of({ success: true, data: { profile: mockProfile } })),
     };
     vi.clearAllMocks();
 
@@ -162,6 +164,19 @@ describe('AppStore', () => {
       expect(store.theme()).toBe('dark');
 
       dispatcher.dispatch(themeChanged({ mode: 'light' }));
+      expect(store.theme()).toBe('light');
+    });
+
+    it('should persist theme change to API when authenticated', () => {
+      httpMock.get.mockReturnValue(of(mockProfileResponse));
+      dispatcher.dispatch(userAuthenticated());
+      expect(store.isAuthenticated()).toBe(true);
+
+      dispatcher.dispatch(themeChanged({ mode: 'light' }));
+
+      expect(httpMock.patch).toHaveBeenCalledWith('/api/v1/profile', {
+        preferredTheme: 'light',
+      });
       expect(store.theme()).toBe('light');
     });
   });

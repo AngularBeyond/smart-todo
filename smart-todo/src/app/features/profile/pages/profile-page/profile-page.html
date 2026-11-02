@@ -1,7 +1,7 @@
 <div class="mx-auto w-full max-w-5xl px-5 py-8 md:px-10 md:py-12">
   <a
     routerLink="/"
-    class="mb-8 flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+    class="mb-8 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
   >
     <svg lucideArrowLeft class="size-4"></svg> Back to tasks
   </a>
@@ -14,118 +14,34 @@
       <p class="mt-2 text-sm text-muted-foreground">Keep your space personal and focused.</p>
     </div>
     <div class="flex items-center gap-3">
-      <div class="flex size-14 items-center justify-center rounded-full bg-secondary font-mono text-lg font-semibold text-secondary-foreground">
+      <div class="flex size-14 items-center justify-center rounded-full bg-secondary font-mono text-lg font-semibold text-secondary-foreground shadow-sm">
         {{ store.initials() }}
       </div>
       <div>
-        <p class="font-medium">{{ store.fullName() }}</p>
-        <p class="text-xs text-muted-foreground">{{ store.profile().workspaceName }}</p>
+        <p class="font-medium text-foreground">{{ store.fullName() || 'Your Name' }}</p>
+        <p class="text-xs text-muted-foreground">{{ store.email() }}</p>
       </div>
     </div>
   </div>
 
-  <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-    <!-- Personal Details Form -->
-    <section class="border border-border bg-card p-6">
-      <div class="mb-6 flex items-center gap-3">
-        <span class="flex size-9 items-center justify-center bg-primary/10 text-primary">
-          <svg lucideUserRound class="size-4"></svg>
-        </span>
-        <div>
-          <h2 class="font-semibold">Personal details</h2>
-          <p class="text-sm text-muted-foreground">How your name appears across Smart Todo.</p>
-        </div>
-      </div>
+  <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <!-- Personal Details Form Component -->
+    <app-profile-form
+      [profile]="store.profile()"
+      [isLoading]="store.isPending()"
+      [error]="store.error()"
+      [success]="store.profileSuccess()"
+      (save)="store.updateProfile($event)"
+      (clearStatus)="store.clearStatus()"
+    />
 
-      <div class="flex flex-col gap-5">
-        <div class="grid gap-5 sm:grid-cols-2">
-          <label class="flex flex-col gap-2 text-xs font-medium">
-            First name
-            <input
-              hlmInput
-              [ngModel]="store.profile().firstName"
-              (ngModelChange)="store.updateField('firstName', $event)"
-            />
-          </label>
-          <label class="flex flex-col gap-2 text-xs font-medium">
-            Last name
-            <input
-              hlmInput
-              [ngModel]="store.profile().lastName"
-              (ngModelChange)="store.updateField('lastName', $event)"
-            />
-          </label>
-        </div>
-
-        <label class="flex flex-col gap-2 text-xs font-medium">
-          Email address
-          <div class="relative">
-            <svg lucideMail class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"></svg>
-            <input
-              hlmInput
-              [ngModel]="store.profile().email"
-              (ngModelChange)="store.updateField('email', $event)"
-              class="pl-9"
-            />
-          </div>
-        </label>
-
-        <div class="flex justify-end">
-          <button hlmBtn (click)="store.saveChanges()" class="gap-2">
-            <svg lucideCheck class="size-4"></svg> Save changes
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Side Preferences & Security Cards -->
-    <div class="flex flex-col gap-6">
-      <section class="border border-border bg-card p-6">
-        <div class="mb-5">
-          <h2 class="font-semibold">Preferences</h2>
-          <p class="text-sm text-muted-foreground">Shape the way your workspace feels.</p>
-        </div>
-        <div class="flex flex-col">
-          <div class="flex items-center gap-3 py-2 text-left">
-            <span class="flex size-8 items-center justify-center bg-muted text-muted-foreground">
-              <svg lucideMoon class="size-4"></svg>
-            </span>
-            <span class="flex-1">
-              <span class="block text-sm font-medium">Appearance</span>
-              <span class="block text-xs text-muted-foreground">Use the theme toggle in the header</span>
-            </span>
-            <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
-          </div>
-          <div hlmSeparator class="my-3"></div>
-          <div class="flex items-center gap-3 py-2 text-left">
-            <span class="flex size-8 items-center justify-center bg-muted text-muted-foreground">
-              <svg lucideBell class="size-4"></svg>
-            </span>
-            <span class="flex-1">
-              <span class="block text-sm font-medium">Notifications</span>
-              <span class="block text-xs text-muted-foreground">Daily reminders and updates</span>
-            </span>
-            <span hlmBadge variant="secondary">On</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="border border-border bg-card p-6">
-        <div class="mb-5">
-          <h2 class="font-semibold">Privacy & security</h2>
-          <p class="text-sm text-muted-foreground">Your workspace is private by default.</p>
-        </div>
-        <button type="button" class="flex w-full items-center gap-3 text-left">
-          <span class="flex size-8 items-center justify-center bg-muted text-muted-foreground">
-            <svg lucideShield class="size-4"></svg>
-          </span>
-          <span class="flex-1">
-            <span class="block text-sm font-medium">Account security</span>
-            <span class="block text-xs text-muted-foreground">Password and sign-in preferences</span>
-          </span>
-          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
-        </button>
-      </section>
-    </div>
+    <!-- Change Password Form Component -->
+    <app-change-password-form
+      [isLoading]="store.isPending()"
+      [error]="store.error()"
+      [success]="store.passwordSuccess()"
+      (changePassword)="store.changePassword($event)"
+      (clearStatus)="store.clearStatus()"
+    />
   </div>
 </div>
