@@ -49,7 +49,9 @@ export class ProfileFormComponent {
   readonly error = input<string | null>(null);
   readonly success = input<boolean>(false);
 
+  readonly currentTheme = input<'light' | 'dark'>('light');
   readonly save = output<UpdateProfileRequest>();
+  readonly themeChange = output<'light' | 'dark'>();
   readonly clearStatus = output<void>();
 
   protected readonly successMessage = PROFILE_CONSTANTS.PROFILE_SAVED_SUCCESS;
@@ -72,21 +74,21 @@ export class ProfileFormComponent {
   constructor() {
     effect(() => {
       const p = this.profile();
-      if (p) {
-        untracked(() => {
-          this.model.set({
-            name: p.name ?? '',
-            lastName: p.lastName ?? '',
-            preferredTheme: p.preferredTheme ?? 'light',
-          });
-          this.profileForm().reset();
-        });
-      }
+      const theme = this.currentTheme();
+      untracked(() => {
+        this.model.update((current) => ({
+          name: p?.name ?? current.name,
+          lastName: p?.lastName ?? current.lastName,
+          preferredTheme: theme ?? p?.preferredTheme ?? current.preferredTheme,
+        }));
+        this.profileForm().reset();
+      });
     });
   }
 
   setTheme(theme: 'light' | 'dark'): void {
     this.model.update((current) => ({ ...current, preferredTheme: theme }));
+    this.themeChange.emit(theme);
   }
 
   handleSubmit(event?: Event): void {
