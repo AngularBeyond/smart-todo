@@ -118,16 +118,39 @@ describe('errorInterceptor', () => {
     );
   });
 
-  it('should preserve backend custom business error message', () => {
+  it('should preserve backend custom business error message and dispatch event on protected endpoints', () => {
     let actualError: HttpErrorResponse | undefined;
 
-    httpClient.post('/api/auth/register', {}).subscribe({
+    httpClient.patch('/api/v1/profile', {}).subscribe({
       error: (err: HttpErrorResponse) => {
         actualError = err;
       },
     });
 
-    const req = httpMock.expectOne('/api/auth/register');
+    const req = httpMock.expectOne('/api/v1/profile');
+    req.flush(
+      { message: 'ThrottlerException: Too Many Requests' },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
+
+    expect(actualError?.error).toEqual({
+      message: 'ThrottlerException: Too Many Requests',
+    });
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      apiErrorOccurred({ message: 'ThrottlerException: Too Many Requests' }),
+    );
+  });
+
+  it('should preserve backend error message but NOT dispatch apiErrorOccurred for register endpoint', () => {
+    let actualError: HttpErrorResponse | undefined;
+
+    httpClient.post('/api/v1/auth/register', {}).subscribe({
+      error: (err: HttpErrorResponse) => {
+        actualError = err;
+      },
+    });
+
+    const req = httpMock.expectOne('/api/v1/auth/register');
     req.flush(
       { message: 'An account with this email already exists.' },
       { status: 409, statusText: 'Conflict' },
@@ -136,12 +159,10 @@ describe('errorInterceptor', () => {
     expect(actualError?.error).toEqual({
       message: 'An account with this email already exists.',
     });
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      apiErrorOccurred({ message: 'An account with this email already exists.' }),
-    );
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('should dispatch userLogout on 401 for protected endpoints', () => {
+  it('should dispatch userLogout and NOT dispatch apiErrorOccurred on 401 for protected endpoints', () => {
     httpClient.get('/api/v1/todos').subscribe({
       error: () => {},
     });
@@ -150,9 +171,10 @@ describe('errorInterceptor', () => {
     req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(userLogout());
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
   });
 
-  it('should NOT dispatch userLogout on 401 for public auth endpoints', () => {
+  it('should NOT dispatch userLogout or apiErrorOccurred on 401 for public auth login endpoint', () => {
     httpClient.post('/api/v1/auth/login', {}).subscribe({
       error: () => {},
     });
@@ -160,9 +182,6 @@ describe('errorInterceptor', () => {
     const req = httpMock.expectOne('/api/v1/auth/login');
     req.flush({ message: 'Invalid credentials' }, { status: 401, statusText: 'Unauthorized' });
 
-    expect(dispatcher.dispatch).not.toHaveBeenCalledWith(userLogout());
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      apiErrorOccurred({ message: 'Invalid credentials' }),
-    );
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 });

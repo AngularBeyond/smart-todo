@@ -20,7 +20,14 @@ import {
   setPending,
   withRequestStatus,
 } from '../index';
-import { userAuthenticated, userLogout, profileSynced, themeChanged } from './events';
+import { toast } from '@spartan-ng/brain/sonner';
+import {
+  userAuthenticated,
+  userLogout,
+  profileSynced,
+  themeChanged,
+  apiErrorOccurred,
+} from './events';
 import { UserProfile } from '../models/user-profile.model';
 import { ThemeMode, ThemeService } from '../services/theme.service';
 
@@ -67,6 +74,14 @@ export const AppStore = signalStore(
     const router = inject(Router);
 
     return {
+      handleApiError$: events.on(apiErrorOccurred).pipe(
+        tap((evt) => {
+          toast.error(evt.payload.message || HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
+            position: 'top-center',
+          });
+        }),
+      ),
+
       loadProfile$: events.on(userAuthenticated).pipe(
         tap(() => patchState(store, { isAuthenticated: true }, setPending())),
         switchMap(() =>

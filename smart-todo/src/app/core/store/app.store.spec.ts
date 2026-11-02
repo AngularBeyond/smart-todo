@@ -3,11 +3,18 @@ import { Router, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
+import { toast } from '@spartan-ng/brain/sonner';
 import { HTTP_ERROR_MESSAGES, HttpService } from '@core';
 import { AppStore } from './app.store';
-import { profileSynced, themeChanged, userAuthenticated, userLogout } from './events';
+import { apiErrorOccurred, profileSynced, themeChanged, userAuthenticated, userLogout } from './events';
 import { ApiResponse } from '../http/api-response.model';
 import { UserProfile } from '../models/user-profile.model';
+
+vi.mock('@spartan-ng/brain/sonner', () => ({
+  toast: {
+    error: vi.fn(),
+  },
+}));
 
 describe('AppStore', () => {
   let store: InstanceType<typeof AppStore>;
@@ -161,6 +168,22 @@ describe('AppStore', () => {
 
       dispatcher.dispatch(themeChanged({ mode: 'light' }));
       expect(store.theme()).toBe('light');
+    });
+  });
+
+  describe('apiErrorOccurred Event', () => {
+    it('should display an error toast when apiErrorOccurred event is dispatched', () => {
+      dispatcher.dispatch(apiErrorOccurred({ message: 'Custom API Error' }));
+      expect(toast.error).toHaveBeenCalledWith('Custom API Error', {
+        position: 'top-center',
+      });
+    });
+
+    it('should fallback to UNKNOWN_ERROR if message is empty', () => {
+      dispatcher.dispatch(apiErrorOccurred({ message: '' }));
+      expect(toast.error).toHaveBeenCalledWith(HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
+        position: 'top-center',
+      });
     });
   });
 
