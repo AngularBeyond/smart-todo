@@ -10,6 +10,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { throttlerConfig } from './config/throttler.config.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { ProfileModule } from './modules/profile/profile.module.js';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
 
 @Module({
@@ -23,6 +24,7 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
     }),
     PrismaModule,
     AuthModule,
+    ProfileModule,
     MaintenanceModule,
   ],
   controllers: [AppController],
