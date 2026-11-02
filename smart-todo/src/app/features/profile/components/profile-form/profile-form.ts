@@ -5,6 +5,7 @@ import {
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { form, FormField, maxLength } from '@angular/forms/signals';
 import {
@@ -72,10 +73,13 @@ export class ProfileFormComponent {
     effect(() => {
       const p = this.profile();
       if (p) {
-        this.model.set({
-          name: p.name ?? '',
-          lastName: p.lastName ?? '',
-          preferredTheme: p.preferredTheme ?? 'light',
+        untracked(() => {
+          this.model.set({
+            name: p.name ?? '',
+            lastName: p.lastName ?? '',
+            preferredTheme: p.preferredTheme ?? 'light',
+          });
+          this.profileForm().reset();
         });
       }
     });
