@@ -1,45 +1,32 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import {
-  LucideArrowLeft,
-  LucideBell,
-  LucideCheck,
-  LucideChevronRight,
-  LucideMail,
-  LucideMoon,
-  LucideShield,
-  LucideUserRound,
-} from '@lucide/angular';
-import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmBadge } from '@spartan-ng/helm/badge';
-import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmSeparator } from '@spartan-ng/helm/separator';
+import { LucideArrowLeft } from '@lucide/angular';
+import { AppStore } from '@core';
 import { ProfileStore } from '../../store';
+import { ChangePasswordFormComponent, ProfileFormComponent } from '../../components';
 
 @Component({
   selector: 'app-profile-page',
   imports: [
     RouterLink,
-    FormsModule,
     LucideArrowLeft,
-    LucideBell,
-    LucideCheck,
-    LucideChevronRight,
-    LucideMail,
-    LucideMoon,
-    LucideShield,
-    LucideUserRound,
-    HlmButton,
-    HlmBadge,
-    HlmInput,
-    HlmSeparator,
+    ProfileFormComponent,
+    ChangePasswordFormComponent,
   ],
   providers: [ProfileStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './profile-page.css',
   templateUrl: './profile-page.html',
 })
-export class ProfilePage {
+export class ProfilePage implements OnInit {
   protected readonly store = inject(ProfileStore);
+  protected readonly appStore = inject(AppStore);
+
+  ngOnInit(): void {
+    const cachedProfile = this.appStore.profile();
+    if (cachedProfile) {
+      this.store.setProfile(cachedProfile);
+    }
+    this.store.loadProfile();
+  }
 }

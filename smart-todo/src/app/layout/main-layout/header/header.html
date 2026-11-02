@@ -15,7 +15,7 @@
       variant="ghost"
       size="icon"
       aria-label="Toggle theme"
-      (click)="appStore.toggleTheme()"
+      (click)="toggleTheme()"
     >
       @if (appStore.theme() === 'dark') {
         <svg lucideSun class="size-4"></svg>
