@@ -1,7 +1,14 @@
 import { computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
 import { Dispatcher, Events, withEventHandlers } from '@ngrx/signals/events';
 import { catchError, EMPTY, switchMap, tap } from 'rxjs';
 import {
@@ -167,5 +174,15 @@ export const AppStore = signalStore(
         patchState(store, initialAppState, setIdle());
       },
     };
+  }),
+  withHooks({
+    onInit(store) {
+      const themeService = inject(ThemeService);
+      const storedTheme = themeService.getStoredTheme();
+      if (storedTheme !== store.theme()) {
+        patchState(store, { theme: storedTheme });
+      }
+      themeService.applyTheme(storedTheme);
+    },
   }),
 );
