@@ -26,7 +26,6 @@ export interface AuthSuccessPayload {
     name: string;
     lastName: string;
     email: string;
-    preferredTheme: string;
   };
 }
 

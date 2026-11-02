@@ -32,7 +32,6 @@ describe('LoginStore', () => {
         name: 'Jordan',
         lastName: 'Davis',
         email: 'jordan@example.com',
-        preferredTheme: 'light',
       },
     },
   };

@@ -24,7 +24,6 @@ describe('AppStore', () => {
     name: 'Jane',
     lastName: 'Doe',
     email: 'jane.doe@example.com',
-    preferredTheme: 'dark',
   };
 
   const mockProfileResponse: ApiResponse<{ profile: UserProfile }> = {
@@ -79,7 +78,6 @@ describe('AppStore', () => {
       expect(httpMock.get).toHaveBeenCalledWith('/api/v1/profile');
       expect(store.isAuthenticated()).toBe(true);
       expect(store.profile()).toEqual(mockProfile);
-      expect(store.theme()).toBe('dark');
       expect(store.userDisplayName()).toBe('Jane Doe');
       expect(store.isReady()).toBe(true);
       expect(store.isFulfilled()).toBe(true);
@@ -141,17 +139,15 @@ describe('AppStore', () => {
   });
 
   describe('profileSynced Event', () => {
-    it('should update profile and theme when profileSynced is dispatched', () => {
+    it('should update profile when profileSynced is dispatched', () => {
       const updatedProfile: UserProfile = {
         ...mockProfile,
         name: 'Janet',
-        preferredTheme: 'light',
       };
 
       dispatcher.dispatch(profileSynced({ profile: updatedProfile }));
 
       expect(store.profile()).toEqual(updatedProfile);
-      expect(store.theme()).toBe('light');
       expect(store.userDisplayName()).toBe('Janet Doe');
     });
   });
@@ -164,19 +160,6 @@ describe('AppStore', () => {
       expect(store.theme()).toBe('dark');
 
       dispatcher.dispatch(themeChanged({ mode: 'light' }));
-      expect(store.theme()).toBe('light');
-    });
-
-    it('should persist theme change to API when authenticated', () => {
-      httpMock.get.mockReturnValue(of(mockProfileResponse));
-      dispatcher.dispatch(userAuthenticated());
-      expect(store.isAuthenticated()).toBe(true);
-
-      dispatcher.dispatch(themeChanged({ mode: 'light' }));
-
-      expect(httpMock.patch).toHaveBeenCalledWith('/api/v1/profile', {
-        preferredTheme: 'light',
-      });
       expect(store.theme()).toBe('light');
     });
   });

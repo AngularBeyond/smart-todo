@@ -3,7 +3,6 @@ import { UserProfile } from '@core';
 export interface UpdateProfileRequest {
   name?: string;
   lastName?: string;
-  preferredTheme?: 'light' | 'dark';
 }
 
 export interface ChangePasswordRequest {

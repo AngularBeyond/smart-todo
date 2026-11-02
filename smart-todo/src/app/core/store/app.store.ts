@@ -59,7 +59,6 @@ export const AppStore = signalStore(
       return `${first}${last}` || p.email.charAt(0).toUpperCase();
     }),
     isReady: computed(() => isAuthenticated() && profile() !== null),
-    preferredTheme: computed(() => theme()),
   })),
   withEventHandlers((store) => {
     const events = inject(Events);
@@ -75,9 +74,7 @@ export const AppStore = signalStore(
             tap({
               next: (res) => {
                 const profile = res.data.profile;
-                const preferredTheme = (profile.preferredTheme as ThemeMode) ?? store.theme();
-                themeService.applyTheme(preferredTheme);
-                patchState(store, { profile, theme: preferredTheme }, setFulfilled());
+                patchState(store, { profile }, setFulfilled());
               },
               error: (err: HttpErrorResponse) => {
                 const message =
@@ -99,16 +96,14 @@ export const AppStore = signalStore(
             tap({
               next: (res) => {
                 if (res.success) {
-                  patchState(store, initialAppState, setIdle());
-                  themeService.applyTheme('light');
+                  patchState(store, { ...initialAppState, theme: store.theme() }, setIdle());
                   void router.navigate(['/login']);
                 } else {
                   patchState(store, setIdle());
                 }
               },
               error: () => {
-                patchState(store, initialAppState, setIdle());
-                themeService.applyTheme('light');
+                patchState(store, { ...initialAppState, theme: store.theme() }, setIdle());
                 void router.navigate(['/login']);
               },
             }),
@@ -119,9 +114,7 @@ export const AppStore = signalStore(
 
       profileSynced$: events.on(profileSynced).pipe(
         tap(({ payload }) => {
-          const theme = (payload.profile.preferredTheme as ThemeMode) ?? store.theme();
-          themeService.applyTheme(theme);
-          patchState(store, { profile: payload.profile, theme });
+          patchState(store, { profile: payload.profile });
         }),
       ),
 
@@ -129,25 +122,6 @@ export const AppStore = signalStore(
         tap(({ payload }) => {
           themeService.applyTheme(payload.mode);
           patchState(store, { theme: payload.mode });
-        }),
-        switchMap(({ payload }) => {
-          if (store.isAuthenticated()) {
-            return httpService
-              .patch<{ profile: UserProfile }>('/api/v1/profile', {
-                preferredTheme: payload.mode,
-              })
-              .pipe(
-                tap({
-                  next: (res) => {
-                    if (res?.data?.profile) {
-                      patchState(store, { profile: res.data.profile });
-                    }
-                  },
-                }),
-                catchError(() => EMPTY),
-              );
-          }
-          return EMPTY;
         }),
       ),
     };

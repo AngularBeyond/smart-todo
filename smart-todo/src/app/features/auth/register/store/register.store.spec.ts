@@ -32,7 +32,6 @@ describe('RegisterStore', () => {
         name: 'Jordan',
         lastName: 'Davis',
         email: 'jordan@example.com',
-        preferredTheme: 'light',
       },
     },
   };

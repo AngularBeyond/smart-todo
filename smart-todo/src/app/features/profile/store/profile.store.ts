@@ -47,7 +47,6 @@ export const ProfileStore = signalStore(
       return (first + last).toUpperCase() || p.email.charAt(0).toUpperCase();
     }),
     email: computed(() => profile()?.email ?? ''),
-    preferredTheme: computed(() => profile()?.preferredTheme ?? 'light'),
   })),
   withMethods(
     (
