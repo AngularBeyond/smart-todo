@@ -4,6 +4,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
+import { ReorderTodoListDto } from './dto/reorder-todo-list.dto.js';
 import { TodoListsService, TodoListsResponse, TodoListResponse } from './todo-lists.service.js';
 
 @UseGuards(JwtAuthGuard)
@@ -24,6 +25,15 @@ export class TodoListsController {
     return this.todoListsService.createList(user.sub, dto);
   }
 
+  @Patch(':id/reorder')
+  async reorderList(
+    @CurrentUser() user: UserPayload,
+    @Param('id') id: string,
+    @Body() dto: ReorderTodoListDto,
+  ): Promise<TodoListResponse> {
+    return this.todoListsService.reorderList(user.sub, id, dto);
+  }
+
   @Patch(':id')
   async updateList(
     @CurrentUser() user: UserPayload,
@@ -33,6 +43,7 @@ export class TodoListsController {
     return this.todoListsService.updateList(user.sub, id, dto);
   }
 }
+
 
 
 

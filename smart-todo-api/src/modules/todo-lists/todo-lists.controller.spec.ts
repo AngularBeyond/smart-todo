@@ -5,6 +5,7 @@ import { TodoListsService, TodoListsResponse, TodoListResponse } from './todo-li
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
+import { ReorderTodoListDto } from './dto/reorder-todo-list.dto.js';
 
 describe('TodoListsController', () => {
   let controller: TodoListsController;
@@ -12,6 +13,7 @@ describe('TodoListsController', () => {
     getLists: ReturnType<typeof vi.fn>;
     createList: ReturnType<typeof vi.fn>;
     updateList: ReturnType<typeof vi.fn>;
+    reorderList: ReturnType<typeof vi.fn>;
   };
 
   const mockUserPayload: UserPayload = {
@@ -61,11 +63,25 @@ describe('TodoListsController', () => {
     },
   };
 
+  const mockReorderedResponse: TodoListResponse = {
+    list: {
+      id: 'list-2',
+      name: 'Personal Tasks',
+      isStarred: false,
+      order: 1500,
+      createdAt: new Date('2026-01-02T00:00:00Z'),
+      updatedAt: new Date('2026-01-03T00:00:00Z'),
+      totalCount: 0,
+      activeCount: 0,
+    },
+  };
+
   beforeEach(async () => {
     serviceMock = {
       getLists: vi.fn().mockResolvedValue(mockResponse),
       createList: vi.fn().mockResolvedValue(mockCreatedResponse),
       updateList: vi.fn().mockResolvedValue(mockUpdatedResponse),
+      reorderList: vi.fn().mockResolvedValue(mockReorderedResponse),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -101,6 +117,16 @@ describe('TodoListsController', () => {
 
       expect(serviceMock.createList).toHaveBeenCalledWith('user-123', dto);
       expect(result).toEqual(mockCreatedResponse);
+    });
+  });
+
+  describe('reorderList', () => {
+    it('should call service.reorderList with user.sub, id, and dto', async () => {
+      const dto: ReorderTodoListDto = { order: 1500 };
+      const result = await controller.reorderList(mockUserPayload, 'list-2', dto);
+
+      expect(serviceMock.reorderList).toHaveBeenCalledWith('user-123', 'list-2', dto);
+      expect(result).toEqual(mockReorderedResponse);
     });
   });
 

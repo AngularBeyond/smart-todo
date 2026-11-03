@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { TodoListsService } from './todo-lists.service.js';
 import { TodoListsRepository, TodoListSummary } from './todo-lists.repository.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
+import { ReorderTodoListDto } from './dto/reorder-todo-list.dto.js';
 
 describe('TodoListsService', () => {
   let service: TodoListsService;
@@ -226,4 +227,61 @@ describe('TodoListsService', () => {
       expect(repositoryMock.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('reorderList', () => {
+    const unstarredList: TodoListSummary = {
+      id: 'list-1',
+      name: 'Tasks',
+      isStarred: false,
+      order: 1000,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-01T00:00:00Z'),
+      totalCount: 3,
+      activeCount: 2,
+    };
+
+    it('should update order when list exists, is unstarred, and belongs to user', async () => {
+      const dto: ReorderTodoListDto = { order: 2500 };
+      const updatedList: TodoListSummary = {
+        ...unstarredList,
+        order: 2500,
+        updatedAt: new Date('2026-01-02T00:00:00Z'),
+      };
+
+      repositoryMock.findByIdAndUserId.mockResolvedValue(unstarredList);
+      repositoryMock.update.mockResolvedValue(updatedList);
+
+      const result = await service.reorderList('user-123', 'list-1', dto);
+
+      expect(repositoryMock.findByIdAndUserId).toHaveBeenCalledWith('list-1', 'user-123');
+      expect(repositoryMock.update).toHaveBeenCalledWith('list-1', { order: 2500 });
+      expect(result).toEqual({ list: updatedList });
+    });
+
+    it('should throw BadRequestException when list is starred', async () => {
+      const starredList: TodoListSummary = {
+        ...unstarredList,
+        isStarred: true,
+      };
+
+      repositoryMock.findByIdAndUserId.mockResolvedValue(starredList);
+
+      await expect(service.reorderList('user-123', 'list-1', { order: 2500 })).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(repositoryMock.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when list is not found or unowned', async () => {
+      repositoryMock.findByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.reorderList('user-123', 'non-existent', { order: 2500 }),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(repositoryMock.update).not.toHaveBeenCalled();
+    });
+  });
 });
+
