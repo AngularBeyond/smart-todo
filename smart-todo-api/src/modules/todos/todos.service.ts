@@ -6,6 +6,7 @@ import {
 import { MAX_TODOS_PER_LIST, ORDER_STEP } from '../../common/constants/quotas.constants.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { GetTodosQueryDto } from './dto/get-todos-query.dto.js';
+import { UpdateTodoDto } from './dto/update-todo.dto.js';
 import { TodosRepository, TodoItemSummary } from './todos.repository.js';
 
 export interface TodoResponse {
@@ -96,5 +97,47 @@ export class TodosService {
         quotaLimit: MAX_TODOS_PER_LIST,
       },
     };
+  }
+
+  async updateTodo(
+    userId: string,
+    listId: string,
+    todoId: string,
+    dto: UpdateTodoDto,
+  ): Promise<TodoResponse> {
+    const updated = await this.todosRepository.transaction(async (tx) => {
+      // 1. Verify list ownership
+      const list = await this.todosRepository.findListByIdAndUserId(listId, userId, tx);
+      if (!list) {
+        throw new NotFoundException('Todo list not found.');
+      }
+
+      // 2. Find todo item and verify ownership & list association
+      const todo = await this.todosRepository.findByIdAndUserId(todoId, userId, tx);
+      if (!todo || todo.listId !== listId) {
+        throw new NotFoundException('Todo item not found.');
+      }
+
+      const updateData: { text?: string; isCompleted?: boolean; order?: number } = {};
+
+      if (dto.text !== undefined) {
+        updateData.text = dto.text.trim();
+      }
+
+      if (dto.isCompleted !== undefined) {
+        if (dto.isCompleted === false && todo.isCompleted === true) {
+          // Uncomplete-to-Top Rule: query min order of active todos in list
+          const minActiveOrder = await this.todosRepository.findMinActiveOrderByListId(listId, tx);
+          updateData.order = (minActiveOrder ?? 2000) - ORDER_STEP;
+          updateData.isCompleted = false;
+        } else {
+          updateData.isCompleted = dto.isCompleted;
+        }
+      }
+
+      return this.todosRepository.update(todoId, updateData, tx);
+    });
+
+    return { todo: updated };
   }
 }

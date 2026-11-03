@@ -132,4 +132,47 @@ export class TodosRepository {
       completedCount: totalCount - activeCount,
     };
   }
+
+  async findByIdAndUserId(
+    id: string,
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<TodoItemSummary | null> {
+    const client = tx ?? this.prisma;
+    return client.todoItem.findFirst({
+      where: { id, userId },
+      select: {
+        id: true,
+        listId: true,
+        userId: true,
+        text: true,
+        isCompleted: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async update(
+    id: string,
+    data: Prisma.TodoItemUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<TodoItemSummary> {
+    const client = tx ?? this.prisma;
+    return client.todoItem.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        listId: true,
+        userId: true,
+        text: true,
+        isCompleted: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
 }
