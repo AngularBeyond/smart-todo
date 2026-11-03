@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import {
   loadTodoLists,
+  reorderUnstarredList,
   selectTodoList,
   toggleStarTodoList,
   TodoListSummary,
@@ -151,6 +152,35 @@ describe('Sidebar', () => {
     emptyFixture.componentInstance.ngOnInit();
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(loadTodoLists());
+  });
+
+  it('should dispatch reorderUnstarredList on onDrop when index changes', () => {
+    const dropEvent = {
+      previousIndex: 0,
+      currentIndex: 1,
+    } as any;
+
+    component.onDrop(dropEvent);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      reorderUnstarredList({
+        listId: 'list-2',
+        targetIndex: 1,
+      }),
+    );
+  });
+
+  it('should not dispatch reorderUnstarredList if dropped at same index', () => {
+    const dropEvent = {
+      previousIndex: 0,
+      currentIndex: 0,
+    } as any;
+
+    component.onDrop(dropEvent);
+
+    expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: '[Todo Lists] Reorder Unstarred List' }),
+    );
   });
 });
 

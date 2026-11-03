@@ -65,27 +65,44 @@
     </div>
   }
 
-  <!-- Unstarred Lists Section -->
+  <!-- Unstarred Lists Section (Drag and Drop Reordering) -->
   <div class="mt-6 flex items-center justify-between">
     <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
       Lists <span class="text-primary">{{ todoListsStore.lists().length }}/3</span>
     </span>
   </div>
 
-  <div class="mt-2 flex flex-col gap-1">
+  <div
+    cdkDropList
+    (cdkDropListDropped)="onDrop($event)"
+    class="mt-2 flex flex-col gap-1"
+  >
     @for (list of todoListsStore.unstarredLists(); track list.id) {
-      <button
-        type="button"
-        (click)="selectList(list.id)"
-        class="group flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      <div
+        cdkDrag
+        class="group flex items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         [class.bg-sidebar-accent]="todoListsStore.selectedListId() === list.id"
         [class.font-medium]="todoListsStore.selectedListId() === list.id"
         [class.text-sidebar-accent-foreground]="todoListsStore.selectedListId() === list.id"
         [class.text-muted-foreground]="todoListsStore.selectedListId() !== list.id"
       >
-        <span class="size-2 shrink-0 rounded-full bg-muted-foreground/40"></span>
-        <span class="truncate">{{ list.name }}</span>
-        <span class="ml-auto flex items-center gap-1.5">
+        <button
+          type="button"
+          cdkDragHandle
+          class="cursor-grab active:cursor-grabbing p-1 text-muted-foreground/60 hover:text-foreground opacity-60 group-hover:opacity-100 transition-opacity"
+          aria-label="Reorder list"
+        >
+          <svg lucideGripVertical class="size-3.5"></svg>
+        </button>
+        <button
+          type="button"
+          (click)="selectList(list.id)"
+          class="flex flex-1 items-center gap-2 text-left truncate min-w-0"
+        >
+          <span class="size-2 shrink-0 rounded-full bg-muted-foreground/40"></span>
+          <span class="truncate">{{ list.name }}</span>
+        </button>
+        <span class="ml-auto flex items-center gap-1.5 shrink-0 pr-1.5">
           <span hlmBadge variant="outline" class="h-5 px-1.5 text-[10px]">
             {{ list.activeCount }}
           </span>
@@ -98,7 +115,7 @@
             <svg lucideStar class="size-3.5"></svg>
           </button>
         </span>
-      </button>
+      </div>
     }
   </div>
 
