@@ -22,12 +22,15 @@ import {
 } from '../index';
 import { toast } from '@spartan-ng/brain/sonner';
 import {
-  userAuthenticated,
-  userLogout,
-  profileSynced,
-  themeChanged,
   apiErrorOccurred,
   apiSuccessOccurred,
+  profileSynced,
+  selectTodoList,
+  setMobileSidebarOpen,
+  themeChanged,
+  toggleMobileSidebar,
+  userAuthenticated,
+  userLogout,
 } from './events';
 import { UserProfile } from '../models/user-profile.model';
 import { ThemeMode, ThemeService } from '../services/theme.service';
@@ -37,6 +40,7 @@ export interface AppState {
   isAuthenticated: boolean;
   accessToken: string | null;
   theme: ThemeMode;
+  isMobileSidebarOpen: boolean;
 }
 
 export const initialAppState: AppState = {
@@ -44,6 +48,7 @@ export const initialAppState: AppState = {
   isAuthenticated: false,
   accessToken: null,
   theme: 'light',
+  isMobileSidebarOpen: false,
 };
 
 /**
@@ -148,6 +153,26 @@ export const AppStore = signalStore(
           patchState(store, { theme: payload.mode });
         }),
       ),
+
+      toggleMobileSidebar$: events.on(toggleMobileSidebar).pipe(
+        tap(() => {
+          patchState(store, { isMobileSidebarOpen: !store.isMobileSidebarOpen() });
+        }),
+      ),
+
+      setMobileSidebarOpen$: events.on(setMobileSidebarOpen).pipe(
+        tap(({ payload }) => {
+          patchState(store, { isMobileSidebarOpen: payload.isOpen });
+        }),
+      ),
+
+      autoCloseMobileSidebarOnSelect$: events.on(selectTodoList).pipe(
+        tap(() => {
+          if (store.isMobileSidebarOpen()) {
+            patchState(store, { isMobileSidebarOpen: false });
+          }
+        }),
+      ),
     };
   }),
   withMethods((store) => {
@@ -167,6 +192,12 @@ export const AppStore = signalStore(
       toggleTheme(): void {
         const nextTheme: ThemeMode = store.theme() === 'dark' ? 'light' : 'dark';
         dispatcher.dispatch(themeChanged({ mode: nextTheme }));
+      },
+      toggleMobileSidebar(): void {
+        dispatcher.dispatch(toggleMobileSidebar());
+      },
+      setMobileSidebarOpen(isOpen: boolean): void {
+        dispatcher.dispatch(setMobileSidebarOpen({ isOpen }));
       },
       clear(): void {
         patchState(store, initialAppState, setIdle());

@@ -1,7 +1,25 @@
 <div class="flex min-h-screen flex-col bg-background text-foreground transition-colors">
   <app-header />
   <div class="flex flex-1 w-full">
-    <app-sidebar class="flex shrink-0" />
+    <!-- Desktop Persistent Sidebar -->
+    <app-sidebar class="hidden md:flex shrink-0" variant="desktop" />
+
+    <!-- Mobile Responsive Sheet Drawer -->
+    <hlm-sheet
+      side="left"
+      [state]="appStore.isMobileSidebarOpen() ? 'open' : 'closed'"
+      (stateChanged)="onOpenChange($event === 'open')"
+    >
+      <hlm-sheet-content
+        *hlmSheetPortal
+        side="left"
+        class="w-72 p-0 overflow-y-auto bg-sidebar"
+        [showCloseButton]="true"
+      >
+        <app-sidebar variant="mobile" />
+      </hlm-sheet-content>
+    </hlm-sheet>
+
     <main class="min-w-0 flex-1 px-5 py-7 md:px-10 lg:px-16">
       <router-outlet />
     </main>

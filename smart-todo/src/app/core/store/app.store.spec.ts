@@ -10,7 +10,10 @@ import {
   apiErrorOccurred,
   apiSuccessOccurred,
   profileSynced,
+  selectTodoList,
+  setMobileSidebarOpen,
   themeChanged,
+  toggleMobileSidebar,
   userAuthenticated,
   userLogout,
 } from './events';
@@ -201,6 +204,34 @@ describe('AppStore', () => {
       expect(toast.success).toHaveBeenCalledWith('Profile updated successfully', {
         position: 'top-center',
       });
+    });
+  });
+
+  describe('Mobile Sidebar & Layout Events', () => {
+    it('should toggle mobile sidebar open state', () => {
+      expect(store.isMobileSidebarOpen()).toBe(false);
+
+      dispatcher.dispatch(toggleMobileSidebar());
+      expect(store.isMobileSidebarOpen()).toBe(true);
+
+      dispatcher.dispatch(toggleMobileSidebar());
+      expect(store.isMobileSidebarOpen()).toBe(false);
+    });
+
+    it('should set mobile sidebar open state via setMobileSidebarOpen', () => {
+      dispatcher.dispatch(setMobileSidebarOpen({ isOpen: true }));
+      expect(store.isMobileSidebarOpen()).toBe(true);
+
+      dispatcher.dispatch(setMobileSidebarOpen({ isOpen: false }));
+      expect(store.isMobileSidebarOpen()).toBe(false);
+    });
+
+    it('should automatically close mobile sidebar when selectTodoList is dispatched', () => {
+      dispatcher.dispatch(setMobileSidebarOpen({ isOpen: true }));
+      expect(store.isMobileSidebarOpen()).toBe(true);
+
+      dispatcher.dispatch(selectTodoList({ listId: 'list-123' }));
+      expect(store.isMobileSidebarOpen()).toBe(false);
     });
   });
 

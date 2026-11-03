@@ -1,13 +1,26 @@
 <header class="flex h-16 items-center justify-between border-b border-border bg-card px-5 md:px-8">
-  <a routerLink="/" class="flex items-center gap-3 text-left">
-    <div class="flex size-9 items-center justify-center bg-primary text-primary-foreground shadow-sm">
-      <svg lucideSparkles class="size-4"></svg>
-    </div>
-    <div>
-      <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Smart Todo</p>
-      <p class="text-xs text-foreground/70">A calmer way to get things done</p>
-    </div>
-  </a>
+  <div class="flex items-center gap-3">
+    <button
+      hlmBtn
+      variant="ghost"
+      size="icon"
+      class="md:hidden size-9"
+      aria-label="Open sidebar"
+      (click)="toggleSidebar()"
+    >
+      <svg lucideMenu class="size-5"></svg>
+    </button>
+
+    <a routerLink="/" class="flex items-center gap-3 text-left">
+      <div class="flex size-9 items-center justify-center bg-primary text-primary-foreground shadow-sm">
+        <svg lucideSparkles class="size-4"></svg>
+      </div>
+      <div>
+        <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Smart Todo</p>
+        <p class="text-xs text-foreground/70">A calmer way to get things done</p>
+      </div>
+    </a>
+  </div>
 
   <div class="flex items-center gap-2">
     <button
