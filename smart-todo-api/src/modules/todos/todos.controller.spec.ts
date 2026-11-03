@@ -11,6 +11,7 @@ describe('TodosController', () => {
     getTodos: ReturnType<typeof vi.fn>;
     updateTodo: ReturnType<typeof vi.fn>;
     reorderTodo: ReturnType<typeof vi.fn>;
+    deleteTodo: ReturnType<typeof vi.fn>;
   };
 
   const user: UserPayload = {
@@ -37,6 +38,7 @@ describe('TodosController', () => {
       getTodos: vi.fn(),
       updateTodo: vi.fn(),
       reorderTodo: vi.fn(),
+      deleteTodo: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -111,6 +113,26 @@ describe('TodosController', () => {
 
       expect(service.reorderTodo).toHaveBeenCalledWith('user-123', 'list-456', 'todo-1', dto);
       expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('deleteTodo', () => {
+    it('should delegate to TodosService with user.sub, listId, and todoId', async () => {
+      const mockDeleteResponse = {
+        message: 'Todo item deleted successfully.',
+        deletedId: 'todo-1',
+        counts: {
+          totalCount: 3,
+          activeCount: 2,
+          completedCount: 1,
+        },
+      };
+      service.deleteTodo.mockResolvedValue(mockDeleteResponse);
+
+      const result = await controller.deleteTodo(user, 'list-456', 'todo-1');
+
+      expect(service.deleteTodo).toHaveBeenCalledWith('user-123', 'list-456', 'todo-1');
+      expect(result).toEqual(mockDeleteResponse);
     });
   });
 });
