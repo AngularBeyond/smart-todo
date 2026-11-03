@@ -27,6 +27,16 @@ export interface PaginatedTodosResponse {
   };
 }
 
+export interface DeleteTodoResponse {
+  message: string;
+  deletedId: string;
+  counts: {
+    totalCount: number;
+    activeCount: number;
+    completedCount: number;
+  };
+}
+
 @Injectable()
 export class TodosService {
   constructor(private readonly todosRepository: TodosRepository) {}
@@ -195,5 +205,37 @@ export class TodosService {
     });
 
     return { todo: updated };
+  }
+
+  async deleteTodo(
+    userId: string,
+    listId: string,
+    todoId: string,
+  ): Promise<DeleteTodoResponse> {
+    const counts = await this.todosRepository.transaction(async (tx) => {
+      // 1. Verify list ownership
+      const list = await this.todosRepository.findListByIdAndUserId(listId, userId, tx);
+      if (!list) {
+        throw new NotFoundException('Todo list not found.');
+      }
+
+      // 2. Find todo item and verify ownership & list association
+      const todo = await this.todosRepository.findByIdAndUserId(todoId, userId, tx);
+      if (!todo || todo.listId !== listId) {
+        throw new NotFoundException('Todo item not found.');
+      }
+
+      // 3. Delete the item
+      await this.todosRepository.delete(todoId, tx);
+
+      // 4. Return updated counts
+      return this.todosRepository.countCountsByListId(listId, tx);
+    });
+
+    return {
+      message: 'Todo item deleted successfully.',
+      deletedId: todoId,
+      counts,
+    };
   }
 }

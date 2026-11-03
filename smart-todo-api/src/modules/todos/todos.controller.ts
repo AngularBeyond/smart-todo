@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -15,7 +16,12 @@ import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { GetTodosQueryDto } from './dto/get-todos-query.dto.js';
 import { ReorderTodoDto } from './dto/reorder-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
-import { TodosService, TodoResponse, PaginatedTodosResponse } from './todos.service.js';
+import {
+  TodosService,
+  TodoResponse,
+  PaginatedTodosResponse,
+  DeleteTodoResponse,
+} from './todos.service.js';
 
 @UseGuards(JwtAuthGuard)
 @Controller('lists/:listId/todos')
@@ -58,5 +64,14 @@ export class TodosController {
     @Body() dto: ReorderTodoDto,
   ): Promise<TodoResponse> {
     return this.todosService.reorderTodo(user.sub, listId, todoId, dto);
+  }
+
+  @Delete(':todoId')
+  async deleteTodo(
+    @CurrentUser() user: UserPayload,
+    @Param('listId') listId: string,
+    @Param('todoId') todoId: string,
+  ): Promise<DeleteTodoResponse> {
+    return this.todosService.deleteTodo(user.sub, listId, todoId);
   }
 }

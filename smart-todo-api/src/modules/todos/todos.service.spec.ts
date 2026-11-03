@@ -19,6 +19,7 @@ describe('TodosService', () => {
     update: ReturnType<typeof vi.fn>;
     findActiveTodosByListId: ReturnType<typeof vi.fn>;
     batchUpdateOrders: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
   };
 
   const userId = 'user-123';
@@ -48,6 +49,7 @@ describe('TodosService', () => {
       update: vi.fn(),
       findActiveTodosByListId: vi.fn(),
       batchUpdateOrders: vi.fn(),
+      delete: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -465,6 +467,63 @@ describe('TodosService', () => {
         expect.anything(),
       );
       expect(result.todo.order).toBe(2000);
+    });
+  });
+
+  describe('deleteTodo', () => {
+    const todoId = 'todo-1';
+
+    it('should throw NotFoundException if the list does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.deleteTodo(userId, listId, todoId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if the todo does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.deleteTodo(userId, listId, todoId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if the todo belongs to a different list', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        listId: 'other-list',
+      });
+
+      await expect(
+        service.deleteTodo(userId, listId, todoId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should delete the todo item and return updated list counts', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue(mockCreatedTodo);
+      repository.delete.mockResolvedValue(undefined);
+      repository.countCountsByListId.mockResolvedValue({
+        totalCount: 4,
+        activeCount: 3,
+        completedCount: 1,
+      });
+
+      const result = await service.deleteTodo(userId, listId, todoId);
+
+      expect(repository.delete).toHaveBeenCalledWith(todoId, expect.anything());
+      expect(result).toEqual({
+        message: 'Todo item deleted successfully.',
+        deletedId: todoId,
+        counts: {
+          totalCount: 4,
+          activeCount: 3,
+          completedCount: 1,
+        },
+      });
     });
   });
 });

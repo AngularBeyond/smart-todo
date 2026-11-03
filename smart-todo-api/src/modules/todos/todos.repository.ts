@@ -211,4 +211,11 @@ export class TodosRepository {
       ),
     );
   }
+
+  async delete(id: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.todoItem.delete({
+      where: { id },
+    });
+  }
 }
