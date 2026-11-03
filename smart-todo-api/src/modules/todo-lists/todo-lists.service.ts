@@ -1,6 +1,7 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { MAX_LISTS_PER_USER, ORDER_STEP } from '../../common/constants/quotas.constants.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
+import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
 import { TodoListsRepository, TodoListSummary } from './todo-lists.repository.js';
 
 export interface TodoListsResponse {
@@ -48,6 +49,25 @@ export class TodoListsService {
 
     return { list };
   }
+
+  async updateList(
+    userId: string,
+    listId: string,
+    dto: UpdateTodoListDto,
+  ): Promise<TodoListResponse> {
+    const existingList = await this.todoListsRepository.findByIdAndUserId(listId, userId);
+    if (!existingList) {
+      throw new NotFoundException('Todo list not found.');
+    }
+
+    const updated = await this.todoListsRepository.update(listId, {
+      ...(dto.name !== undefined ? { name: dto.name } : {}),
+      ...(dto.isStarred !== undefined ? { isStarred: dto.isStarred } : {}),
+    });
+
+    return { list: updated };
+  }
 }
+
 
 
