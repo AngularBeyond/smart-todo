@@ -4,7 +4,7 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Dispatcher } from '@ngrx/signals/events';
 import { EMPTY, pipe } from 'rxjs';
-import { catchError, exhaustMap, filter, switchMap, tap } from 'rxjs/operators';
+import { catchError, concatMap, exhaustMap, filter, switchMap, tap } from 'rxjs/operators';
 import {
   adjustListCounts,
   calculateNewOrder,
@@ -230,10 +230,271 @@ export const TodosStore = signalStore(
       ),
     );
 
+    const createTodo = rxMethod<{ text: string }>(
+      pipe(
+        filter(({ text }) => {
+          const listId = store.currentListId();
+          const trimmed = text?.trim();
+          return !!listId && !!trimmed && !store.isQuotaReached();
+        }),
+        concatMap(({ text }) => {
+          const listId = store.currentListId()!;
+          const trimmed = text.trim();
+          const tempId = `temp-${Date.now()}`;
+          const tempTodo: TodoItem = {
+            id: tempId,
+            listId,
+            userId: '',
+            text: trimmed,
+            isCompleted: false,
+            order: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            meta: 'Just now',
+            tag: 'Inbox',
+            done: false,
+          };
+
+          // Optimistic create
+          patchState(store, {
+            activeTodos: [tempTodo, ...store.activeTodos()],
+            newTask: '',
+            totalCount: store.totalCount() + 1,
+            activeCount: store.activeCount() + 1,
+          });
+          dispatcher.dispatch(adjustListCounts({ listId, totalDelta: 1, activeDelta: 1 }));
+
+          return httpService
+            .post<TodoResponse>(`/lists/${listId}/todos`, { text: trimmed })
+            .pipe(
+              tap({
+                next: (response) => {
+                  const realTodo = response.data.todo;
+                  patchState(store, {
+                    activeTodos: store.activeTodos().map((t) => (t.id === tempId ? realTodo : t)),
+                  });
+                },
+                error: (error: HttpErrorResponse) => {
+                  // Rollback
+                  patchState(store, {
+                    activeTodos: store.activeTodos().filter((t) => t.id !== tempId),
+                    totalCount: Math.max(0, store.totalCount() - 1),
+                    activeCount: Math.max(0, store.activeCount() - 1),
+                  });
+                  dispatcher.dispatch(adjustListCounts({ listId, totalDelta: -1, activeDelta: -1 }));
+                  const message =
+                    error.error?.message ||
+                    (typeof error.error === 'string' ? error.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+    );
+
+    const updateTodoText = rxMethod<{ todoId: string; text: string }>(
+      pipe(
+        filter(({ todoId, text }) => {
+          const listId = store.currentListId();
+          return !!listId && !!todoId && !!text?.trim();
+        }),
+        concatMap(({ todoId, text }) => {
+          const listId = store.currentListId()!;
+          const trimmed = text.trim();
+          const existing = store.activeTodos().find((t) => t.id === todoId);
+          if (!existing || existing.text === trimmed) {
+            patchState(store, { editingId: null, editValue: '' });
+            return EMPTY;
+          }
+
+          const previousText = existing.text;
+          // Optimistic update
+          patchState(store, {
+            activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
+            editingId: null,
+            editValue: '',
+          });
+
+          return httpService
+            .patch<TodoResponse>(`/lists/${listId}/todos/${todoId}`, { text: trimmed })
+            .pipe(
+              tap({
+                next: (response) => {
+                  const updated = response.data.todo;
+                  patchState(store, {
+                    activeTodos: store.activeTodos().map((t) => (t.id === todoId ? updated : t)),
+                  });
+                },
+                error: (error: HttpErrorResponse) => {
+                  // Rollback
+                  patchState(store, {
+                    activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
+                  });
+                  const message =
+                    error.error?.message ||
+                    (typeof error.error === 'string' ? error.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+    );
+
+    const toggleTodoCompletion = rxMethod<TodoItem>(
+      pipe(
+        filter((todo) => !!store.currentListId() && !!todo),
+        concatMap((todo) => {
+          const listId = store.currentListId()!;
+          const targetIsCompleted = !todo.isCompleted;
+
+          if (targetIsCompleted) {
+            // Completing
+            patchState(store, {
+              activeTodos: store.activeTodos().filter((t) => t.id !== todo.id),
+              completedTodos: [{ ...todo, isCompleted: true, done: true }, ...store.completedTodos()],
+              activeCount: Math.max(0, store.activeCount() - 1),
+              completedCount: store.completedCount() + 1,
+            });
+            dispatcher.dispatch(adjustListCounts({ listId, activeDelta: -1 }));
+          } else {
+            // Uncompleting (Uncomplete-to-Top)
+            patchState(store, {
+              completedTodos: store.completedTodos().filter((t) => t.id !== todo.id),
+              activeTodos: [{ ...todo, isCompleted: false, done: false }, ...store.activeTodos()],
+              activeCount: store.activeCount() + 1,
+              completedCount: Math.max(0, store.completedCount() - 1),
+            });
+            dispatcher.dispatch(adjustListCounts({ listId, activeDelta: 1 }));
+          }
+
+          return httpService
+            .patch<TodoResponse>(`/lists/${listId}/todos/${todo.id}`, { isCompleted: targetIsCompleted })
+            .pipe(
+              tap({
+                next: (response) => {
+                  const updated = response.data.todo;
+                  if (targetIsCompleted) {
+                    patchState(store, {
+                      completedTodos: store.completedTodos().map((t) => (t.id === todo.id ? updated : t)),
+                    });
+                  } else {
+                    patchState(store, {
+                      activeTodos: store.activeTodos().map((t) => (t.id === todo.id ? updated : t)),
+                    });
+                  }
+                },
+                error: (error: HttpErrorResponse) => {
+                  // Rollback
+                  if (targetIsCompleted) {
+                    patchState(store, {
+                      completedTodos: store.completedTodos().filter((t) => t.id !== todo.id),
+                      activeTodos: [todo, ...store.activeTodos()],
+                      activeCount: store.activeCount() + 1,
+                      completedCount: Math.max(0, store.completedCount() - 1),
+                    });
+                    dispatcher.dispatch(adjustListCounts({ listId, activeDelta: 1 }));
+                  } else {
+                    patchState(store, {
+                      activeTodos: store.activeTodos().filter((t) => t.id !== todo.id),
+                      completedTodos: [todo, ...store.completedTodos()],
+                      activeCount: Math.max(0, store.activeCount() - 1),
+                      completedCount: store.completedCount() + 1,
+                    });
+                    dispatcher.dispatch(adjustListCounts({ listId, activeDelta: -1 }));
+                  }
+                  const message =
+                    error.error?.message ||
+                    (typeof error.error === 'string' ? error.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+    );
+
+    const deleteTodo = rxMethod<TodoItem>(
+      pipe(
+        filter((todo) => !!store.currentListId() && !!todo),
+        concatMap((todo) => {
+          const listId = store.currentListId()!;
+          const wasCompleted = todo.isCompleted;
+
+          if (wasCompleted) {
+            patchState(store, {
+              completedTodos: store.completedTodos().filter((t) => t.id !== todo.id),
+              totalCount: Math.max(0, store.totalCount() - 1),
+              completedCount: Math.max(0, store.completedCount() - 1),
+            });
+            dispatcher.dispatch(adjustListCounts({ listId, totalDelta: -1, activeDelta: 0 }));
+          } else {
+            patchState(store, {
+              activeTodos: store.activeTodos().filter((t) => t.id !== todo.id),
+              totalCount: Math.max(0, store.totalCount() - 1),
+              activeCount: Math.max(0, store.activeCount() - 1),
+            });
+            dispatcher.dispatch(adjustListCounts({ listId, totalDelta: -1, activeDelta: -1 }));
+          }
+
+          return httpService
+            .delete<DeleteTodoResponse>(`/lists/${listId}/todos/${todo.id}`)
+            .pipe(
+              tap({
+                next: (response) => {
+                  if (response.data?.counts) {
+                    patchState(store, {
+                      totalCount: response.data.counts.totalCount,
+                      activeCount: response.data.counts.activeCount,
+                      completedCount: response.data.counts.completedCount,
+                    });
+                  }
+                },
+                error: (error: HttpErrorResponse) => {
+                  // Rollback
+                  if (wasCompleted) {
+                    patchState(store, {
+                      completedTodos: [todo, ...store.completedTodos()],
+                      totalCount: store.totalCount() + 1,
+                      completedCount: store.completedCount() + 1,
+                    });
+                    dispatcher.dispatch(adjustListCounts({ listId, totalDelta: 1, activeDelta: 0 }));
+                  } else {
+                    patchState(store, {
+                      activeTodos: [todo, ...store.activeTodos()],
+                      totalCount: store.totalCount() + 1,
+                      activeCount: store.activeCount() + 1,
+                    });
+                    dispatcher.dispatch(adjustListCounts({ listId, totalDelta: 1, activeDelta: 1 }));
+                  }
+                  const message =
+                    error.error?.message ||
+                    (typeof error.error === 'string' ? error.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+    );
+
     return {
       loadInitialForList,
       loadMoreActiveTodos,
       loadMoreCompletedTodos,
+      createTodo,
+      updateTodoText,
+      toggleTodoCompletion,
+      deleteTodo,
       toggleCompletedSection(): void {
         const nextExpanded = !store.isCompletedExpanded();
         patchState(store, { isCompletedExpanded: nextExpanded });
@@ -283,75 +544,39 @@ export const TodosStore = signalStore(
       },
       // Backward-compatibility helpers for template before STORY-5.4 & STORY-5.5
       addTask(): void {
-        const text = store.newTask().trim();
-        if (!text) return;
-        const newItem: TodoItem = {
-          id: `temp-${Date.now()}`,
-          listId: store.currentListId() ?? '',
-          userId: '',
-          text,
-          isCompleted: false,
-          order: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          meta: 'Just now',
-          tag: 'Inbox',
-          done: false,
-        };
-        patchState(store, {
-          activeTodos: [newItem, ...store.activeTodos()],
-          newTask: '',
-          totalCount: store.totalCount() + 1,
-          activeCount: store.activeCount() + 1,
-        });
+        createTodo({ text: store.newTask() });
       },
       toggleTask(id: string | number): void {
         const task = store.activeTodos().find((t) => t.id === id);
-        if (!task) return;
-        patchState(store, {
-          activeTodos: store.activeTodos().filter((t) => t.id !== id),
-          completedTodos: [{ ...task, isCompleted: true, done: true, meta: 'Completed just now' }, ...store.completedTodos()],
-          activeCount: Math.max(0, store.activeCount() - 1),
-          completedCount: store.completedCount() + 1,
-        });
+        if (task) {
+          toggleTodoCompletion(task);
+        }
       },
       restoreTask(id: string | number): void {
         const task = store.completedTodos().find((t) => t.id === id);
-        if (!task) return;
-        patchState(store, {
-          completedTodos: store.completedTodos().filter((t) => t.id !== id),
-          activeTodos: [{ ...task, isCompleted: false, done: false, meta: 'Just now' }, ...store.activeTodos()],
-          completedCount: Math.max(0, store.completedCount() - 1),
-          activeCount: store.activeCount() + 1,
-        });
+        if (task) {
+          toggleTodoCompletion(task);
+        }
       },
       saveEdit(id: string | number): void {
         const trimmed = store.editValue().trim();
         if (trimmed) {
-          patchState(store, {
-            activeTodos: store.activeTodos().map((t) =>
-              t.id === id ? { ...t, text: trimmed, meta: 'Updated just now' } : t,
-            ),
-            editingId: null,
-            editValue: '',
-          });
+          updateTodoText({ todoId: String(id), text: trimmed });
         } else {
           patchState(store, { editingId: null, editValue: '' });
         }
       },
       deleteTask(id: string | number): void {
-        patchState(store, {
-          activeTodos: store.activeTodos().filter((t) => t.id !== id),
-          totalCount: Math.max(0, store.totalCount() - 1),
-          activeCount: Math.max(0, store.activeCount() - 1),
-        });
+        const task = store.activeTodos().find((t) => t.id === id);
+        if (task) {
+          deleteTodo(task);
+        }
       },
       deleteCompleted(id: string | number): void {
-        patchState(store, {
-          completedTodos: store.completedTodos().filter((t) => t.id !== id),
-          totalCount: Math.max(0, store.totalCount() - 1),
-          completedCount: Math.max(0, store.completedCount() - 1),
-        });
+        const task = store.completedTodos().find((t) => t.id === id);
+        if (task) {
+          deleteTodo(task);
+        }
       },
     };
   }),

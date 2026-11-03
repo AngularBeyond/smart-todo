@@ -1,14 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { provideDispatcher } from '@ngrx/signals/events';
+import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ApiResponse, HttpService } from '@core';
-import { PaginatedTodosResponse, TodoItem } from '../models';
+import { adjustListCounts, ApiResponse, HttpService } from '@core';
+import { DeleteTodoResponse, PaginatedTodosResponse, TodoItem, TodoResponse } from '../models';
 import { TodosStore } from './todos.store';
 
-describe('TodosStore (Sub-Phase 1: State & Pagination)', () => {
+describe('TodosStore', () => {
   let store: InstanceType<typeof TodosStore>;
+  let dispatcher: Dispatcher;
+  let dispatchSpy: ReturnType<typeof vi.spyOn>;
   let httpService: {
     get: ReturnType<typeof vi.fn>;
     post: ReturnType<typeof vi.fn>;
@@ -73,6 +75,8 @@ describe('TodosStore (Sub-Phase 1: State & Pagination)', () => {
     });
 
     store = TestBed.inject(TodosStore);
+    dispatcher = TestBed.inject(Dispatcher);
+    dispatchSpy = vi.spyOn(dispatcher, 'dispatch');
   });
 
   it('initializes with empty initial state and correct computed properties', () => {
@@ -262,6 +266,202 @@ describe('TodosStore (Sub-Phase 1: State & Pagination)', () => {
       expect(store.isQuotaReached()).toBe(true);
       expect(store.quotaBadgeText()).toBe('40/40');
       expect(store.progressPercentage()).toBe(25);
+    });
+  });
+
+  describe('createTodo', () => {
+    beforeEach(() => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialForList('list-1');
+      dispatchSpy.mockClear();
+    });
+
+    it('optimistically prepends item, increments counts, dispatches adjustListCounts, and replaces with server response', () => {
+      const serverTodo: TodoItem = {
+        ...mockActiveTodo,
+        id: 'real-server-id',
+        text: 'New task text',
+        order: -500,
+      };
+      httpService.post.mockReturnValue(of({ success: true, data: { todo: serverTodo } }));
+
+      store.createTodo({ text: 'New task text' });
+
+      // Check request
+      expect(httpService.post).toHaveBeenCalledWith('/lists/list-1/todos', { text: 'New task text' });
+      // Check event dispatched
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({ listId: 'list-1', totalDelta: 1, activeDelta: 1 }),
+      );
+      // Check store updated with server item
+      expect(store.activeTodos()[0].id).toBe('real-server-id');
+      expect(store.totalCount()).toBe(26);
+      expect(store.activeCount()).toBe(21);
+    });
+
+    it('rolls back optimistic addition and counts when server creation fails', () => {
+      const error = new HttpErrorResponse({
+        error: { message: 'Quota exceeded' },
+        status: 422,
+      });
+      httpService.post.mockReturnValue(throwError(() => error));
+
+      store.createTodo({ text: 'Failing task' });
+
+      // Check rollback event dispatched
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({ listId: 'list-1', totalDelta: -1, activeDelta: -1 }),
+      );
+      // Check state reverted
+      expect(store.activeTodos()).toEqual([mockActiveTodo]);
+      expect(store.totalCount()).toBe(25);
+      expect(store.activeCount()).toBe(20);
+      expect(store.error()).toBe('Quota exceeded');
+    });
+  });
+
+  describe('updateTodoText', () => {
+    beforeEach(() => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialForList('list-1');
+    });
+
+    it('optimistically updates text and replaces with server response', () => {
+      const updatedTodo: TodoItem = { ...mockActiveTodo, text: 'Renamed task' };
+      httpService.patch.mockReturnValue(of({ success: true, data: { todo: updatedTodo } }));
+
+      store.updateTodoText({ todoId: 'todo-1', text: 'Renamed task' });
+
+      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-1', {
+        text: 'Renamed task',
+      });
+      expect(store.activeTodos()[0].text).toBe('Renamed task');
+    });
+
+    it('rolls back to previous text when API call fails', () => {
+      const error = new HttpErrorResponse({
+        error: { message: 'Database error' },
+        status: 500,
+      });
+      httpService.patch.mockReturnValue(throwError(() => error));
+
+      store.updateTodoText({ todoId: 'todo-1', text: 'Will fail' });
+
+      expect(store.activeTodos()[0].text).toBe('Active Task 1');
+      expect(store.error()).toBe('Database error');
+    });
+  });
+
+  describe('toggleTodoCompletion', () => {
+    beforeEach(() => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialForList('list-1');
+      dispatchSpy.mockClear();
+    });
+
+    it('completing a todo moves it to completedTodos, updates counts and dispatches event', () => {
+      const completedResponse: TodoItem = { ...mockActiveTodo, isCompleted: true };
+      httpService.patch.mockReturnValue(of({ success: true, data: { todo: completedResponse } }));
+
+      store.toggleTodoCompletion(mockActiveTodo);
+
+      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-1', {
+        isCompleted: true,
+      });
+      expect(store.activeTodos()).toEqual([]);
+      expect(store.completedTodos()[0].id).toBe('todo-1');
+      expect(store.activeCount()).toBe(19);
+      expect(store.completedCount()).toBe(6);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({
+          listId: 'list-1',
+          activeDelta: -1,
+        }),
+      );
+    });
+
+    it('uncompleting a todo moves it to top of activeTodos (Uncomplete-to-Top)', () => {
+      // Setup existing completed
+      const existingCompleted: TodoItem = { ...mockCompletedTodo, id: 'todo-c1' };
+      const uncompletedResponse: TodoItem = {
+        ...existingCompleted,
+        isCompleted: false,
+        order: -1000,
+      };
+      httpService.patch.mockReturnValue(of({ success: true, data: { todo: uncompletedResponse } }));
+
+      store.toggleTodoCompletion(existingCompleted);
+
+      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-c1', {
+        isCompleted: false,
+      });
+      expect(store.activeTodos()[0].id).toBe('todo-c1');
+      expect(store.activeCount()).toBe(21);
+      expect(store.completedCount()).toBe(4);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({
+          listId: 'list-1',
+          activeDelta: 1,
+        }),
+      );
+    });
+
+    it('rolls back when toggling fails', () => {
+      const error = new HttpErrorResponse({ status: 500 });
+      httpService.patch.mockReturnValue(throwError(() => error));
+
+      store.toggleTodoCompletion(mockActiveTodo);
+
+      // Reverted to active
+      expect(store.activeTodos()[0].id).toBe('todo-1');
+      expect(store.activeCount()).toBe(20);
+      expect(store.completedCount()).toBe(5);
+    });
+  });
+
+  describe('deleteTodo', () => {
+    beforeEach(() => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialForList('list-1');
+      dispatchSpy.mockClear();
+    });
+
+    it('deletes active todo and updates counts', () => {
+      httpService.delete.mockReturnValue(
+        of({
+          success: true,
+          data: {
+            message: 'Deleted',
+            deletedId: 'todo-1',
+            counts: { totalCount: 24, activeCount: 19, completedCount: 5 },
+          },
+        }),
+      );
+
+      store.deleteTodo(mockActiveTodo);
+
+      expect(httpService.delete).toHaveBeenCalledWith('/lists/list-1/todos/todo-1');
+      expect(store.activeTodos()).toEqual([]);
+      expect(store.totalCount()).toBe(24);
+      expect(store.activeCount()).toBe(19);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({
+          listId: 'list-1',
+          totalDelta: -1,
+          activeDelta: -1,
+        }),
+      );
+    });
+
+    it('rolls back when deletion fails', () => {
+      const error = new HttpErrorResponse({ status: 500 });
+      httpService.delete.mockReturnValue(throwError(() => error));
+
+      store.deleteTodo(mockActiveTodo);
+
+      expect(store.activeTodos()[0].id).toBe('todo-1');
+      expect(store.totalCount()).toBe(25);
+      expect(store.activeCount()).toBe(20);
     });
   });
 });
