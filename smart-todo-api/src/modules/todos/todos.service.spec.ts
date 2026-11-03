@@ -13,6 +13,8 @@ describe('TodosService', () => {
     countTotalByListId: ReturnType<typeof vi.fn>;
     findMinActiveOrderByListId: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
+    findTodosByCursor: ReturnType<typeof vi.fn>;
+    countCountsByListId: ReturnType<typeof vi.fn>;
   };
 
   const userId = 'user-123';
@@ -36,6 +38,8 @@ describe('TodosService', () => {
       countTotalByListId: vi.fn(),
       findMinActiveOrderByListId: vi.fn(),
       create: vi.fn(),
+      findTodosByCursor: vi.fn(),
+      countCountsByListId: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -135,6 +139,101 @@ describe('TodosService', () => {
         0,
         expect.anything(),
       );
+    });
+  });
+
+  describe('getTodos', () => {
+    it('should throw NotFoundException if the list does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.getTodos(userId, listId, { completed: false, limit: 20 }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should query active todos with order asc and return hasMore: false when items <= limit', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      const mockItems: TodoItemSummary[] = [
+        { ...mockCreatedTodo, id: 't1', order: 100 },
+        { ...mockCreatedTodo, id: 't2', order: 200 },
+      ];
+      repository.findTodosByCursor.mockResolvedValue(mockItems);
+      repository.countCountsByListId.mockResolvedValue({
+        totalCount: 2,
+        activeCount: 2,
+        completedCount: 0,
+      });
+
+      const result = await service.getTodos(userId, listId, { completed: false, limit: 20 });
+
+      expect(repository.findTodosByCursor).toHaveBeenCalledWith({
+        listId,
+        isCompleted: false,
+        cursor: undefined,
+        limit: 20,
+      });
+      expect(result.items).toHaveLength(2);
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeNull();
+      expect(result.meta).toEqual({
+        totalCount: 2,
+        activeCount: 2,
+        completedCount: 0,
+        quotaLimit: MAX_TODOS_PER_LIST,
+      });
+    });
+
+    it('should return hasMore: true and nextCursor when items exceed limit (take: limit + 1)', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      // Generate 21 items for limit = 20
+      const mockItems: TodoItemSummary[] = Array.from({ length: 21 }, (_, i) => ({
+        ...mockCreatedTodo,
+        id: `todo-${i + 1}`,
+        order: (i + 1) * 100,
+      }));
+      repository.findTodosByCursor.mockResolvedValue(mockItems);
+      repository.countCountsByListId.mockResolvedValue({
+        totalCount: 35,
+        activeCount: 35,
+        completedCount: 0,
+      });
+
+      const result = await service.getTodos(userId, listId, { completed: false, limit: 20 });
+
+      expect(result.items).toHaveLength(20);
+      expect(result.hasMore).toBe(true);
+      expect(result.nextCursor).toBe('todo-20');
+      expect(result.meta.totalCount).toBe(35);
+    });
+
+    it('should query completed todos with completed: true and pass cursor when provided', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      const mockItems: TodoItemSummary[] = [
+        { ...mockCreatedTodo, id: 'comp-2', isCompleted: true },
+      ];
+      repository.findTodosByCursor.mockResolvedValue(mockItems);
+      repository.countCountsByListId.mockResolvedValue({
+        totalCount: 10,
+        activeCount: 5,
+        completedCount: 5,
+      });
+
+      const result = await service.getTodos(userId, listId, {
+        completed: true,
+        cursor: 'comp-1',
+        limit: 10,
+      });
+
+      expect(repository.findTodosByCursor).toHaveBeenCalledWith({
+        listId,
+        isCompleted: true,
+        cursor: 'comp-1',
+        limit: 10,
+      });
+      expect(result.items).toEqual(mockItems);
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeNull();
+      expect(result.meta.completedCount).toBe(5);
     });
   });
 });

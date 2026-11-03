@@ -8,6 +8,7 @@ describe('TodosController', () => {
   let controller: TodosController;
   let service: {
     createTodo: ReturnType<typeof vi.fn>;
+    getTodos: ReturnType<typeof vi.fn>;
   };
 
   const user: UserPayload = {
@@ -31,6 +32,7 @@ describe('TodosController', () => {
   beforeEach(async () => {
     service = {
       createTodo: vi.fn(),
+      getTodos: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -44,6 +46,29 @@ describe('TodosController', () => {
     }).compile();
 
     controller = module.get<TodosController>(TodosController);
+  });
+
+  describe('getTodos', () => {
+    it('should delegate to TodosService with user.sub, listId, and query dto', async () => {
+      const mockPaginated = {
+        items: [mockResponse.todo],
+        hasMore: false,
+        nextCursor: null,
+        meta: {
+          totalCount: 1,
+          activeCount: 1,
+          completedCount: 0,
+          quotaLimit: 40,
+        },
+      };
+      service.getTodos.mockResolvedValue(mockPaginated);
+
+      const query = { completed: false, limit: 20 };
+      const result = await controller.getTodos(user, 'list-456', query);
+
+      expect(service.getTodos).toHaveBeenCalledWith('user-123', 'list-456', query);
+      expect(result).toEqual(mockPaginated);
+    });
   });
 
   describe('createTodo', () => {
