@@ -1,0 +1,189 @@
+import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
+import { Dispatcher, Events, provideDispatcher } from '@ngrx/signals/events';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { HttpService } from '../http/http.service';
+import { ApiResponse } from '../http/api-response.model';
+import { TodoListSummary, TodoListsResponse } from '../models/todo-list.model';
+import { TodoListsStore } from './todo-lists.store';
+import {
+  apiErrorOccurred,
+  loadTodoLists,
+  selectTodoList,
+} from './events';
+
+describe('TodoListsStore', () => {
+  let store: InstanceType<typeof TodoListsStore>;
+  let httpMock: {
+    get: ReturnType<typeof vi.fn>;
+    post: ReturnType<typeof vi.fn>;
+    patch: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  let dispatcher: Dispatcher;
+  let events: Events;
+
+  const mockLists: TodoListSummary[] = [
+    {
+      id: 'list-unstarred-2',
+      name: 'Work',
+      isStarred: false,
+      order: 3000,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      totalCount: 5,
+      activeCount: 3,
+    },
+    {
+      id: 'list-starred-1',
+      name: 'Starred Old',
+      isStarred: true,
+      order: 1000,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-02T10:00:00.000Z',
+      totalCount: 4,
+      activeCount: 1,
+    },
+    {
+      id: 'list-unstarred-1',
+      name: 'Personal',
+      isStarred: false,
+      order: 1000,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      totalCount: 2,
+      activeCount: 0,
+    },
+    {
+      id: 'list-starred-2',
+      name: 'Starred New',
+      isStarred: true,
+      order: 2000,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-03T12:00:00.000Z',
+      totalCount: 8,
+      activeCount: 6,
+    },
+  ];
+
+  const mockResponse: ApiResponse<TodoListsResponse> = {
+    success: true,
+    data: { lists: mockLists },
+  };
+
+  beforeEach(() => {
+    httpMock = {
+      get: vi.fn(),
+      post: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideDispatcher(),
+        { provide: HttpService, useValue: httpMock },
+      ],
+    });
+
+    store = TestBed.inject(TodoListsStore);
+    dispatcher = TestBed.inject(Dispatcher);
+    events = TestBed.inject(Events);
+  });
+
+  it('should initialize with empty state and idle status', () => {
+    expect(store.lists()).toEqual([]);
+    expect(store.selectedListId()).toBeNull();
+    expect(store.selectedList()).toBeNull();
+    expect(store.isQuotaReached()).toBe(false);
+    expect(store.starredLists()).toEqual([]);
+    expect(store.unstarredLists()).toEqual([]);
+    expect(store.isPending()).toBe(false);
+  });
+
+  describe('computed signals', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should sort starred lists by updatedAt DESC', () => {
+      const starred = store.starredLists();
+      expect(starred).toHaveLength(2);
+      expect(starred[0].id).toBe('list-starred-2');
+      expect(starred[1].id).toBe('list-starred-1');
+    });
+
+    it('should sort unstarred lists by order ASC', () => {
+      const unstarred = store.unstarredLists();
+      expect(unstarred).toHaveLength(2);
+      expect(unstarred[0].id).toBe('list-unstarred-1');
+      expect(unstarred[1].id).toBe('list-unstarred-2');
+    });
+
+    it('should calculate isQuotaReached when lists >= 3', () => {
+      expect(store.lists().length).toBe(4);
+      expect(store.isQuotaReached()).toBe(true);
+    });
+
+    it('should compute selectedList from selectedListId', () => {
+      expect(store.selectedList()?.id).toBe('list-starred-1');
+
+      dispatcher.dispatch(selectTodoList({ listId: 'list-unstarred-1' }));
+      expect(store.selectedList()?.id).toBe('list-unstarred-1');
+      expect(store.selectedList()?.name).toBe('Personal');
+    });
+  });
+
+  describe('loadTodoLists event', () => {
+    it('should load lists, update store, and auto-select first list', () => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+
+      dispatcher.dispatch(loadTodoLists());
+
+      expect(httpMock.get).toHaveBeenCalledWith('/api/v1/lists');
+      expect(store.lists()).toEqual(mockLists);
+      expect(store.isFulfilled()).toBe(true);
+      expect(store.selectedListId()).toBe('list-starred-1');
+    });
+
+    it('should handle error, set error state, and dispatch apiErrorOccurred', () => {
+      const errorSpy = vi.fn();
+      events.on(apiErrorOccurred).subscribe(errorSpy);
+
+      const errorResponse = new HttpErrorResponse({
+        error: { message: 'Failed to fetch lists' },
+        status: 500,
+        statusText: 'Server Error',
+      });
+      httpMock.get.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(loadTodoLists());
+
+      expect(store.error()).toBe('Failed to fetch lists');
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Failed to fetch lists' },
+        }),
+      );
+    });
+  });
+
+  describe('selectTodoList event and selectList method', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should update selectedListId when selectTodoList is dispatched', () => {
+      dispatcher.dispatch(selectTodoList({ listId: 'list-unstarred-2' }));
+      expect(store.selectedListId()).toBe('list-unstarred-2');
+    });
+
+    it('should update selectedListId when selectList method is called', () => {
+      store.selectList('list-starred-2');
+      expect(store.selectedListId()).toBe('list-starred-2');
+    });
+  });
+});
