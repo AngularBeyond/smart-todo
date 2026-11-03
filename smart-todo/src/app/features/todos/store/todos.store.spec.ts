@@ -464,4 +464,122 @@ describe('TodosStore', () => {
       expect(store.activeCount()).toBe(20);
     });
   });
+
+  describe('reorderActiveTodo', () => {
+    const todoA: TodoItem = { ...mockActiveTodo, id: 'todo-a', order: 1000 };
+    const todoB: TodoItem = { ...mockActiveTodo, id: 'todo-b', order: 2000 };
+    const todoC: TodoItem = { ...mockActiveTodo, id: 'todo-c', order: 3000 };
+
+    beforeEach(() => {
+      const mockThreeItemsResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [todoA, todoB, todoC],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 3,
+            activeCount: 3,
+            completedCount: 0,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(mockThreeItemsResponse));
+      store.loadInitialForList('list-1');
+    });
+
+    it('moves an active item to targetIndex 0 (top of list)', () => {
+      // items remaining without todoC: [todoA (1000), todoB (2000)]
+      // targetIndex 0: newOrder = firstOrder (1000) - ORDER_STEP (1000) = 0
+      const updatedTodo: TodoItem = { ...todoC, order: 0 };
+      httpService.patch.mockReturnValue(
+        of({ success: true, data: { todo: updatedTodo } }),
+      );
+
+      store.reorderActiveTodo({ todoId: 'todo-c', targetIndex: 0 });
+
+      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-c/reorder', {
+        order: 0,
+      });
+      const active = store.activeTodos();
+      expect(active[0].id).toBe('todo-c');
+      expect(active[0].order).toBe(0);
+      expect(active[1].id).toBe('todo-a');
+      expect(active[2].id).toBe('todo-b');
+    });
+
+    it('moves an active item to middle position', () => {
+      // items remaining without todoA: [todoB (2000), todoC (3000)]
+      // targetIndex 1: between todoB and todoC -> (2000 + 3000) / 2 = 2500
+      const updatedTodo: TodoItem = { ...todoA, order: 2500 };
+      httpService.patch.mockReturnValue(
+        of({ success: true, data: { todo: updatedTodo } }),
+      );
+
+      store.reorderActiveTodo({ todoId: 'todo-a', targetIndex: 1 });
+
+      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-a/reorder', {
+        order: 2500,
+      });
+      const active = store.activeTodos();
+      expect(active[0].id).toBe('todo-b');
+      expect(active[1].id).toBe('todo-a');
+      expect(active[1].order).toBe(2500);
+      expect(active[2].id).toBe('todo-c');
+    });
+
+    it('moves an active item to end of list', () => {
+      // items remaining without todoA: [todoB (2000), todoC (3000)]
+      // targetIndex 2: after todoC -> lastOrder (3000) + ORDER_STEP (1000) = 4000
+      const updatedTodo: TodoItem = { ...todoA, order: 4000 };
+      httpService.patch.mockReturnValue(
+        of({ success: true, data: { todo: updatedTodo } }),
+      );
+
+      store.reorderActiveTodo({ todoId: 'todo-a', targetIndex: 2 });
+
+      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-a/reorder', {
+        order: 4000,
+      });
+      const active = store.activeTodos();
+      expect(active[0].id).toBe('todo-b');
+      expect(active[1].id).toBe('todo-c');
+      expect(active[2].id).toBe('todo-a');
+      expect(active[2].order).toBe(4000);
+    });
+
+    it('rolls back to previous array order on reorder failure', () => {
+      const error = new HttpErrorResponse({ status: 500 });
+      httpService.patch.mockReturnValue(throwError(() => error));
+
+      store.reorderActiveTodo({ todoId: 'todo-c', targetIndex: 0 });
+
+      // Should be rolled back
+      const active = store.activeTodos();
+      expect(active[0].id).toBe('todo-a');
+      expect(active[1].id).toBe('todo-b');
+      expect(active[2].id).toBe('todo-c');
+    });
+
+    it('recovers and processes subsequent reorder calls after an error (stream resilience)', () => {
+      const error = new HttpErrorResponse({ status: 500 });
+      httpService.patch.mockReturnValueOnce(throwError(() => error));
+
+      // First call fails
+      store.reorderActiveTodo({ todoId: 'todo-c', targetIndex: 0 });
+      expect(store.activeTodos()[0].id).toBe('todo-a');
+
+      // Second call succeeds
+      const updatedTodo: TodoItem = { ...todoC, order: 0 };
+      httpService.patch.mockReturnValueOnce(
+        of({ success: true, data: { todo: updatedTodo } }),
+      );
+
+      store.reorderActiveTodo({ todoId: 'todo-c', targetIndex: 0 });
+      expect(store.activeTodos()[0].id).toBe('todo-c');
+      expect(store.activeTodos()[0].order).toBe(0);
+    });
+  });
 });
+
