@@ -18,12 +18,14 @@ import {
   withRequestStatus,
 } from '../index';
 import { TodoListSummary, TodoListsResponse, TodoListResponse } from '../models/todo-list.model';
+import { calculateNewOrder } from '../pure-functions/order-calculator.util';
 import {
   loadTodoLists,
   selectTodoList,
   createTodoList,
   renameTodoList,
   toggleStarTodoList,
+  reorderUnstarredList,
   adjustListCounts,
   apiErrorOccurred,
   apiSuccessOccurred,
@@ -218,6 +220,62 @@ export const TodoListsStore = signalStore(
             .patch<TodoListResponse>(`/api/v1/lists/${payload.listId}`, {
               isStarred: nextIsStarred,
             })
+            .pipe(
+              tap({
+                next: (res) => {
+                  const updatedList = res.data.list;
+                  patchState(store, {
+                    lists: store
+                      .lists()
+                      .map((l) => (l.id === updatedList.id ? updatedList : l)),
+                  });
+                },
+                error: (err: HttpErrorResponse) => {
+                  const message =
+                    err.error?.message ||
+                    (typeof err.error === 'string' ? err.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(
+                    store,
+                    { lists: previousLists },
+                    setError(message),
+                  );
+                  dispatcher.dispatch(apiErrorOccurred({ message }));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+
+      reorderUnstarredList$: events.on(reorderUnstarredList).pipe(
+        switchMap(({ payload }) => {
+          const currentUnstarred = store.unstarredLists();
+          const targetList = currentUnstarred.find(
+            (l) => l.id === payload.listId,
+          );
+          if (!targetList) return EMPTY;
+
+          const previousLists = store.lists();
+          const unstarredWithoutItem = currentUnstarred.filter(
+            (l) => l.id !== payload.listId,
+          );
+          const newOrder = calculateNewOrder(
+            unstarredWithoutItem,
+            payload.targetIndex,
+          );
+
+          patchState(store, {
+            lists: previousLists.map((l) =>
+              l.id === payload.listId ? { ...l, order: newOrder } : l,
+            ),
+          });
+
+          return httpService
+            .patch<TodoListResponse>(
+              `/api/v1/lists/${payload.listId}/reorder`,
+              { order: newOrder },
+            )
             .pipe(
               tap({
                 next: (res) => {
