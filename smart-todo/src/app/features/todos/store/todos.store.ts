@@ -115,5 +115,17 @@ export const TodosStore = signalStore(
         completed: store.completed().filter((item) => item.id !== id),
       });
     },
+    resetForNewList(listName?: string): void {
+      patchState(store, {
+        tasks: [],
+        completed: [],
+        newTask: '',
+        showCompleted: false,
+        activeList: listName ?? store.activeList(),
+        editingId: null,
+        editValue: '',
+        query: '',
+      });
+    },
   })),
 );

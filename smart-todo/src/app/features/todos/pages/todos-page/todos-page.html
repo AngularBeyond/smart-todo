@@ -132,7 +132,7 @@
 
     @if (store.visibleTasks().length === 0) {
       <div class="py-12 text-center text-sm text-muted-foreground">
-        No tasks match that filter.
+        {{ store.query() ? 'No tasks match that filter.' : 'No tasks in this list yet. Add one above!' }}
       </div>
     }
   </section>

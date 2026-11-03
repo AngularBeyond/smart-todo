@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucidePlus,
@@ -47,4 +47,20 @@ export class TodosPage {
   protected readonly store = inject(TodosStore);
   protected readonly todoListsStore = inject(TodoListsStore);
   protected readonly appStore = inject(AppStore);
+
+  private lastSelectedListId: string | null = null;
+
+  constructor() {
+    effect(() => {
+      const selected = this.todoListsStore.selectedList();
+      if (!selected) return;
+
+      if (this.lastSelectedListId !== selected.id) {
+        this.lastSelectedListId = selected.id;
+        if (selected.totalCount === 0) {
+          this.store.resetForNewList(selected.name);
+        }
+      }
+    });
+  }
 }
