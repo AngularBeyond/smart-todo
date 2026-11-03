@@ -13,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { ProfileModule } from './modules/profile/profile.module.js';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
 import { TodoListsModule } from './modules/todo-lists/todo-lists.module.js';
+import { TodosModule } from './modules/todos/todos.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TodoListsModule } from './modules/todo-lists/todo-lists.module.js';
     ProfileModule,
     MaintenanceModule,
     TodoListsModule,
+    TodosModule,
   ],
   controllers: [AppController],
   providers: [
