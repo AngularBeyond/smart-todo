@@ -1,17 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnprocessableEntityException } from '@nestjs/common';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { TodoListsService } from './todo-lists.service.js';
 import { TodoListsRepository, TodoListSummary } from './todo-lists.repository.js';
+import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 
 describe('TodoListsService', () => {
   let service: TodoListsService;
   let repositoryMock: {
     findAllByUserId: ReturnType<typeof vi.fn>;
+    countByUserId: ReturnType<typeof vi.fn>;
+    findMaxOrderByUserId: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+    transaction: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
     repositoryMock = {
       findAllByUserId: vi.fn(),
+      countByUserId: vi.fn(),
+      findMaxOrderByUserId: vi.fn(),
+      create: vi.fn(),
+      transaction: vi.fn().mockImplementation((cb: (tx: unknown) => Promise<unknown>) => cb({})),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -104,6 +114,65 @@ describe('TodoListsService', () => {
       const result = await service.getLists('user-456');
 
       expect(result.lists).toEqual([]);
+    });
+  });
+
+  describe('createList', () => {
+    it('should assign order 1000 when user has no existing lists', async () => {
+      const dto: CreateTodoListDto = { name: 'My First List' };
+      repositoryMock.countByUserId.mockResolvedValue(0);
+      repositoryMock.findMaxOrderByUserId.mockResolvedValue(null);
+      const mockCreatedList: TodoListSummary = {
+        id: 'list-1',
+        name: 'My First List',
+        isStarred: false,
+        order: 1000,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        updatedAt: new Date('2026-01-01T00:00:00Z'),
+        totalCount: 0,
+        activeCount: 0,
+      };
+      repositoryMock.create.mockResolvedValue(mockCreatedList);
+
+      const result = await service.createList('user-123', dto);
+
+      expect(repositoryMock.countByUserId).toHaveBeenCalledWith('user-123', expect.anything());
+      expect(repositoryMock.findMaxOrderByUserId).toHaveBeenCalledWith('user-123', expect.anything());
+      expect(repositoryMock.create).toHaveBeenCalledWith('user-123', 'My First List', 1000, expect.anything());
+      expect(result).toEqual({ list: mockCreatedList });
+    });
+
+    it('should assign maxOrder + 1000 when user already has lists', async () => {
+      const dto: CreateTodoListDto = { name: 'Second List' };
+      repositoryMock.countByUserId.mockResolvedValue(1);
+      repositoryMock.findMaxOrderByUserId.mockResolvedValue(2000);
+      const mockCreatedList: TodoListSummary = {
+        id: 'list-2',
+        name: 'Second List',
+        isStarred: false,
+        order: 3000,
+        createdAt: new Date('2026-01-02T00:00:00Z'),
+        updatedAt: new Date('2026-01-02T00:00:00Z'),
+        totalCount: 0,
+        activeCount: 0,
+      };
+      repositoryMock.create.mockResolvedValue(mockCreatedList);
+
+      const result = await service.createList('user-123', dto);
+
+      expect(repositoryMock.create).toHaveBeenCalledWith('user-123', 'Second List', 3000, expect.anything());
+      expect(result).toEqual({ list: mockCreatedList });
+    });
+
+    it('should throw UnprocessableEntityException when user already has 3 lists', async () => {
+      const dto: CreateTodoListDto = { name: 'Fourth List' };
+      repositoryMock.countByUserId.mockResolvedValue(3);
+
+      await expect(service.createList('user-123', dto)).rejects.toThrow(
+        UnprocessableEntityException,
+      );
+
+      expect(repositoryMock.create).not.toHaveBeenCalled();
     });
   });
 });
