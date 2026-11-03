@@ -75,7 +75,8 @@ export class ListHeaderComponent {
     this.starToggled.emit();
   }
 
-  confirmDelete(): void {
+  confirmDelete(ctx?: { close?: () => void }): void {
+    ctx?.close?.();
     this.deleted.emit();
   }
 }
