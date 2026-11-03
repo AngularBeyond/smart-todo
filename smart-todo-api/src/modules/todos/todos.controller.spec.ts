@@ -10,6 +10,7 @@ describe('TodosController', () => {
     createTodo: ReturnType<typeof vi.fn>;
     getTodos: ReturnType<typeof vi.fn>;
     updateTodo: ReturnType<typeof vi.fn>;
+    reorderTodo: ReturnType<typeof vi.fn>;
   };
 
   const user: UserPayload = {
@@ -35,6 +36,7 @@ describe('TodosController', () => {
       createTodo: vi.fn(),
       getTodos: vi.fn(),
       updateTodo: vi.fn(),
+      reorderTodo: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -96,6 +98,18 @@ describe('TodosController', () => {
       const result = await controller.updateTodo(user, 'list-456', 'todo-1', dto);
 
       expect(service.updateTodo).toHaveBeenCalledWith('user-123', 'list-456', 'todo-1', dto);
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('reorderTodo', () => {
+    it('should delegate to TodosService with user.sub, listId, todoId, and dto', async () => {
+      service.reorderTodo.mockResolvedValue(mockResponse);
+
+      const dto = { order: 2500 };
+      const result = await controller.reorderTodo(user, 'list-456', 'todo-1', dto);
+
+      expect(service.reorderTodo).toHaveBeenCalledWith('user-123', 'list-456', 'todo-1', dto);
       expect(result).toEqual(mockResponse);
     });
   });

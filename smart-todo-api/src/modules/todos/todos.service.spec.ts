@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TodosService } from './todos.service.js';
 import { TodosRepository, TodoItemSummary } from './todos.repository.js';
@@ -17,6 +17,8 @@ describe('TodosService', () => {
     countCountsByListId: ReturnType<typeof vi.fn>;
     findByIdAndUserId: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    findActiveTodosByListId: ReturnType<typeof vi.fn>;
+    batchUpdateOrders: ReturnType<typeof vi.fn>;
   };
 
   const userId = 'user-123';
@@ -44,6 +46,8 @@ describe('TodosService', () => {
       countCountsByListId: vi.fn(),
       findByIdAndUserId: vi.fn(),
       update: vi.fn(),
+      findActiveTodosByListId: vi.fn(),
+      batchUpdateOrders: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -368,6 +372,99 @@ describe('TodosService', () => {
         expect.anything(),
       );
       expect(result.todo.order).toBe(1000);
+    });
+  });
+
+  describe('reorderTodo', () => {
+    const todoId = 'todo-1';
+
+    it('should throw NotFoundException if the list does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.reorderTodo(userId, listId, todoId, { order: 1500 }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if the todo does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.reorderTodo(userId, listId, todoId, { order: 1500 }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if trying to reorder a completed todo', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: true,
+      });
+
+      await expect(
+        service.reorderTodo(userId, listId, todoId, { order: 1500 }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update active todo order without normalization when neighbor distance >= 1e-9', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: false,
+        order: 1000,
+      });
+      repository.update.mockResolvedValue({
+        ...mockCreatedTodo,
+        order: 1500,
+      });
+      repository.findActiveTodosByListId.mockResolvedValue([
+        { ...mockCreatedTodo, id: 't1', order: 1000 },
+        { ...mockCreatedTodo, id: todoId, order: 1500 },
+        { ...mockCreatedTodo, id: 't3', order: 2000 },
+      ]);
+
+      const result = await service.reorderTodo(userId, listId, todoId, { order: 1500 });
+
+      expect(repository.update).toHaveBeenCalledWith(
+        todoId,
+        { order: 1500 },
+        expect.anything(),
+      );
+      expect(repository.batchUpdateOrders).not.toHaveBeenCalled();
+      expect(result.todo.order).toBe(1500);
+    });
+
+    it('should trigger normalization to multiples of 1000 when adjacent distance < 1e-9', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: false,
+        order: 1000,
+      });
+      repository.update.mockResolvedValue({
+        ...mockCreatedTodo,
+        order: 1000.0000000001,
+      });
+      // Adjacent items with distance 1e-10 (< 1e-9)
+      repository.findActiveTodosByListId.mockResolvedValue([
+        { ...mockCreatedTodo, id: 't1', order: 1000 },
+        { ...mockCreatedTodo, id: todoId, order: 1000.0000000001 },
+      ]);
+      repository.batchUpdateOrders.mockResolvedValue(undefined);
+
+      const result = await service.reorderTodo(userId, listId, todoId, {
+        order: 1000.0000000001,
+      });
+
+      expect(repository.batchUpdateOrders).toHaveBeenCalledWith(
+        [
+          { id: 't1', order: 1000 },
+          { id: todoId, order: 2000 },
+        ],
+        expect.anything(),
+      );
+      expect(result.todo.order).toBe(2000);
     });
   });
 });

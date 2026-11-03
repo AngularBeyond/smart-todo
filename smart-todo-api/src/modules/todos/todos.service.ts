@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -6,6 +7,7 @@ import {
 import { MAX_TODOS_PER_LIST, ORDER_STEP } from '../../common/constants/quotas.constants.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { GetTodosQueryDto } from './dto/get-todos-query.dto.js';
+import { ReorderTodoDto } from './dto/reorder-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
 import { TodosRepository, TodoItemSummary } from './todos.repository.js';
 
@@ -136,6 +138,60 @@ export class TodosService {
       }
 
       return this.todosRepository.update(todoId, updateData, tx);
+    });
+
+    return { todo: updated };
+  }
+
+  async reorderTodo(
+    userId: string,
+    listId: string,
+    todoId: string,
+    dto: ReorderTodoDto,
+  ): Promise<TodoResponse> {
+    const updated = await this.todosRepository.transaction(async (tx) => {
+      // 1. Verify list ownership
+      const list = await this.todosRepository.findListByIdAndUserId(listId, userId, tx);
+      if (!list) {
+        throw new NotFoundException('Todo list not found.');
+      }
+
+      // 2. Find todo item and verify ownership & list association
+      const todo = await this.todosRepository.findByIdAndUserId(todoId, userId, tx);
+      if (!todo || todo.listId !== listId) {
+        throw new NotFoundException('Todo item not found.');
+      }
+
+      if (todo.isCompleted) {
+        throw new BadRequestException('Cannot reorder a completed todo.');
+      }
+
+      // 3. Update the target item's order
+      let updatedItem = await this.todosRepository.update(todoId, { order: dto.order }, tx);
+
+      // 4. Precision Safety Net: check adjacent active items
+      const activeTodos = await this.todosRepository.findActiveTodosByListId(listId, tx);
+      let needsNormalization = false;
+      for (let i = 1; i < activeTodos.length; i++) {
+        if (Math.abs(activeTodos[i].order - activeTodos[i - 1].order) < 1e-9) {
+          needsNormalization = true;
+          break;
+        }
+      }
+
+      if (needsNormalization) {
+        const updates = activeTodos.map((item, index) => ({
+          id: item.id,
+          order: (index + 1) * ORDER_STEP,
+        }));
+        await this.todosRepository.batchUpdateOrders(updates, tx);
+        const reloaded = updates.find((u) => u.id === todoId);
+        if (reloaded) {
+          updatedItem = { ...updatedItem, order: reloaded.order };
+        }
+      }
+
+      return updatedItem;
     });
 
     return { todo: updated };

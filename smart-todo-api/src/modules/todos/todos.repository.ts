@@ -175,4 +175,40 @@ export class TodosRepository {
       },
     });
   }
+
+  async findActiveTodosByListId(
+    listId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<TodoItemSummary[]> {
+    const client = tx ?? this.prisma;
+    return client.todoItem.findMany({
+      where: { listId, isCompleted: false },
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        listId: true,
+        userId: true,
+        text: true,
+        isCompleted: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async batchUpdateOrders(
+    updates: Array<{ id: string; order: number }>,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await Promise.all(
+      updates.map((u) =>
+        client.todoItem.update({
+          where: { id: u.id },
+          data: { order: u.order },
+        }),
+      ),
+    );
+  }
 }

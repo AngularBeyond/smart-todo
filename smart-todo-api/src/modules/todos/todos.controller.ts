@@ -13,6 +13,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { GetTodosQueryDto } from './dto/get-todos-query.dto.js';
+import { ReorderTodoDto } from './dto/reorder-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
 import { TodosService, TodoResponse, PaginatedTodosResponse } from './todos.service.js';
 
@@ -47,5 +48,15 @@ export class TodosController {
     @Body() dto: UpdateTodoDto,
   ): Promise<TodoResponse> {
     return this.todosService.updateTodo(user.sub, listId, todoId, dto);
+  }
+
+  @Patch(':todoId/reorder')
+  async reorderTodo(
+    @CurrentUser() user: UserPayload,
+    @Param('listId') listId: string,
+    @Param('todoId') todoId: string,
+    @Body() dto: ReorderTodoDto,
+  ): Promise<TodoResponse> {
+    return this.todosService.reorderTodo(user.sub, listId, todoId, dto);
   }
 }
