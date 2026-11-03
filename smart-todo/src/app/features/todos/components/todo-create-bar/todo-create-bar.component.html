@@ -1,0 +1,32 @@
+<div class="flex items-center gap-3 border border-primary/25 bg-card p-2 shadow-sm transition-colors focus-within:border-primary">
+  <div class="flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
+    <svg lucidePlus class="size-4"></svg>
+  </div>
+  <input
+    hlmInput
+    type="text"
+    [value]="text()"
+    (input)="onInputChange($event)"
+    (keydown.enter)="onSubmit()"
+    [disabled]="isQuotaReached() || disabled()"
+    [placeholder]="isQuotaReached() ? 'List quota reached (40/40)' : placeholder()"
+    class="h-10 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60"
+    aria-label="New task input"
+  />
+  <span
+    hlmBadge
+    [variant]="isQuotaReached() ? 'destructive' : 'secondary'"
+    class="hidden shrink-0 font-mono text-[10px] sm:inline-flex"
+  >
+    {{ quotaBadgeText() }}
+  </span>
+  <button
+    hlmBtn
+    type="button"
+    (click)="onSubmit()"
+    [disabled]="!canSubmit()"
+    class="shrink-0"
+  >
+    Add task
+  </button>
+</div>
