@@ -122,7 +122,13 @@
   <div class="mt-8 border-t border-sidebar-border pt-4">
     <div class="flex items-center justify-between text-xs text-muted-foreground">
       <label for="new-list-input">New list</label>
-      <span>{{ todoListsStore.lists().length }}/3 used</span>
+      <span [class.text-amber-500]="todoListsStore.isQuotaReached()">
+        @if (todoListsStore.isQuotaReached()) {
+          Max 3 lists in demo (3/3)
+        } @else {
+          {{ todoListsStore.lists().length }}/3 used
+        }
+      </span>
     </div>
     <div class="mt-2 flex gap-2">
       <input
@@ -133,7 +139,7 @@
         (ngModelChange)="newListName.set($event)"
         [disabled]="todoListsStore.isQuotaReached()"
         (keydown.enter)="createList()"
-        placeholder="Name your list"
+        [placeholder]="todoListsStore.isQuotaReached() ? 'Max 3 lists in demo (3/3)' : 'Name your list'"
         class="h-9 bg-background text-xs"
       />
       <button
