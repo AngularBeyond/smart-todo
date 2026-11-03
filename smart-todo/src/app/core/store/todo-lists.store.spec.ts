@@ -15,6 +15,7 @@ import {
   createTodoList,
   renameTodoList,
   toggleStarTodoList,
+  reorderUnstarredList,
   adjustListCounts,
 } from './events';
 
@@ -392,5 +393,74 @@ describe('TodoListsStore', () => {
       expect(list?.activeCount).toBe(0);
     });
   });
+
+  describe('reorderUnstarredList event', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should optimistically calculate order and update unstarredLists positioning', () => {
+      // Current unstarred: list-unstarred-1 (order 1000), list-unstarred-2 (order 3000)
+      // Moving list-unstarred-2 to targetIndex 0:
+      // remaining: [list-unstarred-1 (order 1000)]
+      // calculateNewOrder([{ order: 1000 }], 0) = 0
+      const updatedList: TodoListSummary = {
+        ...mockLists[0],
+        order: 0,
+      };
+      const mockPatchResponse: ApiResponse<TodoListResponse> = {
+        success: true,
+        data: { list: updatedList },
+      };
+      httpMock.patch.mockReturnValue(of(mockPatchResponse));
+
+      dispatcher.dispatch(
+        reorderUnstarredList({
+          listId: 'list-unstarred-2',
+          targetIndex: 0,
+        }),
+      );
+
+      expect(httpMock.patch).toHaveBeenCalledWith(
+        '/api/v1/lists/list-unstarred-2/reorder',
+        { order: 0 },
+      );
+      const unstarred = store.unstarredLists();
+      expect(unstarred[0].id).toBe('list-unstarred-2');
+      expect(unstarred[0].order).toBe(0);
+      expect(unstarred[1].id).toBe('list-unstarred-1');
+      expect(unstarred[1].order).toBe(1000);
+    });
+
+    it('should rollback list ordering and dispatch apiErrorOccurred if reorder fails', () => {
+      const errorSpy = vi.fn();
+      events.on(apiErrorOccurred).subscribe(errorSpy);
+
+      const errorResponse = new HttpErrorResponse({
+        error: { message: 'Cannot reorder a starred list.' },
+        status: 400,
+      });
+      httpMock.patch.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(
+        reorderUnstarredList({
+          listId: 'list-unstarred-2',
+          targetIndex: 0,
+        }),
+      );
+
+      const unstarred = store.unstarredLists();
+      expect(unstarred[0].id).toBe('list-unstarred-1');
+      expect(unstarred[1].id).toBe('list-unstarred-2');
+      expect(unstarred[1].order).toBe(3000); // rolled back
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Cannot reorder a starred list.' },
+        }),
+      );
+    });
+  });
 });
+
 
