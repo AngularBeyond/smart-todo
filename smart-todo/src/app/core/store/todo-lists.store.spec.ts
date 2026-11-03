@@ -5,12 +5,17 @@ import { Dispatcher, Events, provideDispatcher } from '@ngrx/signals/events';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { HttpService } from '../http/http.service';
 import { ApiResponse } from '../http/api-response.model';
-import { TodoListSummary, TodoListsResponse } from '../models/todo-list.model';
+import { TodoListSummary, TodoListsResponse, TodoListResponse } from '../models/todo-list.model';
 import { TodoListsStore } from './todo-lists.store';
 import {
   apiErrorOccurred,
+  apiSuccessOccurred,
   loadTodoLists,
   selectTodoList,
+  createTodoList,
+  renameTodoList,
+  toggleStarTodoList,
+  adjustListCounts,
 } from './events';
 
 describe('TodoListsStore', () => {
@@ -186,4 +191,206 @@ describe('TodoListsStore', () => {
       expect(store.selectedListId()).toBe('list-starred-2');
     });
   });
+
+  describe('createTodoList event', () => {
+    const newCreatedList: TodoListSummary = {
+      id: 'list-new-1',
+      name: 'New Project',
+      isStarred: false,
+      order: 4000,
+      createdAt: '2026-01-04T00:00:00.000Z',
+      updatedAt: '2026-01-04T00:00:00.000Z',
+      totalCount: 0,
+      activeCount: 0,
+    };
+
+    const mockCreateResponse: ApiResponse<TodoListResponse> = {
+      success: true,
+      data: { list: newCreatedList },
+    };
+
+    it('should create list, append to store, select it, and dispatch apiSuccessOccurred', () => {
+      const successSpy = vi.fn();
+      events.on(apiSuccessOccurred).subscribe(successSpy);
+      httpMock.post.mockReturnValue(of(mockCreateResponse));
+
+      dispatcher.dispatch(createTodoList({ name: 'New Project' }));
+
+      expect(httpMock.post).toHaveBeenCalledWith('/api/v1/lists', {
+        name: 'New Project',
+      });
+      expect(store.lists()).toContainEqual(newCreatedList);
+      expect(store.selectedListId()).toBe('list-new-1');
+      expect(store.isFulfilled()).toBe(true);
+      expect(successSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Todo list created successfully.' },
+        }),
+      );
+    });
+
+    it('should handle error when creating list fails', () => {
+      const errorSpy = vi.fn();
+      events.on(apiErrorOccurred).subscribe(errorSpy);
+
+      const errorResponse = new HttpErrorResponse({
+        error: { message: 'Demo quota reached: You can create a maximum of 3 lists.' },
+        status: 422,
+        statusText: 'Unprocessable Entity',
+      });
+      httpMock.post.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(createTodoList({ name: 'Exceeding List' }));
+
+      expect(store.error()).toBe(
+        'Demo quota reached: You can create a maximum of 3 lists.',
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: {
+            message: 'Demo quota reached: You can create a maximum of 3 lists.',
+          },
+        }),
+      );
+    });
+  });
+
+  describe('renameTodoList event', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should optimistically update name and persist via PATCH', () => {
+      const updatedList: TodoListSummary = {
+        ...mockLists[2],
+        name: 'Renamed Personal',
+      };
+      const mockPatchResponse: ApiResponse<TodoListResponse> = {
+        success: true,
+        data: { list: updatedList },
+      };
+      httpMock.patch.mockReturnValue(of(mockPatchResponse));
+
+      dispatcher.dispatch(
+        renameTodoList({ listId: 'list-unstarred-1', name: 'Renamed Personal' }),
+      );
+
+      expect(httpMock.patch).toHaveBeenCalledWith(
+        '/api/v1/lists/list-unstarred-1',
+        { name: 'Renamed Personal' },
+      );
+      const renamed = store.lists().find((l) => l.id === 'list-unstarred-1');
+      expect(renamed?.name).toBe('Renamed Personal');
+    });
+
+    it('should rollback name and dispatch apiErrorOccurred if PATCH fails', () => {
+      const errorSpy = vi.fn();
+      events.on(apiErrorOccurred).subscribe(errorSpy);
+
+      const errorResponse = new HttpErrorResponse({
+        error: { message: 'Failed to rename list' },
+        status: 500,
+      });
+      httpMock.patch.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(
+        renameTodoList({ listId: 'list-unstarred-1', name: 'Failed Name' }),
+      );
+
+      const list = store.lists().find((l) => l.id === 'list-unstarred-1');
+      expect(list?.name).toBe('Personal'); // rolled back
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Failed to rename list' },
+        }),
+      );
+    });
+  });
+
+  describe('toggleStarTodoList event', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should optimistically toggle star status and persist via PATCH', () => {
+      const updatedList: TodoListSummary = {
+        ...mockLists[2],
+        isStarred: true,
+      };
+      const mockPatchResponse: ApiResponse<TodoListResponse> = {
+        success: true,
+        data: { list: updatedList },
+      };
+      httpMock.patch.mockReturnValue(of(mockPatchResponse));
+
+      dispatcher.dispatch(toggleStarTodoList({ listId: 'list-unstarred-1' }));
+
+      expect(httpMock.patch).toHaveBeenCalledWith(
+        '/api/v1/lists/list-unstarred-1',
+        { isStarred: true },
+      );
+      const starred = store.lists().find((l) => l.id === 'list-unstarred-1');
+      expect(starred?.isStarred).toBe(true);
+    });
+
+    it('should rollback star status and dispatch apiErrorOccurred if PATCH fails', () => {
+      const errorSpy = vi.fn();
+      events.on(apiErrorOccurred).subscribe(errorSpy);
+
+      const errorResponse = new HttpErrorResponse({
+        error: { message: 'Failed to toggle star' },
+        status: 500,
+      });
+      httpMock.patch.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(toggleStarTodoList({ listId: 'list-unstarred-1' }));
+
+      const list = store.lists().find((l) => l.id === 'list-unstarred-1');
+      expect(list?.isStarred).toBe(false); // rolled back
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Failed to toggle star' },
+        }),
+      );
+    });
+  });
+
+  describe('adjustListCounts event', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should update totalCount and activeCount by deltas', () => {
+      dispatcher.dispatch(
+        adjustListCounts({
+          listId: 'list-unstarred-1',
+          totalDelta: 2,
+          activeDelta: 1,
+        }),
+      );
+
+      const list = store.lists().find((l) => l.id === 'list-unstarred-1');
+      // original: totalCount 2, activeCount 0
+      expect(list?.totalCount).toBe(4);
+      expect(list?.activeCount).toBe(1);
+    });
+
+    it('should clamp counts at zero', () => {
+      dispatcher.dispatch(
+        adjustListCounts({
+          listId: 'list-unstarred-1',
+          totalDelta: -10,
+          activeDelta: -10,
+        }),
+      );
+
+      const list = store.lists().find((l) => l.id === 'list-unstarred-1');
+      expect(list?.totalCount).toBe(0);
+      expect(list?.activeCount).toBe(0);
+    });
+  });
 });
+

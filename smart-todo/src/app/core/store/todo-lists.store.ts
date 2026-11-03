@@ -17,11 +17,16 @@ import {
   setPending,
   withRequestStatus,
 } from '../index';
-import { TodoListSummary, TodoListsResponse } from '../models/todo-list.model';
+import { TodoListSummary, TodoListsResponse, TodoListResponse } from '../models/todo-list.model';
 import {
   loadTodoLists,
   selectTodoList,
+  createTodoList,
+  renameTodoList,
+  toggleStarTodoList,
+  adjustListCounts,
   apiErrorOccurred,
+  apiSuccessOccurred,
 } from './events';
 
 export interface TodoListsState {
@@ -106,6 +111,159 @@ export const TodoListsStore = signalStore(
       selectTodoList$: events.on(selectTodoList).pipe(
         tap(({ payload }) => {
           patchState(store, { selectedListId: payload.listId });
+        }),
+      ),
+
+      createTodoList$: events.on(createTodoList).pipe(
+        tap(() => patchState(store, setPending())),
+        switchMap(({ payload }) =>
+          httpService
+            .post<TodoListResponse>('/api/v1/lists', { name: payload.name })
+            .pipe(
+              tap({
+                next: (res) => {
+                  const newList = res.data.list;
+                  patchState(
+                    store,
+                    {
+                      lists: [...store.lists(), newList],
+                      selectedListId: newList.id,
+                    },
+                    setFulfilled(),
+                  );
+                  dispatcher.dispatch(
+                    apiSuccessOccurred({
+                      message: 'Todo list created successfully.',
+                    }),
+                  );
+                },
+                error: (err: HttpErrorResponse) => {
+                  const message =
+                    err.error?.message ||
+                    (typeof err.error === 'string' ? err.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                  dispatcher.dispatch(apiErrorOccurred({ message }));
+                },
+              }),
+              catchError(() => EMPTY),
+            ),
+        ),
+      ),
+
+      renameTodoList$: events.on(renameTodoList).pipe(
+        switchMap(({ payload }) => {
+          const previousLists = store.lists();
+          patchState(store, {
+            lists: previousLists.map((l) =>
+              l.id === payload.listId ? { ...l, name: payload.name } : l,
+            ),
+          });
+
+          return httpService
+            .patch<TodoListResponse>(`/api/v1/lists/${payload.listId}`, {
+              name: payload.name,
+            })
+            .pipe(
+              tap({
+                next: (res) => {
+                  const updatedList = res.data.list;
+                  patchState(store, {
+                    lists: store
+                      .lists()
+                      .map((l) => (l.id === updatedList.id ? updatedList : l)),
+                  });
+                },
+                error: (err: HttpErrorResponse) => {
+                  const message =
+                    err.error?.message ||
+                    (typeof err.error === 'string' ? err.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(
+                    store,
+                    { lists: previousLists },
+                    setError(message),
+                  );
+                  dispatcher.dispatch(apiErrorOccurred({ message }));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+
+      toggleStarTodoList$: events.on(toggleStarTodoList).pipe(
+        switchMap(({ payload }) => {
+          const targetList = store
+            .lists()
+            .find((l) => l.id === payload.listId);
+          if (!targetList) return EMPTY;
+
+          const previousLists = store.lists();
+          const nextIsStarred = !targetList.isStarred;
+
+          patchState(store, {
+            lists: previousLists.map((l) =>
+              l.id === payload.listId
+                ? {
+                    ...l,
+                    isStarred: nextIsStarred,
+                    updatedAt: new Date().toISOString(),
+                  }
+                : l,
+            ),
+          });
+
+          return httpService
+            .patch<TodoListResponse>(`/api/v1/lists/${payload.listId}`, {
+              isStarred: nextIsStarred,
+            })
+            .pipe(
+              tap({
+                next: (res) => {
+                  const updatedList = res.data.list;
+                  patchState(store, {
+                    lists: store
+                      .lists()
+                      .map((l) => (l.id === updatedList.id ? updatedList : l)),
+                  });
+                },
+                error: (err: HttpErrorResponse) => {
+                  const message =
+                    err.error?.message ||
+                    (typeof err.error === 'string' ? err.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(
+                    store,
+                    { lists: previousLists },
+                    setError(message),
+                  );
+                  dispatcher.dispatch(apiErrorOccurred({ message }));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+
+      adjustListCounts$: events.on(adjustListCounts).pipe(
+        tap(({ payload }) => {
+          patchState(store, {
+            lists: store.lists().map((list) => {
+              if (list.id !== payload.listId) return list;
+              return {
+                ...list,
+                totalCount: Math.max(
+                  0,
+                  list.totalCount + (payload.totalDelta ?? 0),
+                ),
+                activeCount: Math.max(
+                  0,
+                  list.activeCount + (payload.activeDelta ?? 0),
+                ),
+              };
+            }),
+          });
         }),
       ),
     };
