@@ -1,7 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
-import { userLogout } from '@core';
+import {
+  loadTodoLists,
+  selectTodoList,
+  toggleStarTodoList,
+  TodoListSummary,
+  TodoListsStore,
+  userLogout,
+} from '@core';
 import { Sidebar } from './sidebar';
 
 describe('Sidebar', () => {
@@ -10,10 +18,50 @@ describe('Sidebar', () => {
   let element: HTMLElement;
   let dispatcher: Dispatcher;
 
+  const mockLists = signal<TodoListSummary[]>([
+    {
+      id: 'list-1',
+      name: 'Work Tasks',
+      isStarred: true,
+      order: 1000,
+      totalCount: 5,
+      activeCount: 3,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'list-2',
+      name: 'Personal',
+      isStarred: false,
+      order: 2000,
+      totalCount: 2,
+      activeCount: 1,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ]);
+
+  const mockStarredLists = signal<TodoListSummary[]>([mockLists()[0]]);
+  const mockUnstarredLists = signal<TodoListSummary[]>([mockLists()[1]]);
+  const mockSelectedListId = signal<string | null>('list-1');
+  const mockIsQuotaReached = signal<boolean>(false);
+
+  const mockTodoListsStore = {
+    lists: mockLists.asReadonly(),
+    starredLists: mockStarredLists.asReadonly(),
+    unstarredLists: mockUnstarredLists.asReadonly(),
+    selectedListId: mockSelectedListId.asReadonly(),
+    isQuotaReached: mockIsQuotaReached.asReadonly(),
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Sidebar],
-      providers: [provideRouter([]), provideDispatcher()],
+      providers: [
+        provideRouter([]),
+        provideDispatcher(),
+        { provide: TodoListsStore, useValue: mockTodoListsStore },
+      ],
     }).compileComponents();
 
     dispatcher = TestBed.inject(Dispatcher);
@@ -67,4 +115,42 @@ describe('Sidebar', () => {
     expect(input).toBeTruthy();
     expect(label?.textContent?.trim()).toBe('New list');
   });
+
+  it('should render starred lists section and unstarred lists', () => {
+    expect(element.textContent).toContain('Starred');
+    expect(element.textContent).toContain('Work Tasks');
+    expect(element.textContent).toContain('Personal');
+  });
+
+  it('should dispatch selectTodoList when a list item is clicked', () => {
+    component.selectList('list-2');
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(selectTodoList({ listId: 'list-2' }));
+  });
+
+  it('should dispatch toggleStarTodoList when star toggle button is clicked', () => {
+    const mouseEvent = new MouseEvent('click');
+    vi.spyOn(mouseEvent, 'stopPropagation');
+
+    component.toggleStar('list-1', mouseEvent);
+
+    expect(mouseEvent.stopPropagation).toHaveBeenCalled();
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(toggleStarTodoList({ listId: 'list-1' }));
+  });
+
+  it('should dispatch loadTodoLists on init if store lists are empty', () => {
+    const emptyStore = {
+      lists: signal([]).asReadonly(),
+      starredLists: signal([]).asReadonly(),
+      unstarredLists: signal([]).asReadonly(),
+      selectedListId: signal(null).asReadonly(),
+      isQuotaReached: signal(false).asReadonly(),
+    };
+
+    const emptyFixture = TestBed.createComponent(Sidebar);
+    (emptyFixture.componentInstance as any).todoListsStore = emptyStore;
+    emptyFixture.componentInstance.ngOnInit();
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(loadTodoLists());
+  });
 });
+
