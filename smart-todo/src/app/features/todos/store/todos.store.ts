@@ -487,6 +487,71 @@ export const TodosStore = signalStore(
       ),
     );
 
+    const reorderActiveTodo = rxMethod<{
+      todoId: string;
+      targetIndex: number;
+    }>(
+      pipe(
+        filter(({ todoId, targetIndex }) => {
+          const listId = store.currentListId();
+          return !!listId && !!todoId && targetIndex >= 0;
+        }),
+        concatMap(({ todoId, targetIndex }) => {
+          const listId = store.currentListId()!;
+          const currentActive = store.activeTodos();
+          const targetItem = currentActive.find((t) => t.id === todoId);
+          if (!targetItem) return EMPTY;
+
+          const previousActive = currentActive;
+          const activeWithoutItem = currentActive.filter((t) => t.id !== todoId);
+          const newOrder = calculateNewOrder(activeWithoutItem, targetIndex);
+
+          const updatedItem: TodoItem = {
+            ...targetItem,
+            order: newOrder,
+          };
+
+          const newActiveTodos = [...activeWithoutItem];
+          const clampedIndex = Math.max(0, Math.min(targetIndex, newActiveTodos.length));
+          newActiveTodos.splice(clampedIndex, 0, updatedItem);
+
+          // Optimistic reorder
+          patchState(store, {
+            activeTodos: newActiveTodos,
+          });
+
+          return httpService
+            .patch<TodoResponse>(`/lists/${listId}/todos/${todoId}/reorder`, {
+              order: newOrder,
+            })
+            .pipe(
+              tap({
+                next: (response) => {
+                  const savedTodo = response.data.todo;
+                  patchState(store, {
+                    activeTodos: store
+                      .activeTodos()
+                      .map((t) => (t.id === savedTodo.id ? savedTodo : t)),
+                  });
+                },
+                error: (error: HttpErrorResponse) => {
+                  // Rollback
+                  patchState(store, {
+                    activeTodos: previousActive,
+                  });
+                  const message =
+                    error.error?.message ||
+                    (typeof error.error === 'string' ? error.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                },
+              }),
+              catchError(() => EMPTY),
+            );
+        }),
+      ),
+    );
+
     return {
       loadInitialForList,
       loadMoreActiveTodos,
@@ -495,6 +560,7 @@ export const TodosStore = signalStore(
       updateTodoText,
       toggleTodoCompletion,
       deleteTodo,
+      reorderActiveTodo,
       toggleCompletedSection(): void {
         const nextExpanded = !store.isCompletedExpanded();
         patchState(store, { isCompletedExpanded: nextExpanded });
