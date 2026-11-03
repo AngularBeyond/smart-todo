@@ -23,6 +23,7 @@ import {
   reorderUnstarredList,
   deleteTodoList,
   adjustListCounts,
+  userLogout,
 } from './events';
 
 describe('TodoListsStore', () => {
@@ -140,7 +141,7 @@ describe('TodoListsStore', () => {
     });
 
     it('should compute selectedList from selectedListId', () => {
-      expect(store.selectedList()?.id).toBe('list-starred-1');
+      expect(store.selectedList()?.id).toBe('list-starred-2');
 
       dispatcher.dispatch(selectTodoList({ listId: 'list-unstarred-1' }));
       expect(store.selectedList()?.id).toBe('list-unstarred-1');
@@ -149,7 +150,7 @@ describe('TodoListsStore', () => {
   });
 
   describe('loadTodoLists event', () => {
-    it('should load lists, update store, and auto-select first list', () => {
+    it('should load lists, update store, and auto-select first starred list', () => {
       httpMock.get.mockReturnValue(of(mockResponse));
 
       dispatcher.dispatch(loadTodoLists());
@@ -157,7 +158,19 @@ describe('TodoListsStore', () => {
       expect(httpMock.get).toHaveBeenCalledWith('/api/v1/lists');
       expect(store.lists()).toEqual(mockLists);
       expect(store.isFulfilled()).toBe(true);
-      expect(store.selectedListId()).toBe('list-starred-1');
+      expect(store.selectedListId()).toBe('list-starred-2');
+    });
+
+    it('should fallback to first unstarred list when no starred lists exist', () => {
+      const unstarredOnlyLists: TodoListSummary[] = [
+        { ...mockLists[0], isStarred: false },
+        { ...mockLists[2], isStarred: false },
+      ];
+      httpMock.get.mockReturnValue(of({ success: true, data: { lists: unstarredOnlyLists } }));
+
+      dispatcher.dispatch(loadTodoLists());
+
+      expect(store.selectedListId()).toBe('list-unstarred-2');
     });
 
     it('should handle error, set error state, and dispatch apiErrorOccurred', () => {
@@ -484,17 +497,17 @@ describe('TodoListsStore', () => {
       };
       httpMock.delete.mockReturnValue(of(mockDeleteResponse));
 
-      // Currently selected list is list-starred-1
-      expect(store.selectedListId()).toBe('list-starred-1');
+      // Currently selected list is list-starred-2 (first starred list by updatedAt)
+      expect(store.selectedListId()).toBe('list-starred-2');
 
-      dispatcher.dispatch(deleteTodoList({ listId: 'list-starred-1' }));
+      dispatcher.dispatch(deleteTodoList({ listId: 'list-starred-2' }));
 
       expect(httpMock.delete).toHaveBeenCalledWith(
-        '/api/v1/lists/list-starred-1',
+        '/api/v1/lists/list-starred-2',
       );
-      expect(store.lists().some((l) => l.id === 'list-starred-1')).toBe(false);
-      // Next available starred list should be selected (list-starred-2)
-      expect(store.selectedListId()).toBe('list-starred-2');
+      expect(store.lists().some((l) => l.id === 'list-starred-2')).toBe(false);
+      // Next available starred list should be selected (list-starred-1)
+      expect(store.selectedListId()).toBe('list-starred-1');
       expect(store.isFulfilled()).toBe(true);
       expect(successSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -544,6 +557,21 @@ describe('TodoListsStore', () => {
           payload: { message: 'Todo list not found.' },
         }),
       );
+    });
+  });
+
+  describe('userLogout event', () => {
+    it('should reset store to initial state when userLogout is dispatched', () => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+      expect(store.lists().length).toBeGreaterThan(0);
+      expect(store.selectedListId()).not.toBeNull();
+
+      dispatcher.dispatch(userLogout());
+
+      expect(store.lists()).toEqual([]);
+      expect(store.selectedListId()).toBeNull();
+      expect(store.requestStatus()).toBe('idle');
     });
   });
 });

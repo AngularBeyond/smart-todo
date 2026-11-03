@@ -14,6 +14,7 @@ import {
   HttpService,
   setError,
   setFulfilled,
+  setIdle,
   setPending,
   withRequestStatus,
 } from '../index';
@@ -35,6 +36,7 @@ import {
   adjustListCounts,
   apiErrorOccurred,
   apiSuccessOccurred,
+  userLogout,
 } from './events';
 
 export interface TodoListsState {
@@ -90,11 +92,18 @@ export const TodoListsStore = signalStore(
                   currentSelectedId !== null &&
                   fetchedLists.some((l) => l.id === currentSelectedId);
 
-                const firstList =
-                  fetchedLists.find((l) => l.isStarred) ?? fetchedLists[0] ?? null;
+                const firstStarred = [...fetchedLists]
+                  .filter((l) => l.isStarred)
+                  .sort(
+                    (a, b) =>
+                      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+                  )[0];
+                const fallbackList = fetchedLists[0] ?? null;
+                const preferredList = firstStarred ?? fallbackList;
+
                 const nextSelectedId = stillValid
                   ? currentSelectedId
-                  : (firstList?.id ?? null);
+                  : (preferredList?.id ?? null);
 
                 patchState(
                   store,
@@ -344,10 +353,14 @@ export const TodoListsStore = signalStore(
 
                   let nextSelectedId = store.selectedListId();
                   if (nextSelectedId === payload.listId) {
-                    const nextList =
-                      remainingLists.find((l) => l.isStarred) ??
-                      remainingLists[0] ??
-                      null;
+                    const nextStarred = [...remainingLists]
+                      .filter((l) => l.isStarred)
+                      .sort(
+                        (a, b) =>
+                          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+                      )[0];
+                    const nextFallback = remainingLists[0] ?? null;
+                    const nextList = nextStarred ?? nextFallback;
                     nextSelectedId = nextList?.id ?? null;
                   }
 
@@ -378,6 +391,12 @@ export const TodoListsStore = signalStore(
               catchError(() => EMPTY),
             ),
         ),
+      ),
+
+      userLogout$: events.on(userLogout).pipe(
+        tap(() => {
+          patchState(store, initialTodoListsState, setIdle());
+        }),
       ),
     };
   }),
