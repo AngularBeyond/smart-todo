@@ -1,1 +1,1 @@
-// Export components members here
+export * from './list-header/list-header.component';
