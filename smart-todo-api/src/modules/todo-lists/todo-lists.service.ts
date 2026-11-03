@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { MAX_LISTS_PER_USER, ORDER_STEP } from '../../common/constants/quotas.constants.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
+import { ReorderTodoListDto } from './dto/reorder-todo-list.dto.js';
 import { TodoListsRepository, TodoListSummary } from './todo-lists.repository.js';
 
 export interface TodoListsResponse {
@@ -67,7 +68,29 @@ export class TodoListsService {
 
     return { list: updated };
   }
+
+  async reorderList(
+    userId: string,
+    listId: string,
+    dto: ReorderTodoListDto,
+  ): Promise<TodoListResponse> {
+    const existingList = await this.todoListsRepository.findByIdAndUserId(listId, userId);
+    if (!existingList) {
+      throw new NotFoundException('Todo list not found.');
+    }
+
+    if (existingList.isStarred) {
+      throw new BadRequestException('Cannot reorder a starred list.');
+    }
+
+    const updated = await this.todoListsRepository.update(listId, {
+      order: dto.order,
+    });
+
+    return { list: updated };
+  }
 }
+
 
 
 
