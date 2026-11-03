@@ -1,0 +1,87 @@
+<div
+  class="group flex items-center gap-3 border-b border-border/70 py-3.5 transition-colors hover:bg-muted/20 last:border-b-0"
+  [class.opacity-60]="todo().isCompleted"
+>
+  <!-- Drag Handle (Active todos only, 44x44 touch target) -->
+  @if (isDraggable() && !todo().isCompleted) {
+    <div
+      cdkDragHandle
+      role="button"
+      tabindex="0"
+      aria-label="Drag to reorder task"
+      class="flex size-11 shrink-0 cursor-grab items-center justify-center text-muted-foreground/40 transition-colors hover:text-muted-foreground active:cursor-grabbing focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:size-8"
+    >
+      <svg lucideGripVertical class="size-4"></svg>
+    </div>
+  } @else {
+    <div class="w-1 shrink-0"></div>
+  }
+
+  <!-- Complete / Uncomplete Toggle Checkbox -->
+  <button
+    type="button"
+    (click)="onToggleComplete()"
+    class="flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    [class.bg-primary]="todo().isCompleted"
+    [class.border-primary]="todo().isCompleted"
+    [class.text-primary-foreground]="todo().isCompleted"
+    [class.border-muted-foreground/40]="!todo().isCompleted"
+    [class.text-transparent]="!todo().isCompleted"
+    [class.hover:border-primary]="!todo().isCompleted"
+    [attr.aria-label]="todo().isCompleted ? 'Mark as incomplete: ' + todo().text : 'Mark as complete: ' + todo().text"
+  >
+    @if (todo().isCompleted) {
+      <svg lucideCheck class="size-3.5 stroke-[3]"></svg>
+    } @else {
+      <svg lucideCircle class="size-3.5 opacity-0 group-hover:opacity-100 hover:text-primary"></svg>
+    }
+  </button>
+
+  <!-- Text & Inline Editing & Metadata -->
+  <div class="min-w-0 flex-1">
+    @if (isEditing()) {
+      <input
+        hlmInput
+        appAutoFocus
+        [appAutoFocusSelect]="true"
+        type="text"
+        [value]="editText()"
+        (input)="onInputChange($event)"
+        (keydown)="onKeyDown($event)"
+        (blur)="saveEdit()"
+        maxlength="500"
+        class="h-8 w-full text-sm font-medium"
+        [attr.aria-label]="'Edit task text: ' + todo().text"
+      />
+    } @else {
+      <button
+        type="button"
+        (click)="startEditing()"
+        (dblclick)="startEditing()"
+        class="block max-w-full truncate text-left text-sm font-medium transition-colors hover:text-primary focus-visible:outline-none focus-visible:underline"
+        [class.line-through]="todo().isCompleted"
+        [class.text-muted-foreground]="todo().isCompleted"
+        [attr.aria-label]="'Click or double click to edit task: ' + todo().text"
+      >
+        {{ todo().text }}
+      </button>
+    }
+
+    <!-- Metadata subtitle: Created / Updated timestamp -->
+    <div class="mt-0.5 flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
+      <span>{{ metadataText() }}</span>
+    </div>
+  </div>
+
+  <!-- Delete Button -->
+  <button
+    hlmBtn
+    variant="ghost"
+    size="icon"
+    class="size-8 opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+    (click)="onDelete()"
+    [attr.aria-label]="'Delete task: ' + todo().text"
+  >
+    <svg lucideTrash2 class="size-4"></svg>
+  </button>
+</div>

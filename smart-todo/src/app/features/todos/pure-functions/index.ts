@@ -1,1 +1,1 @@
-// Export pure-functions members here
+export * from './todo-date.pure';
