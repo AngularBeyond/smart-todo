@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { NavigationEnd, Router, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
@@ -231,6 +231,14 @@ describe('AppStore', () => {
       expect(store.isMobileSidebarOpen()).toBe(true);
 
       dispatcher.dispatch(selectTodoList({ listId: 'list-123' }));
+      expect(store.isMobileSidebarOpen()).toBe(false);
+    });
+
+    it('should automatically close mobile sidebar when router NavigationEnd fires', () => {
+      dispatcher.dispatch(setMobileSidebarOpen({ isOpen: true }));
+      expect(store.isMobileSidebarOpen()).toBe(true);
+
+      (router as any).events.next(new NavigationEnd(1, '/profile', '/profile'));
       expect(store.isMobileSidebarOpen()).toBe(false);
     });
   });

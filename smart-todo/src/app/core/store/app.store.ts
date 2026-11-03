@@ -1,5 +1,5 @@
 import { computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   patchState,
@@ -10,7 +10,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { Dispatcher, Events, withEventHandlers } from '@ngrx/signals/events';
-import { catchError, EMPTY, switchMap, tap } from 'rxjs';
+import { catchError, EMPTY, filter, switchMap, tap } from 'rxjs';
 import {
   HTTP_ERROR_MESSAGES,
   HttpService,
@@ -207,11 +207,21 @@ export const AppStore = signalStore(
   withHooks({
     onInit(store) {
       const themeService = inject(ThemeService);
+      const router = inject(Router);
+
       const storedTheme = themeService.getStoredTheme();
       if (storedTheme !== store.theme()) {
         patchState(store, { theme: storedTheme });
       }
       themeService.applyTheme(storedTheme);
+
+      router.events
+        .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+        .subscribe(() => {
+          if (store.isMobileSidebarOpen()) {
+            patchState(store, { isMobileSidebarOpen: false });
+          }
+        });
     },
   }),
 );
