@@ -167,5 +167,11 @@ export class TodoListsRepository {
       activeCount: updated.todos.filter((todo) => !todo.isCompleted).length,
     };
   }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.todoList.delete({
+      where: { id },
+    });
+  }
 }
 

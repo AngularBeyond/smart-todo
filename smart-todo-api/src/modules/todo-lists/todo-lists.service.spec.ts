@@ -16,6 +16,7 @@ describe('TodoListsService', () => {
     findMaxOrderByUserId: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
     transaction: ReturnType<typeof vi.fn>;
   };
 
@@ -27,6 +28,7 @@ describe('TodoListsService', () => {
       findMaxOrderByUserId: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
       transaction: vi.fn().mockImplementation((cb: (tx: unknown) => Promise<unknown>) => cb({})),
     };
 
@@ -283,5 +285,40 @@ describe('TodoListsService', () => {
       expect(repositoryMock.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('deleteList', () => {
+    const existingList: TodoListSummary = {
+      id: 'list-1',
+      name: 'Tasks to Delete',
+      isStarred: false,
+      order: 1000,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-01T00:00:00Z'),
+      totalCount: 5,
+      activeCount: 3,
+    };
+
+    it('should delete list and return success message when list exists and belongs to user', async () => {
+      repositoryMock.findByIdAndUserId.mockResolvedValue(existingList);
+      repositoryMock.delete.mockResolvedValue(undefined);
+
+      const result = await service.deleteList('user-123', 'list-1');
+
+      expect(repositoryMock.findByIdAndUserId).toHaveBeenCalledWith('list-1', 'user-123');
+      expect(repositoryMock.delete).toHaveBeenCalledWith('list-1');
+      expect(result).toEqual({ message: 'Todo list deleted successfully.' });
+    });
+
+    it('should throw NotFoundException when list is not found or unowned', async () => {
+      repositoryMock.findByIdAndUserId.mockResolvedValue(null);
+
+      await expect(service.deleteList('user-123', 'non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
+
+      expect(repositoryMock.delete).not.toHaveBeenCalled();
+    });
+  });
 });
+
 
