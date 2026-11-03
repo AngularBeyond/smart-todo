@@ -1,0 +1,102 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <!-- Left Side: Title (inline editing or display) and Counts -->
+  <div class="flex items-center gap-3">
+    @if (isEditingTitle()) {
+      <input
+        hlmInput
+        appAutoFocus
+        [appAutoFocusSelect]="true"
+        type="text"
+        [ngModel]="editingTitle()"
+        (ngModelChange)="editingTitle.set($event)"
+        (keydown)="onTitleKeyDown($event)"
+        (blur)="saveTitle()"
+        maxlength="100"
+        class="h-9 w-64 text-lg font-semibold sm:w-80"
+      />
+    } @else {
+      <div class="group flex items-center gap-2">
+        <h1
+          (click)="startEditing()"
+          (keydown.enter)="startEditing()"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Edit list title: ' + list().name"
+          class="cursor-pointer text-xl font-semibold tracking-tight hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-2xl"
+        >
+          {{ list().name }}
+        </h1>
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          (click)="startEditing()"
+          [attr.aria-label]="'Edit list title ' + list().name"
+          class="size-7 opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary"
+        >
+          <svg lucidePencil class="size-3.5"></svg>
+        </button>
+      </div>
+    }
+
+    <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
+      {{ list().activeCount }} active
+    </span>
+  </div>
+
+  <!-- Right Side: Star Toggle & Delete Alert Dialog -->
+  <div class="flex items-center gap-1.5">
+    <!-- Star Button -->
+    <button
+      hlmBtn
+      variant="ghost"
+      size="icon"
+      (click)="toggleStar()"
+      [attr.aria-label]="list().isStarred ? 'Unstar list' : 'Star list'"
+      class="size-8"
+      [class.text-amber-500]="list().isStarred"
+      [class.hover:text-amber-600]="list().isStarred"
+      [class.text-muted-foreground]="!list().isStarred"
+    >
+      <svg
+        lucideStar
+        class="size-4"
+        [class.fill-current]="list().isStarred"
+      ></svg>
+    </button>
+
+    <!-- Delete Alert Dialog -->
+    <hlm-alert-dialog>
+      <button
+        hlmAlertDialogTrigger
+        hlmBtn
+        variant="ghost"
+        size="icon"
+        aria-label="Delete list"
+        class="size-8 text-muted-foreground hover:text-destructive"
+      >
+        <svg lucideTrash2 class="size-4"></svg>
+      </button>
+
+      <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+        <hlm-alert-dialog-header>
+          <h2 hlmAlertDialogTitle>Delete "{{ list().name }}"?</h2>
+          <p hlmAlertDialogDescription>
+            This action cannot be undone. This will permanently delete this todo list and all of its tasks.
+          </p>
+        </hlm-alert-dialog-header>
+        <hlm-alert-dialog-footer>
+          <button hlmAlertDialogCancel hlmBtn variant="outline">Cancel</button>
+          <button
+            hlmAlertDialogAction
+            hlmBtn
+            variant="destructive"
+            (click)="confirmDelete()"
+          >
+            Delete List
+          </button>
+        </hlm-alert-dialog-footer>
+      </hlm-alert-dialog-content>
+    </hlm-alert-dialog>
+  </div>
+</div>
