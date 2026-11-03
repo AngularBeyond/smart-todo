@@ -101,5 +101,71 @@ export class TodoListsRepository {
       activeCount: 0,
     };
   }
+
+  async findByIdAndUserId(id: string, userId: string): Promise<TodoListSummary | null> {
+    const list = await this.prisma.todoList.findFirst({
+      where: { id, userId },
+      select: {
+        id: true,
+        name: true,
+        isStarred: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+        todos: {
+          select: {
+            isCompleted: true,
+          },
+        },
+      },
+    });
+
+    if (!list) return null;
+
+    return {
+      id: list.id,
+      name: list.name,
+      isStarred: list.isStarred,
+      order: list.order,
+      createdAt: list.createdAt,
+      updatedAt: list.updatedAt,
+      totalCount: list.todos.length,
+      activeCount: list.todos.filter((todo) => !todo.isCompleted).length,
+    };
+  }
+
+  async update(
+    id: string,
+    data: { name?: string; isStarred?: boolean; order?: number },
+  ): Promise<TodoListSummary> {
+    const updated = await this.prisma.todoList.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        name: true,
+        isStarred: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+        todos: {
+          select: {
+            isCompleted: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      isStarred: updated.isStarred,
+      order: updated.order,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+      totalCount: updated.todos.length,
+      activeCount: updated.todos.filter((todo) => !todo.isCompleted).length,
+    };
+  }
 }
 

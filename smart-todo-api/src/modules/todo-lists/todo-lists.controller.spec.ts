@@ -4,12 +4,14 @@ import { TodoListsController } from './todo-lists.controller.js';
 import { TodoListsService, TodoListsResponse, TodoListResponse } from './todo-lists.service.js';
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
+import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
 
 describe('TodoListsController', () => {
   let controller: TodoListsController;
   let serviceMock: {
     getLists: ReturnType<typeof vi.fn>;
     createList: ReturnType<typeof vi.fn>;
+    updateList: ReturnType<typeof vi.fn>;
   };
 
   const mockUserPayload: UserPayload = {
@@ -46,10 +48,24 @@ describe('TodoListsController', () => {
     },
   };
 
+  const mockUpdatedResponse: TodoListResponse = {
+    list: {
+      id: 'list-1',
+      name: 'Updated Tasks',
+      isStarred: false,
+      order: 1000,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-03T00:00:00Z'),
+      totalCount: 5,
+      activeCount: 3,
+    },
+  };
+
   beforeEach(async () => {
     serviceMock = {
       getLists: vi.fn().mockResolvedValue(mockResponse),
       createList: vi.fn().mockResolvedValue(mockCreatedResponse),
+      updateList: vi.fn().mockResolvedValue(mockUpdatedResponse),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -85,6 +101,16 @@ describe('TodoListsController', () => {
 
       expect(serviceMock.createList).toHaveBeenCalledWith('user-123', dto);
       expect(result).toEqual(mockCreatedResponse);
+    });
+  });
+
+  describe('updateList', () => {
+    it('should call service.updateList with user.sub, id, and dto', async () => {
+      const dto: UpdateTodoListDto = { name: 'Updated Tasks', isStarred: false };
+      const result = await controller.updateList(mockUserPayload, 'list-1', dto);
+
+      expect(serviceMock.updateList).toHaveBeenCalledWith('user-123', 'list-1', dto);
+      expect(result).toEqual(mockUpdatedResponse);
     });
   });
 });

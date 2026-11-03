@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
+import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
 import { TodoListsService, TodoListsResponse, TodoListResponse } from './todo-lists.service.js';
 
 @UseGuards(JwtAuthGuard)
@@ -22,6 +23,16 @@ export class TodoListsController {
   ): Promise<TodoListResponse> {
     return this.todoListsService.createList(user.sub, dto);
   }
+
+  @Patch(':id')
+  async updateList(
+    @CurrentUser() user: UserPayload,
+    @Param('id') id: string,
+    @Body() dto: UpdateTodoListDto,
+  ): Promise<TodoListResponse> {
+    return this.todoListsService.updateList(user.sub, id, dto);
+  }
 }
+
 
 
