@@ -46,34 +46,65 @@
     </button>
   </div>
 
-  <!-- List Controls & Filter -->
-  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <h2 class="text-lg font-semibold">{{ todoListsStore.selectedList()?.name ?? store.activeList() }}</h2>
-      <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
-        {{ store.tasks().length }} active
-      </span>
-    </div>
-    <div class="flex items-center gap-2">
-      <div class="relative hidden sm:block">
-        <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
-        <input
-          hlmInput
-          type="text"
-          [ngModel]="store.query()"
-          (ngModelChange)="store.setQuery($event)"
-          placeholder="Filter tasks"
-          class="h-8 w-36 pl-8 text-xs"
-        />
+  <!-- List Header & Actions -->
+  @if (todoListsStore.selectedList(); as currentList) {
+    <div class="mb-5 flex flex-col gap-4">
+      <app-list-header
+        [list]="currentList"
+        (renamed)="onRenameList(currentList.id, $event)"
+        (starToggled)="onToggleStar(currentList.id)"
+        (deleted)="onDeleteList(currentList.id)"
+      />
+
+      <div class="flex items-center justify-end gap-2">
+        <div class="relative hidden sm:block">
+          <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
+          <input
+            hlmInput
+            type="text"
+            [ngModel]="store.query()"
+            (ngModelChange)="store.setQuery($event)"
+            placeholder="Filter tasks"
+            class="h-8 w-36 pl-8 text-xs"
+          />
+        </div>
+        <button hlmBtn variant="outline" size="sm" class="gap-2">
+          <svg lucideTag class="size-3.5"></svg> Filter
+        </button>
+        <button hlmBtn variant="ghost" size="icon" aria-label="More options">
+          <svg lucideMoreHorizontal class="size-4"></svg>
+        </button>
       </div>
-      <button hlmBtn variant="outline" size="sm" class="gap-2">
-        <svg lucideTag class="size-3.5"></svg> Filter
-      </button>
-      <button hlmBtn variant="ghost" size="icon" aria-label="More options">
-        <svg lucideMoreHorizontal class="size-4"></svg>
-      </button>
     </div>
-  </div>
+  } @else {
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg font-semibold">{{ store.activeList() }}</h2>
+        <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
+          {{ store.tasks().length }} active
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="relative hidden sm:block">
+          <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
+          <input
+            hlmInput
+            type="text"
+            [ngModel]="store.query()"
+            (ngModelChange)="store.setQuery($event)"
+            placeholder="Filter tasks"
+            class="h-8 w-36 pl-8 text-xs"
+          />
+        </div>
+        <button hlmBtn variant="outline" size="sm" class="gap-2">
+          <svg lucideTag class="size-3.5"></svg> Filter
+        </button>
+        <button hlmBtn variant="ghost" size="icon" aria-label="More options">
+          <svg lucideMoreHorizontal class="size-4"></svg>
+        </button>
+      </div>
+    </div>
+  }
 
   <!-- Active Tasks Section -->
   <section class="border-y border-border">

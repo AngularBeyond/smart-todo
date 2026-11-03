@@ -16,8 +16,16 @@ import {
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { AppStore, TodoListsStore } from '@core';
+import { Dispatcher } from '@ngrx/signals/events';
+import {
+  AppStore,
+  deleteTodoList,
+  renameTodoList,
+  TodoListsStore,
+  toggleStarTodoList,
+} from '@core';
 import { TodosStore } from '../../store/todos.store';
+import { ListHeaderComponent } from '../../components';
 
 @Component({
   selector: 'app-todos-page',
@@ -37,6 +45,7 @@ import { TodosStore } from '../../store/todos.store';
     HlmButton,
     HlmBadge,
     HlmInput,
+    ListHeaderComponent,
   ],
   providers: [TodosStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +56,7 @@ export class TodosPage {
   protected readonly store = inject(TodosStore);
   protected readonly todoListsStore = inject(TodoListsStore);
   protected readonly appStore = inject(AppStore);
+  protected readonly dispatcher = inject(Dispatcher);
 
   private lastSelectedListId: string | null = null;
 
@@ -62,5 +72,17 @@ export class TodosPage {
         }
       }
     });
+  }
+
+  onRenameList(listId: string, name: string): void {
+    this.dispatcher.dispatch(renameTodoList({ listId, name }));
+  }
+
+  onToggleStar(listId: string): void {
+    this.dispatcher.dispatch(toggleStarTodoList({ listId }));
+  }
+
+  onDeleteList(listId: string): void {
+    this.dispatcher.dispatch(deleteTodoList({ listId }));
   }
 }
