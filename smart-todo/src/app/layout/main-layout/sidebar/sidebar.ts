@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -65,6 +65,7 @@ export class Sidebar implements OnInit {
   protected readonly dispatcher = inject(Dispatcher);
   protected readonly todoListsStore = inject(TodoListsStore);
 
+  readonly variant = input<'desktop' | 'mobile'>('desktop');
   readonly newListName = signal('');
 
   ngOnInit(): void {

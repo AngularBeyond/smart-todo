@@ -5,8 +5,9 @@ import {
   LucideMoon,
   LucideSun,
   LucideBell,
+  LucideMenu,
 } from '@lucide/angular';
-import { AppStore, themeChanged } from '@core';
+import { AppStore, themeChanged, toggleMobileSidebar } from '@core';
 import { Dispatcher } from '@ngrx/signals/events';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
@@ -19,6 +20,7 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
     LucideMoon,
     LucideSun,
     LucideBell,
+    LucideMenu,
     HlmButton,
     HlmSeparator,
   ],
@@ -33,5 +35,9 @@ export class Header {
   toggleTheme(): void {
     const nextMode = this.appStore.theme() === 'dark' ? 'light' : 'dark';
     this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
+  }
+
+  toggleSidebar(): void {
+    this.dispatcher.dispatch(toggleMobileSidebar());
   }
 }
