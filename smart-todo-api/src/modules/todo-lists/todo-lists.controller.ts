@@ -1,11 +1,16 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
 import { ReorderTodoListDto } from './dto/reorder-todo-list.dto.js';
-import { TodoListsService, TodoListsResponse, TodoListResponse } from './todo-lists.service.js';
+import {
+  TodoListsService,
+  TodoListsResponse,
+  TodoListResponse,
+  DeleteTodoListResponse,
+} from './todo-lists.service.js';
 
 @UseGuards(JwtAuthGuard)
 @Controller('lists')
@@ -41,6 +46,14 @@ export class TodoListsController {
     @Body() dto: UpdateTodoListDto,
   ): Promise<TodoListResponse> {
     return this.todoListsService.updateList(user.sub, id, dto);
+  }
+
+  @Delete(':id')
+  async deleteList(
+    @CurrentUser() user: UserPayload,
+    @Param('id') id: string,
+  ): Promise<DeleteTodoListResponse> {
+    return this.todoListsService.deleteList(user.sub, id);
   }
 }
 

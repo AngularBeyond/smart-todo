@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { TodoListsController } from './todo-lists.controller.js';
-import { TodoListsService, TodoListsResponse, TodoListResponse } from './todo-lists.service.js';
+import {
+  TodoListsService,
+  TodoListsResponse,
+  TodoListResponse,
+  DeleteTodoListResponse,
+} from './todo-lists.service.js';
 import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
 import { CreateTodoListDto } from './dto/create-todo-list.dto.js';
 import { UpdateTodoListDto } from './dto/update-todo-list.dto.js';
@@ -14,6 +19,7 @@ describe('TodoListsController', () => {
     createList: ReturnType<typeof vi.fn>;
     updateList: ReturnType<typeof vi.fn>;
     reorderList: ReturnType<typeof vi.fn>;
+    deleteList: ReturnType<typeof vi.fn>;
   };
 
   const mockUserPayload: UserPayload = {
@@ -76,12 +82,17 @@ describe('TodoListsController', () => {
     },
   };
 
+  const mockDeleteResponse: DeleteTodoListResponse = {
+    message: 'Todo list deleted successfully.',
+  };
+
   beforeEach(async () => {
     serviceMock = {
       getLists: vi.fn().mockResolvedValue(mockResponse),
       createList: vi.fn().mockResolvedValue(mockCreatedResponse),
       updateList: vi.fn().mockResolvedValue(mockUpdatedResponse),
       reorderList: vi.fn().mockResolvedValue(mockReorderedResponse),
+      deleteList: vi.fn().mockResolvedValue(mockDeleteResponse),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -137,6 +148,15 @@ describe('TodoListsController', () => {
 
       expect(serviceMock.updateList).toHaveBeenCalledWith('user-123', 'list-1', dto);
       expect(result).toEqual(mockUpdatedResponse);
+    });
+  });
+
+  describe('deleteList', () => {
+    it('should call service.deleteList with user.sub and id', async () => {
+      const result = await controller.deleteList(mockUserPayload, 'list-1');
+
+      expect(serviceMock.deleteList).toHaveBeenCalledWith('user-123', 'list-1');
+      expect(result).toEqual(mockDeleteResponse);
     });
   });
 });

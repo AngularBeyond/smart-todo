@@ -13,6 +13,10 @@ export interface TodoListResponse {
   list: TodoListSummary;
 }
 
+export interface DeleteTodoListResponse {
+  message: string;
+}
+
 @Injectable()
 export class TodoListsService {
   constructor(private readonly todoListsRepository: TodoListsRepository) {}
@@ -88,6 +92,17 @@ export class TodoListsService {
     });
 
     return { list: updated };
+  }
+
+  async deleteList(userId: string, listId: string): Promise<DeleteTodoListResponse> {
+    const existingList = await this.todoListsRepository.findByIdAndUserId(listId, userId);
+    if (!existingList) {
+      throw new NotFoundException('Todo list not found.');
+    }
+
+    await this.todoListsRepository.delete(listId);
+
+    return { message: 'Todo list deleted successfully.' };
   }
 }
 
