@@ -5,10 +5,23 @@ import {
 } from '@nestjs/common';
 import { MAX_TODOS_PER_LIST, ORDER_STEP } from '../../common/constants/quotas.constants.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
+import { GetTodosQueryDto } from './dto/get-todos-query.dto.js';
 import { TodosRepository, TodoItemSummary } from './todos.repository.js';
 
 export interface TodoResponse {
   todo: TodoItemSummary;
+}
+
+export interface PaginatedTodosResponse {
+  items: TodoItemSummary[];
+  hasMore: boolean;
+  nextCursor: string | null;
+  meta: {
+    totalCount: number;
+    activeCount: number;
+    completedCount: number;
+    quotaLimit: number;
+  };
 }
 
 @Injectable()
@@ -46,5 +59,42 @@ export class TodosService {
     });
 
     return { todo };
+  }
+
+  async getTodos(
+    userId: string,
+    listId: string,
+    query: GetTodosQueryDto,
+  ): Promise<PaginatedTodosResponse> {
+    const list = await this.todosRepository.findListByIdAndUserId(listId, userId);
+    if (!list) {
+      throw new NotFoundException('Todo list not found.');
+    }
+
+    const limit = query.limit ?? 20;
+    const rawItems = await this.todosRepository.findTodosByCursor({
+      listId,
+      isCompleted: query.completed,
+      cursor: query.cursor,
+      limit,
+    });
+
+    const hasMore = rawItems.length > limit;
+    const items = hasMore ? rawItems.slice(0, limit) : rawItems;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
+
+    const counts = await this.todosRepository.countCountsByListId(listId);
+
+    return {
+      items,
+      hasMore,
+      nextCursor,
+      meta: {
+        totalCount: counts.totalCount,
+        activeCount: counts.activeCount,
+        completedCount: counts.completedCount,
+        quotaLimit: MAX_TODOS_PER_LIST,
+      },
+    };
   }
 }

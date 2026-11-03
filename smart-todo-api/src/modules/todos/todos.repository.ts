@@ -80,4 +80,56 @@ export class TodosRepository {
       },
     });
   }
+
+  async findTodosByCursor(params: {
+    listId: string;
+    isCompleted: boolean;
+    cursor?: string;
+    limit: number;
+    tx?: Prisma.TransactionClient;
+  }): Promise<TodoItemSummary[]> {
+    const client = params.tx ?? this.prisma;
+    return client.todoItem.findMany({
+      where: {
+        listId: params.listId,
+        isCompleted: params.isCompleted,
+      },
+      orderBy: params.isCompleted
+        ? [{ updatedAt: 'desc' }, { id: 'desc' }]
+        : [{ order: 'asc' }, { id: 'asc' }],
+      take: params.limit + 1,
+      ...(params.cursor
+        ? {
+            cursor: { id: params.cursor },
+            skip: 1,
+          }
+        : {}),
+      select: {
+        id: true,
+        listId: true,
+        userId: true,
+        text: true,
+        isCompleted: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async countCountsByListId(
+    listId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<{ totalCount: number; activeCount: number; completedCount: number }> {
+    const client = tx ?? this.prisma;
+    const [totalCount, activeCount] = await Promise.all([
+      client.todoItem.count({ where: { listId } }),
+      client.todoItem.count({ where: { listId, isCompleted: false } }),
+    ]);
+    return {
+      totalCount,
+      activeCount,
+      completedCount: totalCount - activeCount,
+    };
+  }
 }
