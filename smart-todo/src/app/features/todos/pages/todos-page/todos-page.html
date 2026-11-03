@@ -20,30 +20,12 @@
   </div>
 
   <!-- Add Task Bar -->
-  <div class="mb-8 flex items-center gap-3 border border-primary/25 bg-card p-2 shadow-sm">
-    <div class="flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
-      <svg lucidePlus class="size-4"></svg>
-    </div>
-    <input
-      hlmInput
-      type="text"
-      [ngModel]="store.newTask()"
-      (ngModelChange)="store.setNewTask($event)"
-      (keydown.enter)="store.addTask()"
-      placeholder="What needs your attention?"
-      class="h-10 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
+  <div class="mb-8">
+    <app-todo-create-bar
+      [isQuotaReached]="store.isQuotaReached()"
+      [quotaBadgeText]="store.quotaBadgeText()"
+      (create)="onCreateTodo($event)"
     />
-    <span hlmBadge variant="secondary" class="hidden shrink-0 font-mono text-[10px] sm:inline-flex">
-      {{ store.totalCount() }}/40
-    </span>
-    <button
-      hlmBtn
-      (click)="store.addTask()"
-      [disabled]="!store.newTask().trim()"
-      class="shrink-0"
-    >
-      Add task
-    </button>
   </div>
 
   <!-- List Header & Actions -->
@@ -81,7 +63,7 @@
       <div class="flex items-center gap-3">
         <h2 class="text-lg font-semibold">{{ store.activeList() }}</h2>
         <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
-          {{ store.tasks().length }} active
+          {{ store.activeTodos().length }} active
         </span>
       </div>
       <div class="flex items-center gap-2">
@@ -106,62 +88,27 @@
     </div>
   }
 
-  <!-- Active Tasks Section -->
+  <!-- Active Tasks Section with Drag & Drop -->
   <section class="border-y border-border">
-    @for (task of store.visibleTasks(); track task.id) {
-      <div class="group flex items-center gap-3 border-b border-border/70 py-4 last:border-b-0">
-        <svg lucideGripVertical class="hidden size-4 shrink-0 cursor-grab text-muted-foreground/40 group-hover:text-muted-foreground sm:block"></svg>
-        <button
-          type="button"
-          (click)="store.toggleTask(task.id)"
-          class="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/35 text-primary transition-colors hover:border-primary"
-          [attr.aria-label]="'Complete ' + task.text"
-        >
-          <svg lucideCircle class="size-4"></svg>
-        </button>
+    <div
+      cdkDropList
+      [cdkDropListData]="store.visibleActiveTodos()"
+      (cdkDropListDropped)="onDropActive($event)"
+    >
+      @for (task of store.visibleActiveTodos(); track task.id) {
+        <app-todo-item-row
+          cdkDrag
+          [cdkDragData]="task"
+          [todo]="task"
+          [isDraggable]="true"
+          (toggleComplete)="onToggleComplete(task)"
+          (textUpdated)="onUpdateText(task.id, $event)"
+          (deleteClicked)="onDeleteTodo(task)"
+        />
+      }
+    </div>
 
-        <div class="min-w-0 flex-1">
-          @if (store.editingId() === task.id) {
-            <input
-              hlmInput
-              autofocus
-              [ngModel]="store.editValue()"
-              (ngModelChange)="store.setEditValue($event)"
-              (blur)="store.saveEdit(task.id)"
-              (keydown.enter)="store.saveEdit(task.id)"
-              (keydown.escape)="store.cancelEditing()"
-              class="h-8"
-            />
-          } @else {
-            <button
-              type="button"
-              (click)="store.startEditing(task.id, task.text)"
-              class="block max-w-full truncate text-left text-sm font-medium hover:text-primary"
-            >
-              {{ task.text }}
-            </button>
-          }
-          <div class="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <span>{{ task.meta }}</span>
-            <span class="size-1 rounded-full bg-border"></span>
-            <span>{{ task.tag }}</span>
-          </div>
-        </div>
-
-        <button
-          hlmBtn
-          variant="ghost"
-          size="icon"
-          class="size-8 opacity-0 transition-opacity group-hover:opacity-100"
-          (click)="store.deleteTask(task.id)"
-          [attr.aria-label]="'Delete ' + task.text"
-        >
-          <svg lucideTrash2 class="size-4"></svg>
-        </button>
-      </div>
-    }
-
-    @if (store.visibleTasks().length === 0) {
+    @if (store.visibleActiveTodos().length === 0) {
       <div class="py-12 text-center text-sm text-muted-foreground">
         {{ store.query() ? 'No tasks match that filter.' : 'No tasks in this list yet. Add one above!' }}
       </div>

@@ -1,14 +1,10 @@
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import {
-  LucidePlus,
   LucideSearch,
   LucideTag,
   LucideMoreHorizontal,
-  LucideGripVertical,
-  LucideCircle,
-  LucideCheck,
-  LucideTrash2,
   LucideChevronDown,
   LucideChevronRight,
   LucideCircleCheck,
@@ -25,20 +21,22 @@ import {
   toggleStarTodoList,
 } from '@core';
 import { TodosStore } from '../../store/todos.store';
-import { ListHeaderComponent } from '../../components';
+import {
+  ListHeaderComponent,
+  TodoCreateBarComponent,
+  TodoItemRowComponent,
+} from '../../components';
+import { TodoItem } from '../../models';
 
 @Component({
   selector: 'app-todos-page',
   imports: [
     FormsModule,
-    LucidePlus,
+    CdkDropList,
+    CdkDrag,
     LucideSearch,
     LucideTag,
     LucideMoreHorizontal,
-    LucideGripVertical,
-    LucideCircle,
-    LucideCheck,
-    LucideTrash2,
     LucideChevronDown,
     LucideChevronRight,
     LucideCircleCheck,
@@ -46,6 +44,8 @@ import { ListHeaderComponent } from '../../components';
     HlmBadge,
     HlmInput,
     ListHeaderComponent,
+    TodoCreateBarComponent,
+    TodoItemRowComponent,
   ],
   providers: [TodosStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,4 +85,34 @@ export class TodosPage {
   onDeleteList(listId: string): void {
     this.dispatcher.dispatch(deleteTodoList({ listId }));
   }
+
+  onCreateTodo(text: string): void {
+    this.store.createTodo({ text });
+  }
+
+  onToggleComplete(todo: TodoItem): void {
+    this.store.toggleTodoCompletion(todo);
+  }
+
+  onUpdateText(todoId: string, text: string): void {
+    this.store.updateTodoText({ todoId, text });
+  }
+
+  onDeleteTodo(todo: TodoItem): void {
+    this.store.deleteTodo(todo);
+  }
+
+  onDropActive(event: CdkDragDrop<TodoItem[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+
+    const activeList = this.store.visibleActiveTodos();
+    const item = activeList[event.previousIndex];
+    if (!item) return;
+
+    this.store.reorderActiveTodo({
+      todoId: item.id,
+      targetIndex: event.currentIndex,
+    });
+  }
 }
+
