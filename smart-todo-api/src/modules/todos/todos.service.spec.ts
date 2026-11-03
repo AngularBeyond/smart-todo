@@ -15,6 +15,8 @@ describe('TodosService', () => {
     create: ReturnType<typeof vi.fn>;
     findTodosByCursor: ReturnType<typeof vi.fn>;
     countCountsByListId: ReturnType<typeof vi.fn>;
+    findByIdAndUserId: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
   };
 
   const userId = 'user-123';
@@ -40,6 +42,8 @@ describe('TodosService', () => {
       create: vi.fn(),
       findTodosByCursor: vi.fn(),
       countCountsByListId: vi.fn(),
+      findByIdAndUserId: vi.fn(),
+      update: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -234,6 +238,136 @@ describe('TodosService', () => {
       expect(result.hasMore).toBe(false);
       expect(result.nextCursor).toBeNull();
       expect(result.meta.completedCount).toBe(5);
+    });
+  });
+
+  describe('updateTodo', () => {
+    const todoId = 'todo-1';
+
+    it('should throw NotFoundException if the list does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.updateTodo(userId, listId, todoId, { text: 'Updated text' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if the todo does not exist or belong to user', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue(null);
+
+      await expect(
+        service.updateTodo(userId, listId, todoId, { text: 'Updated text' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if the todo belongs to a different list', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        listId: 'other-list',
+      });
+
+      await expect(
+        service.updateTodo(userId, listId, todoId, { text: 'Updated text' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should update text with trimming and without changing order or isCompleted', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue(mockCreatedTodo);
+      repository.update.mockResolvedValue({
+        ...mockCreatedTodo,
+        text: 'Trimmed updated text',
+      });
+
+      const result = await service.updateTodo(userId, listId, todoId, {
+        text: '   Trimmed updated text   ',
+      });
+
+      expect(repository.update).toHaveBeenCalledWith(
+        todoId,
+        { text: 'Trimmed updated text' },
+        expect.anything(),
+      );
+      expect(result.todo.text).toBe('Trimmed updated text');
+    });
+
+    it('should mark todo as completed (isCompleted: true) without changing order', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: false,
+      });
+      repository.update.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: true,
+      });
+
+      const result = await service.updateTodo(userId, listId, todoId, {
+        isCompleted: true,
+      });
+
+      expect(repository.update).toHaveBeenCalledWith(
+        todoId,
+        { isCompleted: true },
+        expect.anything(),
+      );
+      expect(result.todo.isCompleted).toBe(true);
+    });
+
+    it('should apply Uncomplete-to-Top rule when uncompleting a todo (isCompleted: true -> false)', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: true,
+        order: 5000,
+      });
+      repository.findMinActiveOrderByListId.mockResolvedValue(500);
+      repository.update.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: false,
+        order: -500,
+      });
+
+      const result = await service.updateTodo(userId, listId, todoId, {
+        isCompleted: false,
+      });
+
+      // minOrder (500) - ORDER_STEP (1000) = -500
+      expect(repository.update).toHaveBeenCalledWith(
+        todoId,
+        { isCompleted: false, order: -500 },
+        expect.anything(),
+      );
+      expect(result.todo.order).toBe(-500);
+      expect(result.todo.isCompleted).toBe(false);
+    });
+
+    it('should apply Uncomplete-to-Top with default 1000 order when no active todos exist', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      repository.findByIdAndUserId.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: true,
+      });
+      repository.findMinActiveOrderByListId.mockResolvedValue(null);
+      repository.update.mockResolvedValue({
+        ...mockCreatedTodo,
+        isCompleted: false,
+        order: 1000,
+      });
+
+      const result = await service.updateTodo(userId, listId, todoId, {
+        isCompleted: false,
+      });
+
+      // (null ?? 2000) - ORDER_STEP (1000) = 1000
+      expect(repository.update).toHaveBeenCalledWith(
+        todoId,
+        { isCompleted: false, order: 1000 },
+        expect.anything(),
+      );
+      expect(result.todo.order).toBe(1000);
     });
   });
 });
