@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import {
+  createTodoList,
   loadTodoLists,
   reorderUnstarredList,
   selectTodoList,
@@ -180,6 +181,52 @@ describe('Sidebar', () => {
 
     expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
       expect.objectContaining({ type: '[Todo Lists] Reorder Unstarred List' }),
+    );
+  });
+
+  it('should dispatch createTodoList when createList() is called with valid name', () => {
+    component.newListName.set(' Groceries ');
+    component.createList();
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      createTodoList({ name: 'Groceries' }),
+    );
+    expect(component.newListName()).toBe('');
+  });
+
+  it('should not dispatch createTodoList when newListName is blank', () => {
+    component.newListName.set('   ');
+    component.createList();
+
+    expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: '[Todo Lists] Create List' }),
+    );
+  });
+
+  it('should not dispatch createTodoList and should show quota UI when quota is reached', async () => {
+    const quotaStore = {
+      lists: signal([mockLists()[0], mockLists()[1], { ...mockLists()[1], id: 'list-3' }]).asReadonly(),
+      starredLists: signal([]).asReadonly(),
+      unstarredLists: signal([]).asReadonly(),
+      selectedListId: signal(null).asReadonly(),
+      isQuotaReached: signal(true).asReadonly(),
+    };
+
+    const quotaFixture = TestBed.createComponent(Sidebar);
+    (quotaFixture.componentInstance as any).todoListsStore = quotaStore;
+    quotaFixture.detectChanges();
+    await quotaFixture.whenStable();
+
+    const input = quotaFixture.nativeElement.querySelector('#new-list-input') as HTMLInputElement;
+    expect(input.disabled).toBe(true);
+    expect(input.placeholder).toBe('Max 3 lists in demo (3/3)');
+    expect(quotaFixture.nativeElement.textContent).toContain('Max 3 lists in demo (3/3)');
+
+    quotaFixture.componentInstance.newListName.set('Another List');
+    quotaFixture.componentInstance.createList();
+
+    expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: '[Todo Lists] Create List' }),
     );
   });
 });
