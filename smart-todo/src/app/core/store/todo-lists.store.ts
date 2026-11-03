@@ -17,7 +17,12 @@ import {
   setPending,
   withRequestStatus,
 } from '../index';
-import { TodoListSummary, TodoListsResponse, TodoListResponse } from '../models/todo-list.model';
+import {
+  TodoListSummary,
+  TodoListsResponse,
+  TodoListResponse,
+  DeleteTodoListResponse,
+} from '../models/todo-list.model';
 import { calculateNewOrder } from '../pure-functions/order-calculator.util';
 import {
   loadTodoLists,
@@ -26,6 +31,7 @@ import {
   renameTodoList,
   toggleStarTodoList,
   reorderUnstarredList,
+  deleteTodoList,
   adjustListCounts,
   apiErrorOccurred,
   apiSuccessOccurred,
@@ -323,6 +329,55 @@ export const TodoListsStore = signalStore(
             }),
           });
         }),
+      ),
+
+      deleteTodoList$: events.on(deleteTodoList).pipe(
+        switchMap(({ payload }) =>
+          httpService
+            .delete<DeleteTodoListResponse>(`/api/v1/lists/${payload.listId}`)
+            .pipe(
+              tap({
+                next: () => {
+                  const remainingLists = store
+                    .lists()
+                    .filter((l) => l.id !== payload.listId);
+
+                  let nextSelectedId = store.selectedListId();
+                  if (nextSelectedId === payload.listId) {
+                    const nextList =
+                      remainingLists.find((l) => l.isStarred) ??
+                      remainingLists[0] ??
+                      null;
+                    nextSelectedId = nextList?.id ?? null;
+                  }
+
+                  patchState(
+                    store,
+                    {
+                      lists: remainingLists,
+                      selectedListId: nextSelectedId,
+                    },
+                    setFulfilled(),
+                  );
+
+                  dispatcher.dispatch(
+                    apiSuccessOccurred({
+                      message: 'Todo list deleted successfully.',
+                    }),
+                  );
+                },
+                error: (err: HttpErrorResponse) => {
+                  const message =
+                    err.error?.message ||
+                    (typeof err.error === 'string' ? err.error : null) ||
+                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                  patchState(store, setError(message));
+                  dispatcher.dispatch(apiErrorOccurred({ message }));
+                },
+              }),
+              catchError(() => EMPTY),
+            ),
+        ),
       ),
     };
   }),

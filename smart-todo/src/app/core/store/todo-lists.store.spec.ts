@@ -5,7 +5,12 @@ import { Dispatcher, Events, provideDispatcher } from '@ngrx/signals/events';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { HttpService } from '../http/http.service';
 import { ApiResponse } from '../http/api-response.model';
-import { TodoListSummary, TodoListsResponse, TodoListResponse } from '../models/todo-list.model';
+import {
+  TodoListSummary,
+  TodoListsResponse,
+  TodoListResponse,
+  DeleteTodoListResponse,
+} from '../models/todo-list.model';
 import { TodoListsStore } from './todo-lists.store';
 import {
   apiErrorOccurred,
@@ -16,6 +21,7 @@ import {
   renameTodoList,
   toggleStarTodoList,
   reorderUnstarredList,
+  deleteTodoList,
   adjustListCounts,
 } from './events';
 
@@ -461,6 +467,86 @@ describe('TodoListsStore', () => {
       );
     });
   });
+
+  describe('deleteTodoList event', () => {
+    beforeEach(() => {
+      httpMock.get.mockReturnValue(of(mockResponse));
+      dispatcher.dispatch(loadTodoLists());
+    });
+
+    it('should delete list, remove from store, select next remaining list, and dispatch apiSuccessOccurred', () => {
+      const successSpy = vi.fn();
+      events.on(apiSuccessOccurred).subscribe(successSpy);
+
+      const mockDeleteResponse: ApiResponse<DeleteTodoListResponse> = {
+        success: true,
+        data: { message: 'Todo list deleted successfully.' },
+      };
+      httpMock.delete.mockReturnValue(of(mockDeleteResponse));
+
+      // Currently selected list is list-starred-1
+      expect(store.selectedListId()).toBe('list-starred-1');
+
+      dispatcher.dispatch(deleteTodoList({ listId: 'list-starred-1' }));
+
+      expect(httpMock.delete).toHaveBeenCalledWith(
+        '/api/v1/lists/list-starred-1',
+      );
+      expect(store.lists().some((l) => l.id === 'list-starred-1')).toBe(false);
+      // Next available starred list should be selected (list-starred-2)
+      expect(store.selectedListId()).toBe('list-starred-2');
+      expect(store.isFulfilled()).toBe(true);
+      expect(successSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Todo list deleted successfully.' },
+        }),
+      );
+    });
+
+    it('should set selectedListId to null when deleting the last remaining list', () => {
+      // Setup a store with only 1 list
+      const singleList = [mockLists[0]];
+      httpMock.get.mockReturnValue(
+        of({ success: true, data: { lists: singleList } }),
+      );
+      dispatcher.dispatch(loadTodoLists());
+      expect(store.lists()).toHaveLength(1);
+      expect(store.selectedListId()).toBe(singleList[0].id);
+
+      const mockDeleteResponse: ApiResponse<DeleteTodoListResponse> = {
+        success: true,
+        data: { message: 'Todo list deleted successfully.' },
+      };
+      httpMock.delete.mockReturnValue(of(mockDeleteResponse));
+
+      dispatcher.dispatch(deleteTodoList({ listId: singleList[0].id }));
+
+      expect(store.lists()).toEqual([]);
+      expect(store.selectedListId()).toBeNull();
+      expect(store.selectedList()).toBeNull();
+    });
+
+    it('should handle error when deleting list fails', () => {
+      const errorSpy = vi.fn();
+      events.on(apiErrorOccurred).subscribe(errorSpy);
+
+      const errorResponse = new HttpErrorResponse({
+        error: { message: 'Todo list not found.' },
+        status: 404,
+      });
+      httpMock.delete.mockReturnValue(throwError(() => errorResponse));
+
+      dispatcher.dispatch(deleteTodoList({ listId: 'non-existent' }));
+
+      expect(store.error()).toBe('Todo list not found.');
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { message: 'Todo list not found.' },
+        }),
+      );
+    });
+  });
 });
+
 
 
