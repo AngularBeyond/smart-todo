@@ -1,0 +1,63 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { TodosController } from './todos.controller.js';
+import { TodosService, TodoResponse } from './todos.service.js';
+import type { UserPayload } from '../auth/strategies/jwt.strategy.js';
+
+describe('TodosController', () => {
+  let controller: TodosController;
+  let service: {
+    createTodo: ReturnType<typeof vi.fn>;
+  };
+
+  const user: UserPayload = {
+    sub: 'user-123',
+    email: 'test@example.com',
+  };
+
+  const mockResponse: TodoResponse = {
+    todo: {
+      id: 'todo-1',
+      listId: 'list-456',
+      userId: 'user-123',
+      text: 'Do laundry',
+      isCompleted: false,
+      order: 1000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  };
+
+  beforeEach(async () => {
+    service = {
+      createTodo: vi.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [TodosController],
+      providers: [
+        {
+          provide: TodosService,
+          useValue: service,
+        },
+      ],
+    }).compile();
+
+    controller = module.get<TodosController>(TodosController);
+  });
+
+  describe('createTodo', () => {
+    it('should delegate to TodosService with user.sub, listId, and dto', async () => {
+      service.createTodo.mockResolvedValue(mockResponse);
+
+      const result = await controller.createTodo(user, 'list-456', {
+        text: 'Do laundry',
+      });
+
+      expect(service.createTodo).toHaveBeenCalledWith('user-123', 'list-456', {
+        text: 'Do laundry',
+      });
+      expect(result).toEqual(mockResponse);
+    });
+  });
+});
