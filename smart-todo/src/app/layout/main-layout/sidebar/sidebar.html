@@ -26,37 +26,78 @@
     </button>
   </nav>
 
-  <div class="mt-10 flex items-center justify-between">
+  <!-- Starred Lists Section -->
+  @if (todoListsStore.starredLists().length > 0) {
+    <div class="mt-6 flex items-center justify-between">
+      <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        Starred
+      </span>
+    </div>
+
+    <div class="mt-2 flex flex-col gap-1">
+      @for (list of todoListsStore.starredLists(); track list.id) {
+        <button
+          type="button"
+          (click)="selectList(list.id)"
+          class="group flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          [class.bg-sidebar-accent]="todoListsStore.selectedListId() === list.id"
+          [class.font-medium]="todoListsStore.selectedListId() === list.id"
+          [class.text-sidebar-accent-foreground]="todoListsStore.selectedListId() === list.id"
+          [class.text-muted-foreground]="todoListsStore.selectedListId() !== list.id"
+        >
+          <span class="size-2 shrink-0 rounded-full bg-primary"></span>
+          <span class="truncate">{{ list.name }}</span>
+          <span class="ml-auto flex items-center gap-1.5">
+            <span hlmBadge variant="outline" class="h-5 px-1.5 text-[10px]">
+              {{ list.activeCount }}
+            </span>
+            <button
+              type="button"
+              (click)="toggleStar(list.id, $event)"
+              class="rounded p-0.5 text-primary hover:text-primary/80 transition-colors"
+              aria-label="Unstar list"
+            >
+              <svg lucideStar class="size-3.5 fill-current"></svg>
+            </button>
+          </span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Unstarred Lists Section -->
+  <div class="mt-6 flex items-center justify-between">
     <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-      Lists <span class="text-primary">{{ lists().length }}/3</span>
+      Lists <span class="text-primary">{{ todoListsStore.lists().length }}/3</span>
     </span>
-    <button
-      hlmBtn
-      variant="ghost"
-      size="icon"
-      class="size-7"
-      (click)="newListInput.focus()"
-    >
-      <svg lucideListPlus class="size-4"></svg>
-    </button>
   </div>
 
-  <div class="mt-3 flex flex-col gap-1">
-    @for (list of lists(); track list.name) {
+  <div class="mt-2 flex flex-col gap-1">
+    @for (list of todoListsStore.unstarredLists(); track list.id) {
       <button
         type="button"
-        (click)="selectList(list.name)"
-        class="group flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors"
-        [class.bg-sidebar-accent]="activeList() === list.name"
-        [class.font-medium]="activeList() === list.name"
-        [class.text-sidebar-accent-foreground]="activeList() === list.name"
-        [class.text-muted-foreground]="activeList() !== list.name"
+        (click)="selectList(list.id)"
+        class="group flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        [class.bg-sidebar-accent]="todoListsStore.selectedListId() === list.id"
+        [class.font-medium]="todoListsStore.selectedListId() === list.id"
+        [class.text-sidebar-accent-foreground]="todoListsStore.selectedListId() === list.id"
+        [class.text-muted-foreground]="todoListsStore.selectedListId() !== list.id"
       >
-        <span class="size-2 rounded-full" [class]="list.color"></span>
+        <span class="size-2 shrink-0 rounded-full bg-muted-foreground/40"></span>
         <span class="truncate">{{ list.name }}</span>
-        @if (list.starred) {
-          <svg lucideStar class="ml-auto size-3.5 fill-current text-primary"></svg>
-        }
+        <span class="ml-auto flex items-center gap-1.5">
+          <span hlmBadge variant="outline" class="h-5 px-1.5 text-[10px]">
+            {{ list.activeCount }}
+          </span>
+          <button
+            type="button"
+            (click)="toggleStar(list.id, $event)"
+            class="rounded p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Star list"
+          >
+            <svg lucideStar class="size-3.5"></svg>
+          </button>
+        </span>
       </button>
     }
   </div>
@@ -64,16 +105,16 @@
   <div class="mt-8 border-t border-sidebar-border pt-4">
     <div class="flex items-center justify-between text-xs text-muted-foreground">
       <label for="new-list-input">New list</label>
-      <span>{{ lists().length }}/3 used</span>
+      <span>{{ todoListsStore.lists().length }}/3 used</span>
     </div>
     <div class="mt-2 flex gap-2">
       <input
         id="new-list-input"
         #newListInput
         hlmInput
-        [ngModel]="newList()"
-        (ngModelChange)="newList.set($event)"
-        [disabled]="lists().length >= 3"
+        [ngModel]="newListName()"
+        (ngModelChange)="newListName.set($event)"
+        [disabled]="todoListsStore.isQuotaReached()"
         (keydown.enter)="createList()"
         placeholder="Name your list"
         class="h-9 bg-background text-xs"
@@ -83,7 +124,7 @@
         size="icon"
         class="size-9 shrink-0"
         (click)="createList()"
-        [disabled]="lists().length >= 3 || !newList().trim()"
+        [disabled]="todoListsStore.isQuotaReached() || !newListName().trim()"
         aria-label="Create list"
       >
         <svg lucidePlus class="size-4"></svg>
