@@ -19,7 +19,7 @@ const initialTodosState: TodosState = {
   tasks: STARTER_TASKS,
   completed: COMPLETED_TASKS,
   newTask: '',
-  showCompleted: true,
+  showCompleted: false,
   activeList: 'My Tasks',
   editingId: null,
   editValue: '',
