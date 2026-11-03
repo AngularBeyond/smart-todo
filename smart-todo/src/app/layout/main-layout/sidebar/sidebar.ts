@@ -1,5 +1,5 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
   CdkDrag,
@@ -64,6 +64,7 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
 export class Sidebar implements OnInit {
   protected readonly dispatcher = inject(Dispatcher);
   protected readonly todoListsStore = inject(TodoListsStore);
+  private readonly router = inject(Router);
 
   readonly variant = input<'desktop' | 'mobile'>('desktop');
   readonly newListName = signal('');
@@ -76,6 +77,7 @@ export class Sidebar implements OnInit {
 
   selectList(listId: string): void {
     this.dispatcher.dispatch(selectTodoList({ listId }));
+    this.router.navigate(['/']);
   }
 
   toggleStar(listId: string, event: MouseEvent): void {

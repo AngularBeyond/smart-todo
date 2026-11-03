@@ -16,6 +16,7 @@ import {
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { AppStore, TodoListsStore } from '@core';
 import { TodosStore } from '../../store/todos.store';
 
 @Component({
@@ -44,4 +45,6 @@ import { TodosStore } from '../../store/todos.store';
 })
 export class TodosPage {
   protected readonly store = inject(TodosStore);
+  protected readonly todoListsStore = inject(TodoListsStore);
+  protected readonly appStore = inject(AppStore);
 }

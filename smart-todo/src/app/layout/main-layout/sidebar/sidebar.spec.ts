@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import {
@@ -124,9 +124,13 @@ describe('Sidebar', () => {
     expect(element.textContent).toContain('Personal');
   });
 
-  it('should dispatch selectTodoList when a list item is clicked', () => {
+  it('should dispatch selectTodoList and navigate to / when a list item is clicked', () => {
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate');
+
     component.selectList('list-2');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(selectTodoList({ listId: 'list-2' }));
+    expect(navSpy).toHaveBeenCalledWith(['/']);
   });
 
   it('should dispatch toggleStarTodoList when star toggle button is clicked', () => {

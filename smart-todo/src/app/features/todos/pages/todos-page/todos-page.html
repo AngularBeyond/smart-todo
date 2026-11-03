@@ -4,7 +4,7 @@
     <div>
       <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Monday, July 08, 2024</p>
       <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-        Good morning, Jordan<span class="text-primary">.</span>
+        Good morning, {{ appStore.userDisplayName() }}<span class="text-primary">.</span>
       </h1>
       <p class="mt-2 text-sm text-muted-foreground">Make today count, one small step at a time.</p>
     </div>
@@ -49,7 +49,7 @@
   <!-- List Controls & Filter -->
   <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-      <h2 class="text-lg font-semibold">{{ store.activeList() }}</h2>
+      <h2 class="text-lg font-semibold">{{ todoListsStore.selectedList()?.name ?? store.activeList() }}</h2>
       <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
         {{ store.tasks().length }} active
       </span>
