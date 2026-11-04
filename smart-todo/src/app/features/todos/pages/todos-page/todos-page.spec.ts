@@ -177,5 +177,29 @@ describe('TodosPage', () => {
 
     expect(reorderSpy).not.toHaveBeenCalled();
   });
+
+  it('calls store.toggleCompletedSection on onToggleCompletedSection', () => {
+    const store = (component as any).store;
+    const toggleSpy = vi.spyOn(store, 'toggleCompletedSection');
+
+    component.onToggleCompletedSection();
+    expect(toggleSpy).toHaveBeenCalled();
+  });
+
+  it('calls store.loadMoreActiveTodos on onLoadMoreActive', () => {
+    const store = (component as any).store;
+    const loadSpy = vi.spyOn(store, 'loadMoreActiveTodos');
+
+    component.onLoadMoreActive();
+    expect(loadSpy).toHaveBeenCalled();
+  });
+
+  it('calls store.loadMoreCompletedTodos on onLoadMoreCompleted', () => {
+    const store = (component as any).store;
+    const loadSpy = vi.spyOn(store, 'loadMoreCompletedTodos');
+
+    component.onLoadMoreCompleted();
+    expect(loadSpy).toHaveBeenCalled();
+  });
 });
 

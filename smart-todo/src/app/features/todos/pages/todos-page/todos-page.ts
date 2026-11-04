@@ -5,9 +5,8 @@ import {
   LucideSearch,
   LucideTag,
   LucideMoreHorizontal,
-  LucideChevronDown,
-  LucideChevronRight,
   LucideCircleCheck,
+  LucideLoader2,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
@@ -20,8 +19,10 @@ import {
   TodoListsStore,
   toggleStarTodoList,
 } from '@core';
+import { InfiniteScrollSentinelDirective } from '@ui';
 import { TodosStore } from '../../store/todos.store';
 import {
+  CompletedSectionComponent,
   ListHeaderComponent,
   TodoCreateBarComponent,
   TodoItemRowComponent,
@@ -37,15 +38,16 @@ import { TodoItem } from '../../models';
     LucideSearch,
     LucideTag,
     LucideMoreHorizontal,
-    LucideChevronDown,
-    LucideChevronRight,
     LucideCircleCheck,
+    LucideLoader2,
     HlmButton,
     HlmBadge,
     HlmInput,
+    InfiniteScrollSentinelDirective,
     ListHeaderComponent,
     TodoCreateBarComponent,
     TodoItemRowComponent,
+    CompletedSectionComponent,
   ],
   providers: [TodosStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,6 +71,8 @@ export class TodosPage {
         this.lastSelectedListId = selected.id;
         if (selected.totalCount === 0) {
           this.store.resetForNewList(selected.name);
+        } else {
+          this.store.loadInitialForList(selected.id);
         }
       }
     });
@@ -100,6 +104,18 @@ export class TodosPage {
 
   onDeleteTodo(todo: TodoItem): void {
     this.store.deleteTodo(todo);
+  }
+
+  onToggleCompletedSection(): void {
+    this.store.toggleCompletedSection();
+  }
+
+  onLoadMoreActive(): void {
+    this.store.loadMoreActiveTodos();
+  }
+
+  onLoadMoreCompleted(): void {
+    this.store.loadMoreCompletedTodos();
   }
 
   onDropActive(event: CdkDragDrop<TodoItem[]>): void {
