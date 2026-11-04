@@ -113,63 +113,37 @@
         {{ store.query() ? 'No tasks match that filter.' : 'No tasks in this list yet. Add one above!' }}
       </div>
     }
-  </section>
 
-  <!-- Completed Tasks Section -->
-  <div class="mt-7 border border-border bg-card">
-    <button
-      type="button"
-      (click)="store.toggleShowCompleted()"
-      class="flex w-full items-center gap-3 px-4 py-4 text-left"
-    >
-      <span class="flex size-6 items-center justify-center bg-muted text-muted-foreground">
-        @if (store.showCompleted()) {
-          <svg lucideChevronDown class="size-4"></svg>
-        } @else {
-          <svg lucideChevronRight class="size-4"></svg>
-        }
-      </span>
-      <span class="text-sm font-semibold">Completed</span>
-      <span hlmBadge variant="secondary" class="font-mono text-[10px]">{{ store.completed().length }}</span>
-      <span class="ml-auto text-xs text-muted-foreground">
-        {{ store.showCompleted() ? 'Hide history' : 'View history' }}
-      </span>
-    </button>
-
-    @if (store.showCompleted()) {
-      <div class="border-t border-border px-4">
-        @for (task of store.completed(); track task.id) {
-          <div class="group flex items-center gap-3 border-b border-border/60 py-4 last:border-0">
-            <button
-              type="button"
-              (click)="store.restoreTask(task.id)"
-              class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-              [attr.aria-label]="'Restore ' + task.text"
-            >
-              <svg lucideCheck class="size-3"></svg>
-            </button>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-sm text-muted-foreground line-through">{{ task.text }}</p>
-              <div class="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span>{{ task.meta }}</span>
-                <span class="size-1 rounded-full bg-border"></span>
-                <span>{{ task.tag }}</span>
-              </div>
-            </div>
-            <button
-              hlmBtn
-              variant="ghost"
-              size="icon"
-              class="size-8 opacity-0 group-hover:opacity-100"
-              (click)="store.deleteCompleted(task.id)"
-              [attr.aria-label]="'Delete ' + task.text"
-            >
-              <svg lucideTrash2 class="size-4"></svg>
-            </button>
-          </div>
+    <!-- Active Todos Infinite Scroll Sentinel -->
+    @if (store.hasMoreActive()) {
+      <div
+        appInfiniteScrollSentinel
+        [disabled]="store.activeLoading()"
+        (reachedBottom)="onLoadMoreActive()"
+        class="flex items-center justify-center py-4 text-xs text-muted-foreground"
+      >
+        @if (store.activeLoading()) {
+          <svg lucideLoader2 class="size-3.5 animate-spin mr-2"></svg>
+          <span>Loading more tasks...</span>
         }
       </div>
     }
+  </section>
+
+  <!-- Completed Tasks Section -->
+  <div class="mt-7">
+    <app-completed-section
+      [completedTodos]="store.completedTodos()"
+      [completedCount]="store.completedCount()"
+      [isExpanded]="store.isCompletedExpanded()"
+      [isLoading]="store.completedLoading()"
+      [hasMore]="store.hasMoreCompleted()"
+      (toggleExpand)="onToggleCompletedSection()"
+      (toggleTodo)="onToggleComplete($event)"
+      (updateTodoText)="onUpdateText($event.todoId, $event.text)"
+      (deleteTodo)="onDeleteTodo($event)"
+      (loadMore)="onLoadMoreCompleted()"
+    />
   </div>
 
   <!-- Footer Info -->
