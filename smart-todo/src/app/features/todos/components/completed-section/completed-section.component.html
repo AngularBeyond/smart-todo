@@ -1,0 +1,71 @@
+<div class="border border-border bg-card">
+  <!-- Accordion Toggle Header -->
+  <button
+    type="button"
+    (click)="onToggleExpand()"
+    class="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    [attr.aria-expanded]="isExpanded()"
+    aria-label="Toggle completed tasks history"
+  >
+    <span class="flex size-6 shrink-0 items-center justify-center bg-muted text-muted-foreground transition-transform">
+      @if (isExpanded()) {
+        <svg lucideChevronDown class="size-4"></svg>
+      } @else {
+        <svg lucideChevronRight class="size-4"></svg>
+      }
+    </span>
+    <span class="text-sm font-semibold">Completed</span>
+    <span hlmBadge variant="secondary" class="font-mono text-[10px]">
+      {{ completedCount() }}
+    </span>
+    <span class="ml-auto text-xs text-muted-foreground">
+      {{ isExpanded() ? 'Hide history' : 'View history' }}
+    </span>
+  </button>
+
+  <!-- Expanded Section Content -->
+  @if (isExpanded()) {
+    <div class="border-t border-border px-4">
+      <!-- Initial Loading Spinner (when list is empty and loading) -->
+      @if (isLoading() && completedTodos().length === 0) {
+        <div class="flex items-center justify-center py-8 text-sm text-muted-foreground">
+          <svg lucideLoader2 class="size-4 animate-spin mr-2"></svg>
+          <span>Loading completed tasks...</span>
+        </div>
+      }
+
+      <!-- Completed Todos List -->
+      @for (todo of completedTodos(); track todo.id) {
+        <app-todo-item-row
+          [todo]="todo"
+          [isDraggable]="false"
+          (toggleComplete)="onToggleTodo(todo)"
+          (textUpdated)="onUpdateText(todo.id, $event)"
+          (deleteClicked)="onDeleteTodo(todo)"
+        />
+      }
+
+      <!-- Empty State inside expanded section -->
+      @if (!isLoading() && completedTodos().length === 0) {
+        <div class="py-8 text-center text-sm text-muted-foreground">
+          No completed tasks yet.
+        </div>
+      }
+
+      <!-- Infinite Scroll Sentinel & Bottom Spinner for next page -->
+      @if (hasMore()) {
+        <div
+          appInfiniteScrollSentinel
+          [disabled]="isLoading()"
+          (reachedBottom)="onLoadMore()"
+          class="flex items-center justify-center py-4 text-xs text-muted-foreground"
+        >
+          @if (isLoading()) {
+            <svg lucideLoader2 class="size-3.5 animate-spin mr-2"></svg>
+            <span>Loading more completed tasks...</span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
