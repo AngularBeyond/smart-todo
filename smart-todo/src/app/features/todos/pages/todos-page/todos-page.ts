@@ -5,9 +5,13 @@ import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import {
   LucideSearch,
   LucideLoader2,
+  LucideStar,
+  LucideTrash,
 } from '@lucide/angular';
 import { HlmBadge } from '@spartan-ng/helm/badge';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
 import { Dispatcher } from '@ngrx/signals/events';
 import {
   AppStore,
@@ -35,8 +39,12 @@ import { TodoItem } from '../../models';
     CdkDrag,
     LucideSearch,
     LucideLoader2,
+    LucideStar,
+    LucideTrash,
     HlmBadge,
+    HlmButton,
     HlmInput,
+    HlmAlertDialogImports,
     InfiniteScrollSentinelDirective,
     ListHeaderComponent,
     TodoCreateBarComponent,

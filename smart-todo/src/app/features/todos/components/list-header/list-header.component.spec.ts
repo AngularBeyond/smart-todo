@@ -81,22 +81,4 @@ describe('ListHeaderComponent', () => {
     expect(component.isEditingTitle()).toBe(false);
     expect(component.editingTitle()).toBe('');
   });
-
-  it('emits starToggled on star button click', () => {
-    const starSpy = vi.fn();
-    component.starToggled.subscribe(starSpy);
-
-    component.toggleStar();
-    expect(starSpy).toHaveBeenCalled();
-  });
-
-  it('emits deleted and invokes ctx.close when confirmDelete is called', () => {
-    const deletedSpy = vi.fn();
-    const closeSpy = vi.fn();
-    component.deleted.subscribe(deletedSpy);
-
-    component.confirmDelete({ close: closeSpy });
-    expect(closeSpy).toHaveBeenCalled();
-    expect(deletedSpy).toHaveBeenCalled();
-  });
 });
