@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideSparkles,
@@ -34,17 +34,44 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
   styleUrl: './header.css',
   templateUrl: './header.html',
 })
-export class Header {
+export class Header implements OnDestroy {
   private readonly dispatcher = inject(Dispatcher);
   protected readonly appStore = inject(AppStore);
 
   readonly showDropdown = signal(false);
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   toggleDropdown(): void {
+    this.cancelCloseTimer();
     this.showDropdown.update((v) => !v);
   }
 
+  onMouseEnter(): void {
+    this.cancelCloseTimer();
+    this.showDropdown.set(true);
+  }
+
+  onMouseLeave(): void {
+    this.startCloseTimer();
+  }
+
+  cancelCloseTimer(): void {
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+    }
+  }
+
+  startCloseTimer(): void {
+    this.cancelCloseTimer();
+    this.closeTimer = setTimeout(() => {
+      this.showDropdown.set(false);
+      this.closeTimer = null;
+    }, 2000);
+  }
+
   closeDropdown(): void {
+    this.cancelCloseTimer();
     this.showDropdown.set(false);
   }
 
@@ -60,5 +87,9 @@ export class Header {
 
   toggleSidebar(): void {
     this.dispatcher.dispatch(toggleMobileSidebar());
+  }
+
+  ngOnDestroy(): void {
+    this.cancelCloseTimer();
   }
 }

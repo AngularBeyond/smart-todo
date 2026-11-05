@@ -83,4 +83,54 @@ describe('Header', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(userLogout());
     expect(component.showDropdown()).toBe(false);
   });
+
+  it('should open dropdown on mouse enter and close after 2000ms on mouse leave', () => {
+    vi.useFakeTimers();
+    try {
+      expect(component.showDropdown()).toBe(false);
+
+      component.onMouseEnter();
+      expect(component.showDropdown()).toBe(true);
+
+      component.onMouseLeave();
+      // Dropdown remains open before 2 seconds
+      vi.advanceTimersByTime(1999);
+      expect(component.showDropdown()).toBe(true);
+
+      // Closes at 2000ms
+      vi.advanceTimersByTime(1);
+      expect(component.showDropdown()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should cancel close timer if re-entering before 2000ms', () => {
+    vi.useFakeTimers();
+    try {
+      component.onMouseEnter();
+      expect(component.showDropdown()).toBe(true);
+
+      component.onMouseLeave();
+      vi.advanceTimersByTime(1000);
+      expect(component.showDropdown()).toBe(true);
+
+      // Re-enter before 2000ms expires
+      component.onMouseEnter();
+      vi.advanceTimersByTime(2000);
+      expect(component.showDropdown()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should render bot button before theme toggle button', () => {
+    const buttons = Array.from(element.querySelectorAll<HTMLButtonElement>('button'));
+    const botBtnIndex = buttons.findIndex((b) => b.getAttribute('aria-label') === 'Agentic assistant');
+    const themeBtnIndex = buttons.findIndex((b) => b.getAttribute('aria-label') === 'Toggle theme');
+
+    expect(botBtnIndex).toBeGreaterThan(-1);
+    expect(themeBtnIndex).toBeGreaterThan(-1);
+    expect(botBtnIndex).toBeLessThan(themeBtnIndex);
+  });
 });
