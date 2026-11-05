@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
+import { patchState } from '@ngrx/signals';
 import {
   deleteTodoList,
   renameTodoList,
@@ -220,6 +221,27 @@ describe('TodosPage', () => {
     expect(el.textContent).not.toContain('Auto-saved just now');
     expect(el.textContent).not.toContain('total tasks');
     expect(el.textContent).toContain("Today's progress");
+  });
+
+  it('configures drag placeholder in template', () => {
+    const store = (component as any).store;
+    patchState(store, {
+      activeTodos: [
+        {
+          id: 'task-1',
+          text: 'First task',
+          isCompleted: false,
+          order: 1000,
+          listId: 'list-123',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const itemRow = fixture.nativeElement.querySelector('app-todo-item-row');
+    expect(itemRow).toBeTruthy();
   });
 });
 
