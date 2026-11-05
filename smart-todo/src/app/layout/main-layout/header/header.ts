@@ -67,7 +67,7 @@ export class Header implements OnDestroy {
     this.closeTimer = setTimeout(() => {
       this.showDropdown.set(false);
       this.closeTimer = null;
-    }, 2000);
+    }, 1000);
   }
 
   closeDropdown(): void {

@@ -84,7 +84,7 @@ describe('Header', () => {
     expect(component.showDropdown()).toBe(false);
   });
 
-  it('should open dropdown on mouse enter and close after 2000ms on mouse leave', () => {
+  it('should open dropdown on mouse enter and close after 1000ms on mouse leave', () => {
     vi.useFakeTimers();
     try {
       expect(component.showDropdown()).toBe(false);
@@ -93,11 +93,11 @@ describe('Header', () => {
       expect(component.showDropdown()).toBe(true);
 
       component.onMouseLeave();
-      // Dropdown remains open before 2 seconds
-      vi.advanceTimersByTime(1999);
+      // Dropdown remains open before 1 second
+      vi.advanceTimersByTime(999);
       expect(component.showDropdown()).toBe(true);
 
-      // Closes at 2000ms
+      // Closes at 1000ms
       vi.advanceTimersByTime(1);
       expect(component.showDropdown()).toBe(false);
     } finally {
@@ -105,19 +105,19 @@ describe('Header', () => {
     }
   });
 
-  it('should cancel close timer if re-entering before 2000ms', () => {
+  it('should cancel close timer if re-entering before 1000ms', () => {
     vi.useFakeTimers();
     try {
       component.onMouseEnter();
       expect(component.showDropdown()).toBe(true);
 
       component.onMouseLeave();
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(500);
       expect(component.showDropdown()).toBe(true);
 
-      // Re-enter before 2000ms expires
+      // Re-enter before 1000ms expires
       component.onMouseEnter();
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(1000);
       expect(component.showDropdown()).toBe(true);
     } finally {
       vi.useRealTimers();
