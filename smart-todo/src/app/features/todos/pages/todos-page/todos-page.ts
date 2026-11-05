@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
 import {
   LucideSearch,
   LucideLoader2,
@@ -37,6 +37,7 @@ import { TodoItem } from '../../models';
     FormsModule,
     CdkDropList,
     CdkDrag,
+    CdkDragPlaceholder,
     LucideSearch,
     LucideLoader2,
     LucideStar,
