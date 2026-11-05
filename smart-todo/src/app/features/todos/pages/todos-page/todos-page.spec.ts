@@ -208,5 +208,15 @@ describe('TodosPage', () => {
     const expectedDate = datePipe.transform(component.currentDate, 'EEEE, MMMM dd, yyyy');
     expect(fixture.nativeElement.textContent).toContain(expectedDate);
   });
+
+  it('renders filter tasks input and does not render removed buttons or footer info', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const filterInput = el.querySelector('input[placeholder="Filter tasks"]');
+    expect(filterInput).toBeTruthy();
+
+    expect(el.querySelector('button[aria-label="More options"]')).toBeFalsy();
+    expect(el.textContent).not.toContain('Auto-saved just now');
+    expect(el.textContent).not.toContain('total tasks');
+  });
 });
 
