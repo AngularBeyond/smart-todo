@@ -1,12 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideStar, LucideTrash2, LucidePencil } from '@lucide/angular';
+import { LucideStar, LucideTrash, LucidePencil } from '@lucide/angular';
 import { TodoListSummary } from '@core';
 import { AutoFocusDirective } from '@ui';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -16,11 +10,10 @@ import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
 
 @Component({
   selector: 'app-list-header',
-  standalone: true,
   imports: [
     FormsModule,
     LucideStar,
-    LucideTrash2,
+    LucideTrash,
     LucidePencil,
     AutoFocusDirective,
     HlmButton,
@@ -29,7 +22,6 @@ import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
     HlmAlertDialogImports,
   ],
   templateUrl: './list-header.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ListHeaderComponent {
   readonly list = input.required<TodoListSummary>();
