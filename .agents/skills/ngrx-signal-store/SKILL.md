@@ -1,6 +1,6 @@
 ---
 name: ngrx-signal-store
-description: Teaches coding agents best practices for building, extending, and testing Angular NgRx SignalStores. Use when creating new SignalStores, managing state with withState or withLinkedState, defining computed signals with withComputed, adding methods with withMethods, managing entity collections with withEntities, building reusable custom features with signalStoreFeature, integrating RxJS effects using rxMethod, implementing event-driven architectures with @ngrx/signals/events, or writing unit tests using TestBed and unprotected. Don't use for legacy RxJS-based NgRx Store/Effects (@ngrx/store), component-level local signals without SignalStore, or non-Angular state management.
+description: Teaches coding agents best practices for building, extending, and testing Angular NgRx SignalStores. Use when creating new SignalStores, managing state with withState or withLinkedState, defining computed signals with withComputed, adding methods with withMethods, managing entity collections with withEntities, building reusable custom features with signalStoreFeature, integrating RxJS effects using rxMethod, leveraging @ngrx/operators (tapResponse, concatLatestFrom, mapResponse), implementing event-driven architectures with @ngrx/signals/events, or writing unit tests using TestBed and unprotected. Don't use for legacy RxJS-based NgRx Store/Effects (@ngrx/store), component-level local signals without SignalStore, or non-Angular state management.
 ---
 
 ### Angular NgRx SignalStore Engineering Guide
@@ -28,8 +28,8 @@ Evaluate the store requirements and load specific reference documentation only w
   Read `references/entity-management.md` to implement `@ngrx/signals/entities`, `withEntities`, `entityConfig`, custom `selectId` functions, and named/private entity collections.
 * **If building reusable, modular store features:**
   Read `references/custom-features.md` to construct `signalStoreFeature`, configure feature input types using `type<T>()`, avoid TypeScript compilation errors with `withZ<_>()`, or utilize `withFeature`.
-* **If integrating RxJS pipelines, API calls, or Angular Resources:**
-  Read `references/rxjs-and-async.md` to handle side-effects with `rxMethod`, handle API responses with `tapResponse`, manage injector scope cleanup, or extend Angular Resources via `extendResource`.
+* **If integrating RxJS pipelines, API calls, @ngrx/operators, or Angular Resources:**
+  Read `references/rxjs-and-async.md` to handle side-effects with `rxMethod`, apply `@ngrx/operators` (`tapResponse`, `concatLatestFrom`, `mapResponse`), manage injector scope cleanup, or extend Angular Resources via `extendResource`.
 * **If implementing an event-driven / decoupled architecture:**
   Read `references/events-plugin.md` to define event creators using `event` or `eventGroup`, create state transitions using `withReducer` and `on()`, attach side-effects with `withEventHandlers`, and handle scoped event dispatching.
 
