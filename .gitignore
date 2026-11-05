@@ -26,4 +26,5 @@ Dockerfile
 docker-compose.override.yml
 
 # Internal Docs
-docs/
+initial-docs/
+
