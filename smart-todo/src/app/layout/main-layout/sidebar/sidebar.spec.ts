@@ -86,6 +86,14 @@ describe('Sidebar', () => {
     expect(aboutBtn).toBeTruthy();
   });
 
+  it('should render All tasks without count badge', () => {
+    const allTasksBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
+      btn.textContent?.includes('All tasks'),
+    );
+    expect(allTasksBtn).toBeTruthy();
+    expect(allTasksBtn?.textContent?.trim()).toBe('All tasks');
+  });
+
   it('should not render Profile, Settings, or Logout links in sidebar footer', () => {
     const profileLink = element.querySelector<HTMLAnchorElement>('a[routerLink="/profile"]');
     const settingsLink = element.querySelector<HTMLAnchorElement>('a[routerLink="/settings"]');

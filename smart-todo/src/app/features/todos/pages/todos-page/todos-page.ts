@@ -4,12 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import {
   LucideSearch,
-  LucideTag,
-  LucideMoreHorizontal,
-  LucideCircleCheck,
   LucideLoader2,
 } from '@lucide/angular';
-import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { Dispatcher } from '@ngrx/signals/events';
@@ -38,11 +34,7 @@ import { TodoItem } from '../../models';
     CdkDropList,
     CdkDrag,
     LucideSearch,
-    LucideTag,
-    LucideMoreHorizontal,
-    LucideCircleCheck,
     LucideLoader2,
-    HlmButton,
     HlmBadge,
     HlmInput,
     InfiniteScrollSentinelDirective,

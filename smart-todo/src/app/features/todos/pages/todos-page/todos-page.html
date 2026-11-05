@@ -30,15 +30,13 @@
 
   <!-- List Header & Actions -->
   @if (todoListsStore.selectedList(); as currentList) {
-    <div class="mb-5 flex flex-col gap-4">
+    <div class="mb-5">
       <app-list-header
         [list]="currentList"
         (renamed)="onRenameList(currentList.id, $event)"
         (starToggled)="onToggleStar(currentList.id)"
         (deleted)="onDeleteList(currentList.id)"
-      />
-
-      <div class="flex items-center justify-end gap-2">
+      >
         <div class="relative hidden sm:block">
           <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
           <input
@@ -47,16 +45,10 @@
             [ngModel]="store.query()"
             (ngModelChange)="store.setQuery($event)"
             placeholder="Filter tasks"
-            class="h-8 w-36 pl-8 text-xs"
+            class="h-8 w-36 pl-8 text-xs sm:w-44"
           />
         </div>
-        <button hlmBtn variant="outline" size="sm" class="gap-2">
-          <svg lucideTag class="size-3.5"></svg> Filter
-        </button>
-        <button hlmBtn variant="ghost" size="icon" aria-label="More options">
-          <svg lucideMoreHorizontal class="size-4"></svg>
-        </button>
-      </div>
+      </app-list-header>
     </div>
   } @else {
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -75,15 +67,9 @@
             [ngModel]="store.query()"
             (ngModelChange)="store.setQuery($event)"
             placeholder="Filter tasks"
-            class="h-8 w-36 pl-8 text-xs"
+            class="h-8 w-36 pl-8 text-xs sm:w-44"
           />
         </div>
-        <button hlmBtn variant="outline" size="sm" class="gap-2">
-          <svg lucideTag class="size-3.5"></svg> Filter
-        </button>
-        <button hlmBtn variant="ghost" size="icon" aria-label="More options">
-          <svg lucideMoreHorizontal class="size-4"></svg>
-        </button>
       </div>
     </div>
   }
@@ -144,13 +130,5 @@
       (deleteTodo)="onDeleteTodo($event)"
       (loadMore)="onLoadMoreCompleted()"
     />
-  </div>
-
-  <!-- Footer Info -->
-  <div class="mt-8 flex items-center justify-between border-t border-border pt-5 text-[11px] text-muted-foreground">
-    <span class="font-mono uppercase tracking-wider">{{ store.totalCount() }} total tasks</span>
-    <span class="flex items-center gap-1.5">
-      <svg lucideCircleCheck class="size-3.5 text-chart-2"></svg> Auto-saved just now
-    </span>
   </div>
 </div>
