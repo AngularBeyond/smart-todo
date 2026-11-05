@@ -94,7 +94,7 @@ describe('TodosStore', () => {
 
       store.loadInitialForList('list-1');
 
-      expect(httpService.get).toHaveBeenCalledWith('/lists/list-1/todos?completed=false&limit=20');
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/lists/list-1/todos?completed=false&limit=20');
       expect(store.activeTodos()).toEqual([mockActiveTodo]);
       expect(store.activeCursor()).toBe('todo-1');
       expect(store.hasMoreActive()).toBe(true);
@@ -147,7 +147,7 @@ describe('TodosStore', () => {
       store.loadMoreActiveTodos();
 
       expect(httpService.get).toHaveBeenLastCalledWith(
-        '/lists/list-1/todos?completed=false&limit=20&cursor=todo-1',
+        '/api/v1/lists/list-1/todos?completed=false&limit=20&cursor=todo-1',
       );
       expect(store.activeTodos()).toEqual([mockActiveTodo, secondTodo]);
       expect(store.activeCursor()).toBeNull();
@@ -199,7 +199,7 @@ describe('TodosStore', () => {
       store.toggleCompletedSection();
 
       expect(store.isCompletedExpanded()).toBe(true);
-      expect(httpService.get).toHaveBeenLastCalledWith('/lists/list-1/todos?completed=true&limit=20');
+      expect(httpService.get).toHaveBeenLastCalledWith('/api/v1/lists/list-1/todos?completed=true&limit=20');
       expect(store.completedTodos()).toEqual([mockCompletedTodo]);
 
       // Collapse
@@ -242,7 +242,7 @@ describe('TodosStore', () => {
       store.loadMoreCompletedTodos();
 
       expect(httpService.get).toHaveBeenLastCalledWith(
-        '/lists/list-1/todos?completed=true&limit=20&cursor=todo-c1',
+        '/api/v1/lists/list-1/todos?completed=true&limit=20&cursor=todo-c1',
       );
       expect(store.completedTodos()).toEqual([mockCompletedTodo, secondCompletedTodo]);
     });
@@ -288,7 +288,7 @@ describe('TodosStore', () => {
       store.createTodo({ text: 'New task text' });
 
       // Check request
-      expect(httpService.post).toHaveBeenCalledWith('/lists/list-1/todos', { text: 'New task text' });
+      expect(httpService.post).toHaveBeenCalledWith('/api/v1/lists/list-1/todos', { text: 'New task text' });
       // Check event dispatched
       expect(dispatchSpy).toHaveBeenCalledWith(
         adjustListCounts({ listId: 'list-1', totalDelta: 1, activeDelta: 1 }),
@@ -332,7 +332,7 @@ describe('TodosStore', () => {
 
       store.updateTodoText({ todoId: 'todo-1', text: 'Renamed task' });
 
-      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-1', {
+      expect(httpService.patch).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1', {
         text: 'Renamed task',
       });
       expect(store.activeTodos()[0].text).toBe('Renamed task');
@@ -365,7 +365,7 @@ describe('TodosStore', () => {
 
       store.toggleTodoCompletion(mockActiveTodo);
 
-      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-1', {
+      expect(httpService.patch).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1', {
         isCompleted: true,
       });
       expect(store.activeTodos()).toEqual([]);
@@ -392,7 +392,7 @@ describe('TodosStore', () => {
 
       store.toggleTodoCompletion(existingCompleted);
 
-      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-c1', {
+      expect(httpService.patch).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-c1', {
         isCompleted: false,
       });
       expect(store.activeTodos()[0].id).toBe('todo-c1');
@@ -440,7 +440,7 @@ describe('TodosStore', () => {
 
       store.deleteTodo(mockActiveTodo);
 
-      expect(httpService.delete).toHaveBeenCalledWith('/lists/list-1/todos/todo-1');
+      expect(httpService.delete).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1');
       expect(store.activeTodos()).toEqual([]);
       expect(store.totalCount()).toBe(24);
       expect(store.activeCount()).toBe(19);
@@ -499,7 +499,7 @@ describe('TodosStore', () => {
 
       store.reorderActiveTodo({ todoId: 'todo-c', targetIndex: 0 });
 
-      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-c/reorder', {
+      expect(httpService.patch).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-c/reorder', {
         order: 0,
       });
       const active = store.activeTodos();
@@ -519,7 +519,7 @@ describe('TodosStore', () => {
 
       store.reorderActiveTodo({ todoId: 'todo-a', targetIndex: 1 });
 
-      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-a/reorder', {
+      expect(httpService.patch).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-a/reorder', {
         order: 2500,
       });
       const active = store.activeTodos();
@@ -539,7 +539,7 @@ describe('TodosStore', () => {
 
       store.reorderActiveTodo({ todoId: 'todo-a', targetIndex: 2 });
 
-      expect(httpService.patch).toHaveBeenCalledWith('/lists/list-1/todos/todo-a/reorder', {
+      expect(httpService.patch).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-a/reorder', {
         order: 4000,
       });
       const active = store.activeTodos();

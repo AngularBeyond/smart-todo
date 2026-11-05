@@ -74,12 +74,14 @@ export const TodoListsStore = signalStore(
     }),
     isQuotaReached: computed(() => lists().length >= 3),
   })),
-  withEventHandlers((store) => {
-    const events = inject(Events);
-    const httpService = inject(HttpService);
-    const dispatcher = inject(Dispatcher);
-
-    return {
+  withEventHandlers(
+    (
+      store,
+      events = inject(Events),
+      httpService = inject(HttpService),
+      dispatcher = inject(Dispatcher),
+    ) => {
+      return {
       loadTodoLists$: events.on(loadTodoLists).pipe(
         tap(() => patchState(store, setPending())),
         switchMap(() =>

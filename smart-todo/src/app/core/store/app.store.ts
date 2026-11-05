@@ -1,4 +1,5 @@
-import { computed, inject } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -73,13 +74,15 @@ export const AppStore = signalStore(
     }),
     isReady: computed(() => isAuthenticated() && profile() !== null),
   })),
-  withEventHandlers((store) => {
-    const events = inject(Events);
-    const httpService = inject(HttpService);
-    const themeService = inject(ThemeService);
-    const router = inject(Router);
-
-    return {
+  withEventHandlers(
+    (
+      store,
+      events = inject(Events),
+      httpService = inject(HttpService),
+      themeService = inject(ThemeService),
+      router = inject(Router),
+    ) => {
+      return {
       handleApiError$: events.on(apiErrorOccurred).pipe(
         tap((evt) => {
           toast.error(evt.payload.message || HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
@@ -175,39 +178,43 @@ export const AppStore = signalStore(
       ),
     };
   }),
-  withMethods((store) => {
-    const themeService = inject(ThemeService);
-    const dispatcher = inject(Dispatcher);
-
-    return {
-      setAccessToken(accessToken: string | null): void {
-        patchState(store, { accessToken, isAuthenticated: !!accessToken });
-      },
-      setAuthenticated(isAuthenticated: boolean): void {
-        patchState(store, { isAuthenticated });
-      },
-      setTheme(theme: ThemeMode): void {
-        dispatcher.dispatch(themeChanged({ mode: theme }));
-      },
-      toggleTheme(): void {
-        const nextTheme: ThemeMode = store.theme() === 'dark' ? 'light' : 'dark';
-        dispatcher.dispatch(themeChanged({ mode: nextTheme }));
-      },
-      toggleMobileSidebar(): void {
-        dispatcher.dispatch(toggleMobileSidebar());
-      },
-      setMobileSidebarOpen(isOpen: boolean): void {
-        dispatcher.dispatch(setMobileSidebarOpen({ isOpen }));
-      },
-      clear(): void {
-        patchState(store, initialAppState, setIdle());
-      },
-    };
-  }),
+  withMethods(
+    (
+      store,
+      themeService = inject(ThemeService),
+      dispatcher = inject(Dispatcher),
+    ) => {
+      return {
+        setAccessToken(accessToken: string | null): void {
+          patchState(store, { accessToken, isAuthenticated: !!accessToken });
+        },
+        setAuthenticated(isAuthenticated: boolean): void {
+          patchState(store, { isAuthenticated });
+        },
+        setTheme(theme: ThemeMode): void {
+          dispatcher.dispatch(themeChanged({ mode: theme }));
+        },
+        toggleTheme(): void {
+          const nextTheme: ThemeMode = store.theme() === 'dark' ? 'light' : 'dark';
+          dispatcher.dispatch(themeChanged({ mode: nextTheme }));
+        },
+        toggleMobileSidebar(): void {
+          dispatcher.dispatch(toggleMobileSidebar());
+        },
+        setMobileSidebarOpen(isOpen: boolean): void {
+          dispatcher.dispatch(setMobileSidebarOpen({ isOpen }));
+        },
+        clear(): void {
+          patchState(store, initialAppState, setIdle());
+        },
+      };
+    },
+  ),
   withHooks({
     onInit(store) {
       const themeService = inject(ThemeService);
       const router = inject(Router);
+      const destroyRef = inject(DestroyRef);
 
       const storedTheme = themeService.getStoredTheme();
       if (storedTheme !== store.theme()) {
@@ -216,7 +223,10 @@ export const AppStore = signalStore(
       themeService.applyTheme(storedTheme);
 
       router.events
-        .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+        .pipe(
+          filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+          takeUntilDestroyed(destroyRef),
+        )
         .subscribe(() => {
           if (store.isMobileSidebarOpen()) {
             patchState(store, { isMobileSidebarOpen: false });

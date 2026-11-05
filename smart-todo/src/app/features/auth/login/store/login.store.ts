@@ -4,7 +4,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Dispatcher } from '@ngrx/signals/events';
-import { catchError, EMPTY, pipe, switchMap, tap } from 'rxjs';
+import { tapResponse } from '@ngrx/operators';
+import { pipe, switchMap, tap } from 'rxjs';
 import {
   ApiResponse,
   HTTP_ERROR_MESSAGES,
@@ -55,7 +56,7 @@ export const LoginStore = signalStore(
           tap(() => patchState(store, setPending())),
           switchMap((credentials) =>
             http.post<AuthSuccessPayload>('/api/v1/auth/login', credentials).pipe(
-              tap({
+              tapResponse({
                 next: (response) => {
                   patchState(store, setFulfilled());
                   appStore.setAccessToken(response.data.accessToken);
@@ -70,7 +71,6 @@ export const LoginStore = signalStore(
                   patchState(store, setError(message));
                 },
               }),
-              catchError(() => EMPTY),
             ),
           ),
         ),

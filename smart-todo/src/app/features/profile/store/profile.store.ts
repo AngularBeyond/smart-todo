@@ -3,7 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Dispatcher } from '@ngrx/signals/events';
-import { catchError, EMPTY, pipe, switchMap, tap } from 'rxjs';
+import { tapResponse } from '@ngrx/operators';
+import { pipe, switchMap, tap } from 'rxjs';
 import {
   ApiResponse,
   AppStore,
@@ -68,7 +69,7 @@ export const ProfileStore = signalStore(
           tap(() => patchState(store, setPending())),
           switchMap(() =>
             http.get<ProfileResponseData>('/api/v1/profile').pipe(
-              tap({
+              tapResponse({
                 next: (res) => {
                   const profile = res.data.profile;
                   patchState(store, { profile }, setFulfilled());
@@ -82,7 +83,6 @@ export const ProfileStore = signalStore(
                   patchState(store, setError(message));
                 },
               }),
-              catchError(() => EMPTY),
             ),
           ),
         ),
@@ -92,7 +92,7 @@ export const ProfileStore = signalStore(
           tap(() => patchState(store, { profileSuccess: false }, setPending())),
           switchMap((dto) =>
             http.patch<ProfileResponseData>('/api/v1/profile', dto).pipe(
-              tap({
+              tapResponse({
                 next: (res) => {
                   const profile = res.data.profile;
                   patchState(store, { profile, profileSuccess: true }, setFulfilled());
@@ -109,7 +109,6 @@ export const ProfileStore = signalStore(
                   patchState(store, { profileSuccess: false }, setError(message));
                 },
               }),
-              catchError(() => EMPTY),
             ),
           ),
         ),
@@ -119,7 +118,7 @@ export const ProfileStore = signalStore(
           tap(() => patchState(store, { passwordSuccess: false }, setPending())),
           switchMap((dto) =>
             http.patch<ChangePasswordResponseData>('/api/v1/auth/change-password', dto).pipe(
-              tap({
+              tapResponse({
                 next: (res) => {
                   patchState(store, { passwordSuccess: true }, setFulfilled());
                   if (res.data?.accessToken) {
@@ -137,7 +136,6 @@ export const ProfileStore = signalStore(
                   patchState(store, { passwordSuccess: false }, setError(message));
                 },
               }),
-              catchError(() => EMPTY),
             ),
           ),
         ),
