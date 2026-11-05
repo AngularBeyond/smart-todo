@@ -1,21 +1,48 @@
 <div class="mx-auto max-w-4xl">
-  <!-- Progress Header -->
-  <div class="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-    <div>
-      <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{{ currentDate | date: 'EEEE, MMMM dd, yyyy' }}</p>
-      <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-        Good morning, {{ appStore.userDisplayName() }}<span class="text-primary">.</span>
-      </h1>
-      <p class="mt-2 text-sm text-muted-foreground">Make today count, one small step at a time.</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <div class="hidden text-right sm:block">
-        <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Today's progress</p>
-        <p class="mt-1 text-lg font-semibold">{{ store.progressPercentage() }}%</p>
-      </div>
-      <div class="flex size-12 items-center justify-center border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
-        {{ store.completed().length }}/{{ store.totalCount() }}
-      </div>
+  <!-- List Title & Progress Header -->
+  <div class="mb-8">
+    <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      {{ currentDate | date: 'EEEE, MMMM dd, yyyy' }}
+    </p>
+
+    <div class="mt-2">
+      @if (todoListsStore.selectedList(); as currentList) {
+        <app-list-header
+          [list]="currentList"
+          (renamed)="onRenameList(currentList.id, $event)"
+        >
+          <!-- Today's progress (at the same height as H1) -->
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Today's progress</p>
+              <p class="mt-0.5 text-lg font-semibold">{{ store.progressPercentage() }}%</p>
+            </div>
+            <div class="flex size-12 items-center justify-center border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
+              {{ store.completed().length }}/{{ store.totalCount() }}
+            </div>
+          </div>
+        </app-list-header>
+      } @else {
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">
+              {{ store.activeList() }}
+            </h1>
+            <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
+              {{ store.activeTodos().length }} active
+            </span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <div class="text-right">
+              <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Today's progress</p>
+              <p class="mt-0.5 text-lg font-semibold">{{ store.progressPercentage() }}%</p>
+            </div>
+            <div class="flex size-12 items-center justify-center border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
+              {{ store.completed().length }}/{{ store.totalCount() }}
+            </div>
+          </div>
+        </div>
+      }
     </div>
   </div>
 
@@ -28,51 +55,77 @@
     />
   </div>
 
-  <!-- List Header & Actions -->
-  @if (todoListsStore.selectedList(); as currentList) {
-    <div class="mb-5">
-      <app-list-header
-        [list]="currentList"
-        (renamed)="onRenameList(currentList.id, $event)"
-        (starToggled)="onToggleStar(currentList.id)"
-        (deleted)="onDeleteList(currentList.id)"
-      >
-        <div class="relative hidden sm:block">
-          <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
-          <input
-            hlmInput
-            type="text"
-            [ngModel]="store.query()"
-            (ngModelChange)="store.setQuery($event)"
-            placeholder="Filter tasks"
-            class="h-8 w-36 pl-8 text-xs sm:w-44"
-          />
-        </div>
-      </app-list-header>
+  <!-- Filter & Actions Bar -->
+  <div class="mb-5 flex items-center justify-between gap-3">
+    <!-- Filter Tasks Input (left, longer, responsive) -->
+    <div class="relative flex-1 max-w-xs sm:max-w-sm md:max-w-md">
+      <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
+      <input
+        hlmInput
+        type="text"
+        [ngModel]="store.query()"
+        (ngModelChange)="store.setQuery($event)"
+        placeholder="Filter tasks"
+        class="h-9 w-full pl-8 text-xs"
+      />
     </div>
-  } @else {
-    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <h2 class="text-lg font-semibold">{{ store.activeList() }}</h2>
-        <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
-          {{ store.activeTodos().length }} active
-        </span>
+
+    <!-- Star & Delete Actions (right) -->
+    @if (todoListsStore.selectedList(); as currentList) {
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          (click)="onToggleStar(currentList.id)"
+          [attr.aria-label]="currentList.isStarred ? 'Unstar list' : 'Star list'"
+          class="size-8"
+          [class.text-amber-500]="currentList.isStarred"
+          [class.hover:text-amber-600]="currentList.isStarred"
+          [class.text-muted-foreground]="!currentList.isStarred"
+        >
+          <svg
+            lucideStar
+            class="size-4"
+            [class.fill-current]="currentList.isStarred"
+          ></svg>
+        </button>
+
+        <hlm-alert-dialog>
+          <button
+            hlmAlertDialogTrigger
+            hlmBtn
+            variant="ghost"
+            size="icon"
+            aria-label="Delete list"
+            class="size-8 text-muted-foreground hover:text-destructive"
+          >
+            <svg lucideTrash class="size-4"></svg>
+          </button>
+
+          <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+            <hlm-alert-dialog-header>
+              <h2 hlmAlertDialogTitle>Delete "{{ currentList.name }}"?</h2>
+              <p hlmAlertDialogDescription>
+                This action cannot be undone. This will permanently delete this todo list and all of its tasks.
+              </p>
+            </hlm-alert-dialog-header>
+            <hlm-alert-dialog-footer>
+              <button hlmAlertDialogCancel hlmBtn variant="outline">Cancel</button>
+              <button
+                hlmAlertDialogAction
+                hlmBtn
+                variant="destructive"
+                (click)="onDeleteList(currentList.id); ctx.close()"
+              >
+                Delete List
+              </button>
+            </hlm-alert-dialog-footer>
+          </hlm-alert-dialog-content>
+        </hlm-alert-dialog>
       </div>
-      <div class="flex items-center gap-2">
-        <div class="relative hidden sm:block">
-          <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
-          <input
-            hlmInput
-            type="text"
-            [ngModel]="store.query()"
-            (ngModelChange)="store.setQuery($event)"
-            placeholder="Filter tasks"
-            class="h-8 w-36 pl-8 text-xs sm:w-44"
-          />
-        </div>
-      </div>
-    </div>
-  }
+    }
+  </div>
 
   <!-- Active Tasks Section with Drag & Drop -->
   <section class="border-y border-border">

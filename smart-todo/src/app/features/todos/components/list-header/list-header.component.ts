@@ -1,25 +1,21 @@
 import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideStar, LucideTrash, LucidePencil } from '@lucide/angular';
+import { LucidePencil } from '@lucide/angular';
 import { TodoListSummary } from '@core';
 import { AutoFocusDirective } from '@ui';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmBadge } from '@spartan-ng/helm/badge';
-import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
 
 @Component({
   selector: 'app-list-header',
   imports: [
     FormsModule,
-    LucideStar,
-    LucideTrash,
     LucidePencil,
     AutoFocusDirective,
     HlmButton,
     HlmInput,
     HlmBadge,
-    HlmAlertDialogImports,
   ],
   templateUrl: './list-header.component.html',
 })
@@ -27,8 +23,6 @@ export class ListHeaderComponent {
   readonly list = input.required<TodoListSummary>();
 
   readonly renamed = output<string>();
-  readonly starToggled = output<void>();
-  readonly deleted = output<void>();
 
   readonly isEditingTitle = signal(false);
   readonly editingTitle = signal('');
@@ -61,14 +55,5 @@ export class ListHeaderComponent {
       event.preventDefault();
       this.cancelEditing();
     }
-  }
-
-  toggleStar(): void {
-    this.starToggled.emit();
-  }
-
-  confirmDelete(ctx?: { close?: () => void }): void {
-    ctx?.close?.();
-    this.deleted.emit();
   }
 }

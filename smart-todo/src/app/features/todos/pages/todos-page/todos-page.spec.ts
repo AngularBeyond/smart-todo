@@ -215,8 +215,11 @@ describe('TodosPage', () => {
     expect(filterInput).toBeTruthy();
 
     expect(el.querySelector('button[aria-label="More options"]')).toBeFalsy();
+    expect(el.textContent).not.toContain('Good morning');
+    expect(el.textContent).not.toContain('Make today count');
     expect(el.textContent).not.toContain('Auto-saved just now');
     expect(el.textContent).not.toContain('total tasks');
+    expect(el.textContent).toContain("Today's progress");
   });
 });
 
