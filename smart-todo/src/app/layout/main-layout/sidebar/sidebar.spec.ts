@@ -10,7 +10,6 @@ import {
   toggleStarTodoList,
   TodoListSummary,
   TodoListsStore,
-  userLogout,
 } from '@core';
 import { Sidebar } from './sidebar';
 
@@ -80,34 +79,22 @@ describe('Sidebar', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render Profile link pointing to /profile and not render Tags link', () => {
+  it('should render About menu button in sidebar footer', () => {
+    const aboutBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
+      btn.textContent?.includes('About'),
+    );
+    expect(aboutBtn).toBeTruthy();
+  });
+
+  it('should not render Profile, Settings, or Logout links in sidebar footer', () => {
     const profileLink = element.querySelector<HTMLAnchorElement>('a[routerLink="/profile"]');
-    expect(profileLink).toBeTruthy();
-    expect(profileLink?.textContent).toContain('Profile');
-
-    const tagsLink = element.querySelector<HTMLAnchorElement>('a[routerLink="/tags"]');
-    expect(tagsLink).toBeNull();
-  });
-
-  it('should render Settings link pointing to /settings', () => {
     const settingsLink = element.querySelector<HTMLAnchorElement>('a[routerLink="/settings"]');
-    expect(settingsLink).toBeTruthy();
-    expect(settingsLink?.textContent).toContain('Settings');
-  });
-
-  it('should render Logout button and dispatch userLogout when clicked', () => {
     const logoutBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
       btn.textContent?.includes('Logout'),
     );
-    expect(logoutBtn).toBeTruthy();
-
-    logoutBtn?.click();
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(userLogout());
-  });
-
-  it('should call dispatcher.dispatch with userLogout on logout() call', () => {
-    component.logout();
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(userLogout());
+    expect(profileLink).toBeNull();
+    expect(settingsLink).toBeNull();
+    expect(logoutBtn).toBeUndefined();
   });
 
   it('should have label associated with new-list-input', () => {

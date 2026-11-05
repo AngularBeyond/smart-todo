@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DatePipe } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -200,6 +201,12 @@ describe('TodosPage', () => {
 
     component.onLoadMoreCompleted();
     expect(loadSpy).toHaveBeenCalled();
+  });
+
+  it('renders dynamic current date formatted with date pipe', () => {
+    const datePipe = new DatePipe('en-US');
+    const expectedDate = datePipe.transform(component.currentDate, 'EEEE, MMMM dd, yyyy');
+    expect(fixture.nativeElement.textContent).toContain(expectedDate);
   });
 });
 

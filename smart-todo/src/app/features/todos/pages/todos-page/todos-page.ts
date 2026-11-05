@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import {
@@ -32,6 +33,7 @@ import { TodoItem } from '../../models';
 @Component({
   selector: 'app-todos-page',
   imports: [
+    DatePipe,
     FormsModule,
     CdkDropList,
     CdkDrag,
@@ -58,6 +60,8 @@ export class TodosPage {
   protected readonly store = inject(TodosStore);
   protected readonly todoListsStore = inject(TodoListsStore);
   protected readonly appStore = inject(AppStore);
+
+  readonly currentDate = new Date();
   protected readonly dispatcher = inject(Dispatcher);
 
   private lastSelectedListId: string | null = null;
