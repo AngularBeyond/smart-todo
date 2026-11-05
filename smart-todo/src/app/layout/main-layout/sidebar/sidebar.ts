@@ -1,5 +1,5 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
   CdkDrag,
@@ -12,9 +12,7 @@ import {
   LucideStar,
   LucideArchive,
   LucidePlus,
-  LucideUser,
-  LucideSettings2,
-  LucideLogOut,
+  LucideInfo,
   LucideGripVertical,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
@@ -26,7 +24,6 @@ import {
   toggleStarTodoList,
   TodoListSummary,
   TodoListsStore,
-  userLogout,
 } from '@core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
@@ -36,8 +33,6 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
 @Component({
   selector: 'app-sidebar',
   imports: [
-    RouterLink,
-    RouterLinkActive,
     FormsModule,
     CdkDropList,
     CdkDrag,
@@ -46,9 +41,7 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
     LucideStar,
     LucideArchive,
     LucidePlus,
-    LucideUser,
-    LucideSettings2,
-    LucideLogOut,
+    LucideInfo,
     LucideGripVertical,
     HlmButton,
     HlmBadge,
@@ -107,9 +100,5 @@ export class Sidebar implements OnInit {
     if (!name || this.todoListsStore.isQuotaReached()) return;
     this.dispatcher.dispatch(createTodoList({ name }));
     this.newListName.set('');
-  }
-
-  logout(): void {
-    this.dispatcher.dispatch(userLogout());
   }
 }

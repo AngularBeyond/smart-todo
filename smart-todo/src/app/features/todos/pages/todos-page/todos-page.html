@@ -2,7 +2,7 @@
   <!-- Progress Header -->
   <div class="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
     <div>
-      <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Monday, July 08, 2024</p>
+      <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{{ currentDate | date: 'EEEE, MMMM dd, yyyy' }}</p>
       <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
         Good morning, {{ appStore.userDisplayName() }}<span class="text-primary">.</span>
       </h1>
