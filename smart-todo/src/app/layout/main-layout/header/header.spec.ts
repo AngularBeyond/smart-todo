@@ -49,7 +49,7 @@ describe('Header', () => {
 
   it('should render brand logo, title, and agentic slogan', () => {
     expect(element.textContent).toContain('Smart Todo');
-    expect(element.textContent).toContain('An agentic way to get things done');
+    expect(element.textContent).toContain('Your tasks, orchestrated by agents.');
   });
 
   it('should dispatch toggleMobileSidebar when hamburger button is clicked', () => {
