@@ -8,12 +8,11 @@ import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 
-
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Throttle({ auth: { limit: 5, ttl: 60000 } })
+  @Throttle({ auth: { limit: 40, ttl: 60000 } })
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
@@ -22,7 +21,7 @@ export class AuthController {
     return this.authService.register(dto, res);
   }
 
-  @Throttle({ auth: { limit: 5, ttl: 60000 } })
+  @Throttle({ auth: { limit: 40, ttl: 60000 } })
   @Post('login')
   async login(
     @Body() dto: LoginDto,
@@ -48,7 +47,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Throttle({ auth: { limit: 5, ttl: 60000 } })
+  @Throttle({ auth: { limit: 40, ttl: 60000 } })
   @Patch('change-password')
   async changePassword(
     @CurrentUser('userId') userId: string,
