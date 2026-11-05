@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ApiResponseInterceptor } from './common/interceptors/api-response.interceptor.js';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { ScheduleModule } from '@nestjs/schedule';
-import { throttlerConfig } from './config/throttler.config.js';
+import { getThrottlerConfig } from './config/throttler.config.js';
+import { AppThrottlerGuard } from './common/guards/app-throttler.guard.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { ProfileModule } from './modules/profile/profile.module.js';
@@ -22,7 +23,9 @@ import { TodosModule } from './modules/todos/todos.module.js';
     }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({
-      useFactory: () => throttlerConfig,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => getThrottlerConfig(configService),
     }),
     PrismaModule,
     AuthModule,
@@ -36,7 +39,7 @@ import { TodosModule } from './modules/todos/todos.module.js';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: AppThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,
