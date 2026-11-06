@@ -79,11 +79,12 @@ describe('Sidebar', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render About menu button in sidebar footer', () => {
+  it('should render About menu button in sidebar footer with LucideBadgeInfo icon', () => {
     const aboutBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
       btn.textContent?.includes('About'),
     );
     expect(aboutBtn).toBeTruthy();
+    expect(aboutBtn?.querySelector('svg[lucideBadgeInfo]')).toBeTruthy();
   });
 
   it('should render All tasks without count badge and navigate on click', () => {
@@ -251,6 +252,38 @@ describe('Sidebar', () => {
     expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
       expect.objectContaining({ type: '[Todo Lists] Create List' }),
     );
+  });
+
+  it('should render bg-primary dot for selected list and not for unselected list', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const selectedDot = element.querySelector('button[class*="bg-sidebar-accent"] span.rounded-full');
+    expect(selectedDot?.classList.contains('bg-primary')).toBe(true);
+
+    const unselectedItem = Array.from(element.querySelectorAll('div[cdkdrag]')).find((el) =>
+      el.textContent?.includes('Personal'),
+    );
+    const unselectedDot = unselectedItem?.querySelector('span.rounded-full');
+    expect(unselectedDot?.classList.contains('bg-primary')).toBe(false);
+  });
+
+  it('should render info icon with tooltip when quota is reached', async () => {
+    const quotaStore = {
+      lists: signal([mockLists()[0], mockLists()[1], { ...mockLists()[1], id: 'list-3' }]).asReadonly(),
+      starredLists: signal([]).asReadonly(),
+      unstarredLists: signal([]).asReadonly(),
+      selectedListId: signal(null).asReadonly(),
+      isQuotaReached: signal(true).asReadonly(),
+    };
+
+    const quotaFixture = TestBed.createComponent(Sidebar);
+    (quotaFixture.componentInstance as any).todoListsStore = quotaStore;
+    quotaFixture.detectChanges();
+    await quotaFixture.whenStable();
+
+    const infoIcon = quotaFixture.nativeElement.querySelector('svg[lucideInfo]');
+    expect(infoIcon).toBeTruthy();
   });
 });
 
