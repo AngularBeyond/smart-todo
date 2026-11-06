@@ -10,6 +10,8 @@ import {
   LucidePalette,
   LucideShield,
 } from '@lucide/angular';
+import { Dispatcher } from '@ngrx/signals/events';
+import { AppStore, themeChanged } from '@core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
@@ -37,5 +39,12 @@ import { SettingsStore } from '../../store';
   templateUrl: './settings-page.html',
 })
 export class SettingsPage {
+  private readonly dispatcher = inject(Dispatcher);
+  protected readonly appStore = inject(AppStore);
   protected readonly store = inject(SettingsStore);
+
+  toggleTheme(): void {
+    const nextMode = this.appStore.theme() === 'dark' ? 'light' : 'dark';
+    this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
+  }
 }

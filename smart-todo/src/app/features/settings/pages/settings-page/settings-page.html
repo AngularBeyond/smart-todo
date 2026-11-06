@@ -8,8 +8,12 @@
 
   <!-- Header -->
   <div class="mb-9 border-b border-border pb-8">
-    <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Workspace control</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Settings<span class="text-primary">.</span></h1>
+    <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      Workspace control
+    </p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+      Settings<span class="text-primary">.</span>
+    </h1>
     <p class="mt-2 text-sm text-muted-foreground">Tune Smart Todo to fit the way you work.</p>
   </div>
 
@@ -18,14 +22,17 @@
     <section class="border border-border bg-card p-6">
       <div class="mb-6">
         <h2 class="font-semibold">Workspace preferences</h2>
-        <p class="mt-1 text-sm text-muted-foreground">Make your daily planning feel more natural.</p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Make your daily planning feel more natural.
+        </p>
       </div>
 
       <div class="flex flex-col">
         <!-- Appearance Option -->
         <button
           type="button"
-          (click)="store.setAppearance(store.settings().appearance === 'light' ? 'dark' : 'light')"
+          (click)="toggleTheme()"
+          aria-label="Toggle theme"
           class="flex items-center gap-3 py-3 text-left"
         >
           <span class="flex size-9 items-center justify-center bg-primary/10 text-primary">
@@ -34,10 +41,10 @@
           <span class="flex-1">
             <span class="block text-sm font-medium">Appearance</span>
             <span class="block text-xs text-muted-foreground">
-              {{ store.settings().appearance | titlecase }} theme is active
+              {{ appStore.theme() | titlecase }} theme is active
             </span>
           </span>
-          <span hlmBadge variant="secondary" class="capitalize">{{ store.settings().appearance }}</span>
+          <span hlmBadge variant="secondary" class="capitalize">{{ appStore.theme() }}</span>
           <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
         </button>
 
@@ -54,7 +61,9 @@
           </span>
           <span class="flex-1">
             <span class="block text-sm font-medium">Start of week</span>
-            <span class="block text-xs text-muted-foreground">Choose how your weekly rhythm begins</span>
+            <span class="block text-xs text-muted-foreground"
+              >Choose how your weekly rhythm begins</span
+            >
           </span>
           <span class="text-xs text-muted-foreground">{{ store.settings().startOfWeek }}</span>
           <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
@@ -73,9 +82,13 @@
           </span>
           <span class="flex-1">
             <span class="block text-sm font-medium">Notifications</span>
-            <span class="block text-xs text-muted-foreground">Reminders and daily progress updates</span>
+            <span class="block text-xs text-muted-foreground"
+              >Reminders and daily progress updates</span
+            >
           </span>
-          <span hlmBadge variant="secondary">{{ store.settings().notifications ? 'On' : 'Off' }}</span>
+          <span hlmBadge variant="secondary">{{
+            store.settings().notifications ? 'On' : 'Off'
+          }}</span>
           <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
         </button>
       </div>
@@ -116,7 +129,9 @@
           </span>
           <span class="flex-1">
             <span class="block text-sm font-medium">Account security</span>
-            <span class="block text-xs text-muted-foreground">Password and sign-in preferences</span>
+            <span class="block text-xs text-muted-foreground"
+              >Password and sign-in preferences</span
+            >
           </span>
           <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
         </button>
