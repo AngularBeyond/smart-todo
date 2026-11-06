@@ -585,8 +585,9 @@ export const TodosStore = signalStore(
       cancelEditing(): void {
         patchState(store, { editingId: null, editValue: '' });
       },
-      resetForNewList(listName?: string): void {
+      resetForNewList(listId?: string): void {
         patchState(store, {
+          currentListId: listId ?? null,
           activeTodos: [],
           completedTodos: [],
           newTask: '',
