@@ -58,7 +58,7 @@
               <span class="text-sm font-semibold sm:mt-0.5 sm:text-lg">{{ store.progressPercentage() }}%</span>
             </div>
             <div class="flex size-9 items-center justify-center border border-primary/30 bg-primary/10 text-xs font-semibold text-primary sm:size-12 sm:text-sm">
-              {{ store.completed().length }}/{{ store.totalCount() }}
+              {{ store.completedCount() }}/{{ store.totalCount() }}
             </div>
           </div>
         </app-list-header>
@@ -69,7 +69,7 @@
               {{ store.activeList() }}
             </h1>
             <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
-              {{ store.activeTodos().length }} active
+              {{ store.activeCount() }} active
             </span>
           </div>
           <div class="flex w-full items-center justify-end shrink-0 sm:w-auto">
@@ -79,7 +79,7 @@
                 <span class="text-sm font-semibold sm:mt-0.5 sm:text-lg">{{ store.progressPercentage() }}%</span>
               </div>
               <div class="flex size-9 items-center justify-center border border-primary/30 bg-primary/10 text-xs font-semibold text-primary sm:size-12 sm:text-sm">
-                {{ store.completed().length }}/{{ store.totalCount() }}
+                {{ store.completedCount() }}/{{ store.totalCount() }}
               </div>
             </div>
           </div>
