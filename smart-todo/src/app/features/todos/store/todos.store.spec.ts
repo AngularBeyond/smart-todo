@@ -602,5 +602,65 @@ describe('TodosStore', () => {
       expect(store.activeTodos()[0].order).toBe(0);
     });
   });
+
+  describe('All tasks view mode', () => {
+    it('loadInitialAllTodos queries /api/v1/todos, sets viewMode all and isAllTasks true', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+
+      store.loadInitialAllTodos();
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?completed=false&limit=20');
+      expect(store.viewMode()).toBe('all');
+      expect(store.isAllTasks()).toBe(true);
+      expect(store.activeTodos()).toEqual([mockActiveTodo]);
+      expect(store.isCompletedExpanded()).toBe(false);
+      expect(store.totalCount()).toBe(25);
+    });
+
+    it('loadMoreActiveTodos queries /api/v1/todos with cursor when viewMode is all', () => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialAllTodos();
+
+      const nextPageResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [{ ...mockActiveTodo, id: 'todo-2' }],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 25,
+            activeCount: 20,
+            completedCount: 5,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(nextPageResponse));
+
+      store.loadMoreActiveTodos();
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?completed=false&limit=20&cursor=todo-1');
+      expect(store.activeTodos().length).toBe(2);
+      expect(store.hasMoreActive()).toBe(false);
+    });
+
+    it('does not create task when viewMode is all', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialAllTodos();
+
+      store.createTodo({ text: 'Not allowed in all tasks view' });
+
+      expect(httpService.post).not.toHaveBeenCalled();
+    });
+
+    it('does not reorder active task when viewMode is all', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialAllTodos();
+
+      store.reorderActiveTodo({ todoId: 'todo-1', targetIndex: 0 });
+
+      expect(httpService.patch).not.toHaveBeenCalled();
+    });
+  });
 });
 

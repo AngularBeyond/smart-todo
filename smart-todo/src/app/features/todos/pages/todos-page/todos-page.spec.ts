@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DatePipe } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { patchState } from '@ngrx/signals';
@@ -36,6 +37,7 @@ describe('TodosPage', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         provideDispatcher(),
         TodoListsStore,
       ],
@@ -277,6 +279,34 @@ describe('TodosPage', () => {
     fixture.detectChanges();
 
     expect(resetSpy).toHaveBeenCalled();
+  });
+
+  it('renders All tasks header and hides creation bar and list actions when in all view', () => {
+    Object.defineProperty(component, 'isAllTasks', {
+      value: () => true,
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('h1')?.textContent).toContain('All tasks');
+    expect(el.querySelector('app-todo-create-bar')).toBeNull();
+    expect(el.querySelector('button[aria-label="Star list"]')).toBeNull();
+    expect(el.querySelector('button[aria-label="Delete list"]')).toBeNull();
+  });
+
+  it('does not reorder active todos when in all view', () => {
+    Object.defineProperty(component, 'isAllTasks', {
+      value: () => true,
+    });
+    const store = (component as any).store;
+    const reorderSpy = vi.spyOn(store, 'reorderActiveTodo');
+
+    component.onDropActive({
+      previousIndex: 0,
+      currentIndex: 1,
+    } as any);
+
+    expect(reorderSpy).not.toHaveBeenCalled();
   });
 });
 

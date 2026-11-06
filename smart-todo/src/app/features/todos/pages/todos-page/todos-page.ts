@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
@@ -58,6 +60,10 @@ import { TodoItem } from '../../models';
   templateUrl: './todos-page.html',
 })
 export class TodosPage {
+  private readonly route = inject(ActivatedRoute);
+  private readonly queryParams = toSignal(this.route.queryParamMap);
+  readonly isAllTasks = computed(() => this.queryParams()?.get('view') === 'all');
+
   protected readonly store = inject(TodosStore);
   protected readonly todoListsStore = inject(TodoListsStore);
   protected readonly appStore = inject(AppStore);
@@ -69,6 +75,14 @@ export class TodosPage {
 
   constructor() {
     effect(() => {
+      if (this.isAllTasks()) {
+        if (this.lastSelectedListId !== 'all') {
+          this.lastSelectedListId = 'all';
+          this.store.loadInitialAllTodos();
+        }
+        return;
+      }
+
       const selected = this.todoListsStore.selectedList();
       if (!selected) {
         this.lastSelectedListId = null;
@@ -124,7 +138,7 @@ export class TodosPage {
   }
 
   onDropActive(event: CdkDragDrop<TodoItem[]>): void {
-    if (event.previousIndex === event.currentIndex) return;
+    if (this.isAllTasks() || event.previousIndex === event.currentIndex) return;
 
     const activeList = this.store.visibleActiveTodos();
     const item = activeList[event.previousIndex];

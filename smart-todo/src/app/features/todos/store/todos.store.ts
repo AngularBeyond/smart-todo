@@ -25,6 +25,7 @@ import {
 
 export interface TodosState {
   currentListId: string | null;
+  viewMode: 'list' | 'all';
   activeTodos: TodoItem[];
   completedTodos: TodoItem[];
   activeCursor: string | null;
@@ -45,6 +46,7 @@ export interface TodosState {
 
 export const initialTodosState: TodosState = {
   currentListId: null,
+  viewMode: 'list',
   activeTodos: [],
   completedTodos: [],
   activeCursor: null,
@@ -66,7 +68,8 @@ export const initialTodosState: TodosState = {
 export const TodosStore = signalStore(
   withState<TodosState>(initialTodosState),
   withRequestStatus(),
-  withComputed(({ activeTodos, completedTodos, totalCount, completedCount, query, isCompletedExpanded }) => ({
+  withComputed(({ activeTodos, completedTodos, totalCount, completedCount, query, isCompletedExpanded, viewMode }) => ({
+    isAllTasks: computed(() => viewMode() === 'all'),
     isQuotaReached: computed(() => totalCount() >= 40),
     quotaBadgeText: computed(() => `${totalCount()}/40`),
     progressPercentage: computed(() => {
@@ -103,15 +106,17 @@ export const TodosStore = signalStore(
           filter(() => {
             const listId = store.currentListId();
             const loading = store.completedLoading();
-            if (!listId || loading) return false;
+            if ((!listId && store.viewMode() !== 'all') || loading) return false;
             if (store.completedTodos().length > 0 && !store.hasMoreCompleted()) return false;
             return true;
           }),
           tap(() => patchState(store, { completedLoading: true })),
           exhaustMap(() => {
-            const listId = store.currentListId()!;
             const cursor = store.completedCursor();
-            const url = `/api/v1/lists/${listId}/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+            const url =
+              store.viewMode() === 'all'
+                ? `/api/v1/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`
+                : `/api/v1/lists/${store.currentListId()}/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
             return httpService.get<PaginatedTodosResponse>(url).pipe(
               tapResponse({
                 next: (response) => {
@@ -143,6 +148,7 @@ export const TodosStore = signalStore(
               store,
               {
                 currentListId: listId,
+                viewMode: 'list',
                 activeTodos: [],
                 completedTodos: [],
                 activeCursor: null,
@@ -193,19 +199,79 @@ export const TodosStore = signalStore(
         ),
       );
 
+      const loadInitialAllTodos = rxMethod<void>(
+        pipe(
+          tap(() => {
+            patchState(
+              store,
+              {
+                currentListId: null,
+                viewMode: 'all',
+                activeTodos: [],
+                completedTodos: [],
+                activeCursor: null,
+                completedCursor: null,
+                hasMoreActive: false,
+                hasMoreCompleted: false,
+                isCompletedExpanded: false,
+                totalCount: 0,
+                activeCount: 0,
+                completedCount: 0,
+                activeLoading: true,
+                completedLoading: false,
+              },
+              setPending(),
+            );
+          }),
+          switchMap(() =>
+            httpService
+              .get<PaginatedTodosResponse>('/api/v1/todos?completed=false&limit=20')
+              .pipe(
+                tapResponse({
+                  next: (response) => {
+                    const data = response.data;
+                    patchState(
+                      store,
+                      {
+                        activeTodos: data.items,
+                        activeCursor: data.nextCursor,
+                        hasMoreActive: data.hasMore,
+                        totalCount: data.meta.totalCount,
+                        activeCount: data.meta.activeCount,
+                        completedCount: data.meta.completedCount,
+                        activeLoading: false,
+                      },
+                      setFulfilled(),
+                    );
+                  },
+                  error: (error: HttpErrorResponse) => {
+                    const message =
+                      error.error?.message ||
+                      (typeof error.error === 'string' ? error.error : null) ||
+                      HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                    patchState(store, { activeLoading: false }, setError(message));
+                  },
+                }),
+              ),
+          ),
+        ),
+      );
+
     const loadMoreActiveTodos = rxMethod<void>(
       pipe(
         filter(() => {
           const listId = store.currentListId();
           const hasMore = store.hasMoreActive();
           const loading = store.activeLoading();
-          return !!listId && hasMore && !loading;
+          return (!!listId || store.viewMode() === 'all') && hasMore && !loading;
         }),
         tap(() => patchState(store, { activeLoading: true })),
         exhaustMap(() => {
-          const listId = store.currentListId()!;
           const cursor = store.activeCursor();
-          const url = `/api/v1/lists/${listId}/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+          const url =
+            store.viewMode() === 'all'
+              ? `/api/v1/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`
+              : `/api/v1/lists/${store.currentListId()}/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
           return httpService.get<PaginatedTodosResponse>(url).pipe(
             tapResponse({
               next: (response) => {
@@ -233,6 +299,7 @@ export const TodosStore = signalStore(
     const createTodo = rxMethod<{ text: string }>(
       pipe(
         filter(({ text }) => {
+          if (store.viewMode() === 'all') return false;
           const listId = store.currentListId();
           const trimmed = text?.trim();
           return !!listId && !!trimmed && !store.isQuotaReached();
@@ -297,25 +364,38 @@ export const TodosStore = signalStore(
     const updateTodoText = rxMethod<{ todoId: string; text: string }>(
       pipe(
         filter(({ todoId, text }) => {
-          const listId = store.currentListId();
-          return !!listId && !!todoId && !!text?.trim();
+          return !!todoId && !!text?.trim();
         }),
         concatMap(({ todoId, text }) => {
-          const listId = store.currentListId()!;
           const trimmed = text.trim();
-          const existing = store.activeTodos().find((t) => t.id === todoId);
+          const existing =
+            store.activeTodos().find((t) => t.id === todoId) ||
+            store.completedTodos().find((t) => t.id === todoId);
           if (!existing || existing.text === trimmed) {
             patchState(store, { editingId: null, editValue: '' });
             return EMPTY;
           }
 
+          const listId = existing.listId || store.currentListId();
+          if (!listId) return EMPTY;
+
           const previousText = existing.text;
+          const wasCompleted = existing.isCompleted;
+
           // Optimistic update
-          patchState(store, {
-            activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
-            editingId: null,
-            editValue: '',
-          });
+          if (wasCompleted) {
+            patchState(store, {
+              completedTodos: store.completedTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
+              editingId: null,
+              editValue: '',
+            });
+          } else {
+            patchState(store, {
+              activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
+              editingId: null,
+              editValue: '',
+            });
+          }
 
           return httpService
             .patch<TodoResponse>(`/api/v1/lists/${listId}/todos/${todoId}`, { text: trimmed })
@@ -323,15 +403,27 @@ export const TodosStore = signalStore(
               tapResponse({
                 next: (response) => {
                   const updated = response.data.todo;
-                  patchState(store, {
-                    activeTodos: store.activeTodos().map((t) => (t.id === todoId ? updated : t)),
-                  });
+                  if (wasCompleted) {
+                    patchState(store, {
+                      completedTodos: store.completedTodos().map((t) => (t.id === todoId ? updated : t)),
+                    });
+                  } else {
+                    patchState(store, {
+                      activeTodos: store.activeTodos().map((t) => (t.id === todoId ? updated : t)),
+                    });
+                  }
                 },
                 error: (error: HttpErrorResponse) => {
                   // Rollback
-                  patchState(store, {
-                    activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
-                  });
+                  if (wasCompleted) {
+                    patchState(store, {
+                      completedTodos: store.completedTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
+                    });
+                  } else {
+                    patchState(store, {
+                      activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
+                    });
+                  }
                   const message =
                     error.error?.message ||
                     (typeof error.error === 'string' ? error.error : null) ||
@@ -346,9 +438,9 @@ export const TodosStore = signalStore(
 
     const toggleTodoCompletion = rxMethod<TodoItem>(
       pipe(
-        filter((todo) => !!store.currentListId() && !!todo),
+        filter((todo) => (!!store.currentListId() || !!todo?.listId) && !!todo),
         concatMap((todo) => {
-          const listId = store.currentListId()!;
+          const listId = todo.listId || store.currentListId()!;
           const targetIsCompleted = !todo.isCompleted;
 
           if (targetIsCompleted) {
@@ -420,9 +512,9 @@ export const TodosStore = signalStore(
 
     const deleteTodo = rxMethod<TodoItem>(
       pipe(
-        filter((todo) => !!store.currentListId() && !!todo),
+        filter((todo) => (!!store.currentListId() || !!todo?.listId) && !!todo),
         concatMap((todo) => {
-          const listId = store.currentListId()!;
+          const listId = todo.listId || store.currentListId()!;
           const wasCompleted = todo.isCompleted;
 
           if (wasCompleted) {
@@ -488,6 +580,7 @@ export const TodosStore = signalStore(
       targetIndex: number;
     }>(
       pipe(
+        filter(() => store.viewMode() !== 'all'),
         filter(({ todoId, targetIndex }) => {
           const listId = store.currentListId();
           return !!listId && !!todoId && targetIndex >= 0;
@@ -549,6 +642,7 @@ export const TodosStore = signalStore(
 
     return {
       loadInitialForList,
+      loadInitialAllTodos,
       loadMoreActiveTodos,
       loadMoreCompletedTodos,
       createTodo,
@@ -588,6 +682,7 @@ export const TodosStore = signalStore(
       resetForNewList(listId?: string): void {
         patchState(store, {
           currentListId: listId ?? null,
+          viewMode: 'list',
           activeTodos: [],
           completedTodos: [],
           newTask: '',
