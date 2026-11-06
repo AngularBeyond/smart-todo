@@ -70,15 +70,15 @@ export class TodosPage {
   constructor() {
     effect(() => {
       const selected = this.todoListsStore.selectedList();
-      if (!selected) return;
+      if (!selected) {
+        this.lastSelectedListId = null;
+        this.store.resetForNewList();
+        return;
+      }
 
       if (this.lastSelectedListId !== selected.id) {
         this.lastSelectedListId = selected.id;
-        if (selected.totalCount === 0) {
-          this.store.resetForNewList(selected.name);
-        } else {
-          this.store.loadInitialForList(selected.id);
-        }
+        this.store.loadInitialForList(selected.id);
       }
     });
   }

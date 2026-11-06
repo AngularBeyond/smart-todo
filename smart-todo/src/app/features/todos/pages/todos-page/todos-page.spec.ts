@@ -243,5 +243,40 @@ describe('TodosPage', () => {
     const itemRow = fixture.nativeElement.querySelector('app-todo-item-row');
     expect(itemRow).toBeTruthy();
   });
+
+  it('calls loadInitialForList when selected list changes, even if totalCount is 0', () => {
+    const todoListsStore = TestBed.inject(TodoListsStore);
+    const store = (component as any).store;
+    const loadSpy = vi.spyOn(store, 'loadInitialForList');
+
+    patchState(todoListsStore as any, {
+      lists: [{ ...mockList, id: 'new-list-id', totalCount: 0, activeCount: 0 }],
+      selectedListId: 'new-list-id',
+    });
+    fixture.detectChanges();
+
+    expect(loadSpy).toHaveBeenCalledWith('new-list-id');
+  });
+
+  it('resets store when selected list becomes null', () => {
+    const todoListsStore = TestBed.inject(TodoListsStore);
+    const store = (component as any).store;
+
+    patchState(todoListsStore as any, {
+      lists: [mockList],
+      selectedListId: mockList.id,
+    });
+    fixture.detectChanges();
+
+    const resetSpy = vi.spyOn(store, 'resetForNewList');
+
+    patchState(todoListsStore as any, {
+      lists: [],
+      selectedListId: null,
+    });
+    fixture.detectChanges();
+
+    expect(resetSpy).toHaveBeenCalled();
+  });
 });
 

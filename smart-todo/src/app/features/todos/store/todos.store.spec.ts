@@ -88,6 +88,27 @@ describe('TodosStore', () => {
     expect(store.isCompletedExpanded()).toBe(false);
   });
 
+  describe('resetForNewList', () => {
+    it('resets state and sets currentListId when listId is provided', () => {
+      store.resetForNewList('new-list-id');
+
+      expect(store.currentListId()).toBe('new-list-id');
+      expect(store.activeTodos()).toEqual([]);
+      expect(store.completedTodos()).toEqual([]);
+      expect(store.totalCount()).toBe(0);
+      expect(store.activeCount()).toBe(0);
+      expect(store.completedCount()).toBe(0);
+    });
+
+    it('resets currentListId to null when no listId is provided', () => {
+      store.resetForNewList('some-list-id');
+      expect(store.currentListId()).toBe('some-list-id');
+
+      store.resetForNewList();
+      expect(store.currentListId()).toBeNull();
+    });
+  });
+
   describe('loadInitialForList', () => {
     it('loads first batch of active todos and populates counts and cursor', () => {
       httpService.get.mockReturnValue(of(mockInitialResponse));
