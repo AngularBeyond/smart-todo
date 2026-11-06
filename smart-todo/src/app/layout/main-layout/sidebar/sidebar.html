@@ -66,7 +66,11 @@
           [class.text-sidebar-accent-foreground]="isListActive() && todoListsStore.selectedListId() === list.id"
           [class.text-muted-foreground]="!isListActive() || todoListsStore.selectedListId() !== list.id"
         >
-          <span class="size-2 shrink-0 rounded-full bg-primary"></span>
+          <span
+            class="size-2 shrink-0 rounded-full transition-colors"
+            [class.bg-primary]="isListActive() && todoListsStore.selectedListId() === list.id"
+            [class.bg-muted-foreground/40]="!isListActive() || todoListsStore.selectedListId() !== list.id"
+          ></span>
           <span class="truncate">{{ list.name }}</span>
           <span class="ml-auto flex items-center gap-1.5">
             <span hlmBadge variant="outline" class="h-5 px-1.5 text-[10px]">
@@ -120,7 +124,11 @@
           (click)="selectList(list.id)"
           class="flex flex-1 items-center gap-2 text-left truncate min-w-0"
         >
-          <span class="size-2 shrink-0 rounded-full bg-muted-foreground/40"></span>
+          <span
+            class="size-2 shrink-0 rounded-full transition-colors"
+            [class.bg-primary]="isListActive() && todoListsStore.selectedListId() === list.id"
+            [class.bg-muted-foreground/40]="!isListActive() || todoListsStore.selectedListId() !== list.id"
+          ></span>
           <span class="truncate">{{ list.name }}</span>
         </button>
         <span class="ml-auto flex items-center gap-1.5 shrink-0 pr-1.5">
@@ -145,7 +153,18 @@
       <label for="new-list-input">New list</label>
       <span [class.text-amber-500]="todoListsStore.isQuotaReached()">
         @if (todoListsStore.isQuotaReached()) {
-          Max 3 lists in demo (3/3)
+          <span class="inline-flex items-center gap-1.5">
+            <span>Max 3 lists in demo (3/3)</span>
+            <span
+              [hlmTooltip]="'Demo accounts are limited to a maximum of 3 lists to conserve resources and keep demo environments responsive.'"
+              position="top"
+              class="inline-flex items-center text-muted-foreground hover:text-foreground cursor-help"
+              aria-label="Why only 3 lists?"
+              tabindex="0"
+            >
+              <svg lucideInfo class="size-3.5"></svg>
+            </span>
+          </span>
         } @else {
           {{ todoListsStore.lists().length }}/3 used
         }
@@ -184,7 +203,7 @@
       variant="ghost"
       class="w-full justify-start gap-3 px-3 text-muted-foreground hover:text-foreground"
     >
-      <svg lucideInfo class="size-4"></svg>
+      <svg lucideBadgeInfo class="size-4"></svg>
       <span>About</span>
     </button>
   </div>

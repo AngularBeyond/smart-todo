@@ -14,6 +14,7 @@ import {
   LucideStar,
   LucidePlus,
   LucideInfo,
+  LucideBadgeInfo,
   LucideGripVertical,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
@@ -30,6 +31,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
+import { HlmTooltip } from '@ui';
 
 @Component({
   selector: 'app-sidebar',
@@ -42,11 +44,13 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
     LucideStar,
     LucidePlus,
     LucideInfo,
+    LucideBadgeInfo,
     LucideGripVertical,
     HlmButton,
     HlmBadge,
     HlmInput,
     HlmSeparator,
+    HlmTooltip,
   ],
   host: {
     class: 'flex shrink-0',
