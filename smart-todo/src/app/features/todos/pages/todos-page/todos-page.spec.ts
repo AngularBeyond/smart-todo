@@ -225,6 +225,26 @@ describe('TodosPage', () => {
     expect(el.textContent).toContain("Today's progress");
   });
 
+  it('displays accurate completedCount/totalCount in progress box even when completed list is not expanded', () => {
+    const todoListsStore = TestBed.inject(TodoListsStore);
+    const store = (component as any).store;
+    vi.spyOn(store, 'loadInitialForList').mockImplementation(() => {});
+
+    patchState(todoListsStore as any, {
+      lists: [mockList],
+      selectedListId: mockList.id,
+    });
+    patchState(store, {
+      completedTodos: [],
+      completedCount: 2,
+      totalCount: 6,
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('2/6');
+  });
+
   it('configures drag placeholder in template', () => {
     const store = (component as any).store;
     patchState(store, {
