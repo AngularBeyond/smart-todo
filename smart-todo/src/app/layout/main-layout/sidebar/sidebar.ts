@@ -71,6 +71,14 @@ export class Sidebar implements OnInit {
     return (this.currentUrl() ?? '').includes('view=all');
   });
 
+  readonly isStarredTasksActive = computed(() => {
+    return (this.currentUrl() ?? '').includes('view=starred');
+  });
+
+  readonly isListActive = computed(() => {
+    return !this.isAllTasksActive() && !this.isStarredTasksActive();
+  });
+
   readonly variant = input<'desktop' | 'mobile'>('desktop');
   readonly newListName = signal('');
 
@@ -82,6 +90,10 @@ export class Sidebar implements OnInit {
 
   selectAllTasks(): void {
     this.router.navigate(['/tasks'], { queryParams: { view: 'all' } });
+  }
+
+  selectStarredTasks(): void {
+    this.router.navigate(['/tasks'], { queryParams: { view: 'starred' } });
   }
 
   selectList(listId: string): void {

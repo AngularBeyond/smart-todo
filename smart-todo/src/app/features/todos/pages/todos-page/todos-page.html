@@ -6,7 +6,27 @@
     </p>
 
     <div class="mt-2">
-      @if (isAllTasks()) {
+      @if (isStarredTasks()) {
+        <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">Starred tasks</h1>
+            <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
+              {{ store.activeCount() }} active
+            </span>
+          </div>
+          <div class="flex w-full items-center justify-end shrink-0 sm:w-auto">
+            <div class="flex items-center gap-2.5 sm:gap-3">
+              <div class="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-0">
+                <span class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Today's progress</span>
+                <span class="text-sm font-semibold sm:mt-0.5 sm:text-lg">{{ store.progressPercentage() }}%</span>
+              </div>
+              <div class="flex size-9 items-center justify-center border border-primary/30 bg-primary/10 text-xs font-semibold text-primary sm:size-12 sm:text-sm">
+                {{ store.completedCount() }}/{{ store.totalCount() }}
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else if (isAllTasks()) {
         <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div class="flex flex-wrap items-center gap-3">
             <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">All tasks</h1>
@@ -69,7 +89,7 @@
   </div>
 
   <!-- Add Task Bar -->
-  @if (!isAllTasks()) {
+  @if (!isAggregateView()) {
     <div class="mb-8">
       <app-todo-create-bar
         [isQuotaReached]="store.isQuotaReached()"
@@ -95,7 +115,7 @@
     </div>
 
     <!-- Star & Delete Actions (right) -->
-    @if (!isAllTasks() && todoListsStore.selectedList(); as currentList) {
+    @if (!isAggregateView() && todoListsStore.selectedList(); as currentList) {
       <div class="flex items-center gap-1.5 shrink-0">
         <button
           hlmBtn
@@ -155,17 +175,17 @@
   <section class="border-y border-border">
     <div
       cdkDropList
-      [cdkDropListDisabled]="isAllTasks()"
+      [cdkDropListDisabled]="isAggregateView()"
       [cdkDropListData]="store.visibleActiveTodos()"
       (cdkDropListDropped)="onDropActive($event)"
     >
       @for (task of store.visibleActiveTodos(); track task.id) {
         <app-todo-item-row
           cdkDrag
-          [cdkDragDisabled]="isAllTasks()"
+          [cdkDragDisabled]="isAggregateView()"
           [cdkDragData]="task"
           [todo]="task"
-          [isDraggable]="!isAllTasks()"
+          [isDraggable]="!isAggregateView()"
           (toggleComplete)="onToggleComplete(task)"
           (textUpdated)="onUpdateText(task.id, $event)"
           (deleteClicked)="onDeleteTodo(task)"
@@ -181,7 +201,7 @@
 
     @if (store.visibleActiveTodos().length === 0) {
       <div class="py-12 text-center text-sm text-muted-foreground">
-        {{ store.query() ? 'No tasks match that filter.' : (isAllTasks() ? 'No tasks yet.' : 'No tasks in this list yet. Add one above!') }}
+        {{ store.query() ? 'No tasks match that filter.' : (isStarredTasks() ? 'No starred tasks yet.' : (isAllTasks() ? 'No tasks yet.' : 'No tasks in this list yet. Add one above!')) }}
       </div>
     }
 

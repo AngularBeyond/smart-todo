@@ -31,7 +31,17 @@
       <svg lucideInbox class="size-4"></svg>
       <span>All tasks</span>
     </button>
-    <button hlmBtn variant="ghost" class="justify-start gap-3 text-muted-foreground">
+    <button
+      type="button"
+      hlmBtn
+      variant="ghost"
+      (click)="selectStarredTasks()"
+      class="justify-start gap-3 transition-colors"
+      [class.bg-sidebar-accent]="isStarredTasksActive()"
+      [class.font-medium]="isStarredTasksActive()"
+      [class.text-sidebar-accent-foreground]="isStarredTasksActive()"
+      [class.text-muted-foreground]="!isStarredTasksActive()"
+    >
       <svg lucideStar class="size-4"></svg>
       <span>Starred</span>
     </button>
@@ -51,10 +61,10 @@
           type="button"
           (click)="selectList(list.id)"
           class="group flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          [class.bg-sidebar-accent]="!isAllTasksActive() && todoListsStore.selectedListId() === list.id"
-          [class.font-medium]="!isAllTasksActive() && todoListsStore.selectedListId() === list.id"
-          [class.text-sidebar-accent-foreground]="!isAllTasksActive() && todoListsStore.selectedListId() === list.id"
-          [class.text-muted-foreground]="isAllTasksActive() || todoListsStore.selectedListId() !== list.id"
+          [class.bg-sidebar-accent]="isListActive() && todoListsStore.selectedListId() === list.id"
+          [class.font-medium]="isListActive() && todoListsStore.selectedListId() === list.id"
+          [class.text-sidebar-accent-foreground]="isListActive() && todoListsStore.selectedListId() === list.id"
+          [class.text-muted-foreground]="!isListActive() || todoListsStore.selectedListId() !== list.id"
         >
           <span class="size-2 shrink-0 rounded-full bg-primary"></span>
           <span class="truncate">{{ list.name }}</span>
@@ -92,10 +102,10 @@
       <div
         cdkDrag
         class="group flex items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        [class.bg-sidebar-accent]="!isAllTasksActive() && todoListsStore.selectedListId() === list.id"
-        [class.font-medium]="!isAllTasksActive() && todoListsStore.selectedListId() === list.id"
-        [class.text-sidebar-accent-foreground]="!isAllTasksActive() && todoListsStore.selectedListId() === list.id"
-        [class.text-muted-foreground]="isAllTasksActive() || todoListsStore.selectedListId() !== list.id"
+        [class.bg-sidebar-accent]="isListActive() && todoListsStore.selectedListId() === list.id"
+        [class.font-medium]="isListActive() && todoListsStore.selectedListId() === list.id"
+        [class.text-sidebar-accent-foreground]="isListActive() && todoListsStore.selectedListId() === list.id"
+        [class.text-muted-foreground]="!isListActive() || todoListsStore.selectedListId() !== list.id"
       >
         <button
           type="button"
