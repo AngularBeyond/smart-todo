@@ -86,12 +86,24 @@ describe('Sidebar', () => {
     expect(aboutBtn).toBeTruthy();
   });
 
-  it('should render All tasks without count badge', () => {
+  it('should render All tasks without count badge and navigate on click', () => {
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate');
     const allTasksBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
       btn.textContent?.includes('All tasks'),
     );
     expect(allTasksBtn).toBeTruthy();
     expect(allTasksBtn?.textContent?.trim()).toBe('All tasks');
+
+    allTasksBtn?.click();
+    expect(navSpy).toHaveBeenCalledWith(['/tasks'], { queryParams: { view: 'all' } });
+  });
+
+  it('should not render Archive menu in navigation', () => {
+    const archiveBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
+      btn.textContent?.includes('Archive'),
+    );
+    expect(archiveBtn).toBeUndefined();
   });
 
   it('should not render Profile, Settings, or Logout links in sidebar footer', () => {

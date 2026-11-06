@@ -156,4 +156,12 @@ describe('TodoItemRowComponent', () => {
 
     expect(deleteSpy).toHaveBeenCalled();
   });
+
+  it('renders listName badge when listName is present on todo', () => {
+    componentRef.setInput('todo', { ...mockActiveTodo, listName: 'Personal Projects' });
+    fixture.detectChanges();
+
+    const textContent = fixture.nativeElement.textContent;
+    expect(textContent).toContain('Personal Projects');
+  });
 });

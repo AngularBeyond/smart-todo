@@ -7,6 +7,7 @@ export interface TodoItem {
   order: number;
   createdAt: string | Date;
   updatedAt: string | Date;
+  listName?: string;
   meta?: string;
   tag?: string;
   done?: boolean;

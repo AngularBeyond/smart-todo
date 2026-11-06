@@ -1,5 +1,7 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import {
   CdkDrag,
@@ -10,7 +12,6 @@ import {
 import {
   LucideInbox,
   LucideStar,
-  LucideArchive,
   LucidePlus,
   LucideInfo,
   LucideGripVertical,
@@ -39,7 +40,6 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
     CdkDragHandle,
     LucideInbox,
     LucideStar,
-    LucideArchive,
     LucidePlus,
     LucideInfo,
     LucideGripVertical,
@@ -59,6 +59,18 @@ export class Sidebar implements OnInit {
   protected readonly todoListsStore = inject(TodoListsStore);
   private readonly router = inject(Router);
 
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  readonly isAllTasksActive = computed(() => {
+    return (this.currentUrl() ?? '').includes('view=all');
+  });
+
   readonly variant = input<'desktop' | 'mobile'>('desktop');
   readonly newListName = signal('');
 
@@ -66,6 +78,10 @@ export class Sidebar implements OnInit {
     if (this.todoListsStore.lists().length === 0) {
       this.dispatcher.dispatch(loadTodoLists());
     }
+  }
+
+  selectAllTasks(): void {
+    this.router.navigate(['/tasks'], { queryParams: { view: 'all' } });
   }
 
   selectList(listId: string): void {
