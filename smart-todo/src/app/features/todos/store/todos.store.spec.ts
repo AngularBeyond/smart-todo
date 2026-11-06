@@ -662,5 +662,92 @@ describe('TodosStore', () => {
       expect(httpService.patch).not.toHaveBeenCalled();
     });
   });
+
+  describe('Starred tasks view mode', () => {
+    it('loadInitialStarredTodos queries /api/v1/todos with starred=true, sets viewMode starred and isStarredTasks true', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+
+      store.loadInitialStarredTodos();
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?completed=false&limit=20&starred=true');
+      expect(store.viewMode()).toBe('starred');
+      expect(store.isStarredTasks()).toBe(true);
+      expect(store.isAggregateView()).toBe(true);
+      expect(store.activeTodos()).toEqual([mockActiveTodo]);
+      expect(store.isCompletedExpanded()).toBe(false);
+      expect(store.totalCount()).toBe(25);
+    });
+
+    it('loadMoreActiveTodos queries /api/v1/todos with starred=true and cursor when viewMode is starred', () => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialStarredTodos();
+
+      const nextPageResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [{ ...mockActiveTodo, id: 'todo-starred-2' }],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 25,
+            activeCount: 20,
+            completedCount: 5,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(nextPageResponse));
+
+      store.loadMoreActiveTodos();
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?completed=false&limit=20&starred=true&cursor=todo-1');
+      expect(store.activeTodos().length).toBe(2);
+      expect(store.hasMoreActive()).toBe(false);
+    });
+
+    it('loadMoreCompletedTodos queries /api/v1/todos with starred=true and cursor when viewMode is starred', () => {
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+      store.loadInitialStarredTodos();
+
+      const completedResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [mockCompletedTodo],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 25,
+            activeCount: 20,
+            completedCount: 5,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(completedResponse));
+
+      store.loadMoreCompletedTodos();
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?completed=true&limit=20&starred=true');
+      expect(store.completedTodos()).toEqual([mockCompletedTodo]);
+    });
+
+    it('does not create task when viewMode is starred', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialStarredTodos();
+
+      store.createTodo({ text: 'Not allowed in starred tasks view' });
+
+      expect(httpService.post).not.toHaveBeenCalled();
+    });
+
+    it('does not reorder active task when viewMode is starred', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialStarredTodos();
+
+      store.reorderActiveTodo({ todoId: 'todo-1', targetIndex: 0 });
+
+      expect(httpService.patch).not.toHaveBeenCalled();
+    });
+  });
 });
 

@@ -25,7 +25,7 @@ import {
 
 export interface TodosState {
   currentListId: string | null;
-  viewMode: 'list' | 'all';
+  viewMode: 'list' | 'all' | 'starred';
   activeTodos: TodoItem[];
   completedTodos: TodoItem[];
   activeCursor: string | null;
@@ -70,6 +70,8 @@ export const TodosStore = signalStore(
   withRequestStatus(),
   withComputed(({ activeTodos, completedTodos, totalCount, completedCount, query, isCompletedExpanded, viewMode }) => ({
     isAllTasks: computed(() => viewMode() === 'all'),
+    isStarredTasks: computed(() => viewMode() === 'starred'),
+    isAggregateView: computed(() => viewMode() === 'all' || viewMode() === 'starred'),
     isQuotaReached: computed(() => totalCount() >= 40),
     quotaBadgeText: computed(() => `${totalCount()}/40`),
     progressPercentage: computed(() => {
@@ -106,17 +108,21 @@ export const TodosStore = signalStore(
           filter(() => {
             const listId = store.currentListId();
             const loading = store.completedLoading();
-            if ((!listId && store.viewMode() !== 'all') || loading) return false;
+            if ((!listId && !store.isAggregateView()) || loading) return false;
             if (store.completedTodos().length > 0 && !store.hasMoreCompleted()) return false;
             return true;
           }),
           tap(() => patchState(store, { completedLoading: true })),
           exhaustMap(() => {
             const cursor = store.completedCursor();
-            const url =
-              store.viewMode() === 'all'
-                ? `/api/v1/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`
-                : `/api/v1/lists/${store.currentListId()}/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+            let url: string;
+            if (store.viewMode() === 'starred') {
+              url = `/api/v1/todos?completed=true&limit=20&starred=true${cursor ? `&cursor=${cursor}` : ''}`;
+            } else if (store.viewMode() === 'all') {
+              url = `/api/v1/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+            } else {
+              url = `/api/v1/lists/${store.currentListId()}/todos?completed=true&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+            }
             return httpService.get<PaginatedTodosResponse>(url).pipe(
               tapResponse({
                 next: (response) => {
@@ -257,21 +263,83 @@ export const TodosStore = signalStore(
         ),
       );
 
+      const loadInitialStarredTodos = rxMethod<void>(
+        pipe(
+          tap(() => {
+            patchState(
+              store,
+              {
+                currentListId: null,
+                viewMode: 'starred',
+                activeTodos: [],
+                completedTodos: [],
+                activeCursor: null,
+                completedCursor: null,
+                hasMoreActive: false,
+                hasMoreCompleted: false,
+                isCompletedExpanded: false,
+                totalCount: 0,
+                activeCount: 0,
+                completedCount: 0,
+                activeLoading: true,
+                completedLoading: false,
+              },
+              setPending(),
+            );
+          }),
+          switchMap(() =>
+            httpService
+              .get<PaginatedTodosResponse>('/api/v1/todos?completed=false&limit=20&starred=true')
+              .pipe(
+                tapResponse({
+                  next: (response) => {
+                    const data = response.data;
+                    patchState(
+                      store,
+                      {
+                        activeTodos: data.items,
+                        activeCursor: data.nextCursor,
+                        hasMoreActive: data.hasMore,
+                        totalCount: data.meta.totalCount,
+                        activeCount: data.meta.activeCount,
+                        completedCount: data.meta.completedCount,
+                        activeLoading: false,
+                      },
+                      setFulfilled(),
+                    );
+                  },
+                  error: (error: HttpErrorResponse) => {
+                    const message =
+                      error.error?.message ||
+                      (typeof error.error === 'string' ? error.error : null) ||
+                      HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                    patchState(store, { activeLoading: false }, setError(message));
+                  },
+                }),
+              ),
+          ),
+        ),
+      );
+
     const loadMoreActiveTodos = rxMethod<void>(
       pipe(
         filter(() => {
           const listId = store.currentListId();
           const hasMore = store.hasMoreActive();
           const loading = store.activeLoading();
-          return (!!listId || store.viewMode() === 'all') && hasMore && !loading;
+          return (!!listId || store.isAggregateView()) && hasMore && !loading;
         }),
         tap(() => patchState(store, { activeLoading: true })),
         exhaustMap(() => {
           const cursor = store.activeCursor();
-          const url =
-            store.viewMode() === 'all'
-              ? `/api/v1/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`
-              : `/api/v1/lists/${store.currentListId()}/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+          let url: string;
+          if (store.viewMode() === 'starred') {
+            url = `/api/v1/todos?completed=false&limit=20&starred=true${cursor ? `&cursor=${cursor}` : ''}`;
+          } else if (store.viewMode() === 'all') {
+            url = `/api/v1/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+          } else {
+            url = `/api/v1/lists/${store.currentListId()}/todos?completed=false&limit=20${cursor ? `&cursor=${cursor}` : ''}`;
+          }
           return httpService.get<PaginatedTodosResponse>(url).pipe(
             tapResponse({
               next: (response) => {
@@ -299,7 +367,7 @@ export const TodosStore = signalStore(
     const createTodo = rxMethod<{ text: string }>(
       pipe(
         filter(({ text }) => {
-          if (store.viewMode() === 'all') return false;
+          if (store.isAggregateView()) return false;
           const listId = store.currentListId();
           const trimmed = text?.trim();
           return !!listId && !!trimmed && !store.isQuotaReached();
@@ -580,7 +648,7 @@ export const TodosStore = signalStore(
       targetIndex: number;
     }>(
       pipe(
-        filter(() => store.viewMode() !== 'all'),
+        filter(() => !store.isAggregateView()),
         filter(({ todoId, targetIndex }) => {
           const listId = store.currentListId();
           return !!listId && !!todoId && targetIndex >= 0;
@@ -643,6 +711,7 @@ export const TodosStore = signalStore(
     return {
       loadInitialForList,
       loadInitialAllTodos,
+      loadInitialStarredTodos,
       loadMoreActiveTodos,
       loadMoreCompletedTodos,
       createTodo,

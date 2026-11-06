@@ -285,6 +285,9 @@ describe('TodosPage', () => {
     Object.defineProperty(component, 'isAllTasks', {
       value: () => true,
     });
+    Object.defineProperty(component, 'isAggregateView', {
+      value: () => true,
+    });
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
@@ -298,6 +301,9 @@ describe('TodosPage', () => {
     Object.defineProperty(component, 'isAllTasks', {
       value: () => true,
     });
+    Object.defineProperty(component, 'isAggregateView', {
+      value: () => true,
+    });
     const store = (component as any).store;
     const reorderSpy = vi.spyOn(store, 'reorderActiveTodo');
 
@@ -307,6 +313,22 @@ describe('TodosPage', () => {
     } as any);
 
     expect(reorderSpy).not.toHaveBeenCalled();
+  });
+
+  it('renders Starred tasks header and hides creation bar and list actions when in starred view', () => {
+    Object.defineProperty(component, 'isStarredTasks', {
+      value: () => true,
+    });
+    Object.defineProperty(component, 'isAggregateView', {
+      value: () => true,
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('h1')?.textContent).toContain('Starred tasks');
+    expect(el.querySelector('app-todo-create-bar')).toBeNull();
+    expect(el.querySelector('button[aria-label="Star list"]')).toBeNull();
+    expect(el.querySelector('button[aria-label="Delete list"]')).toBeNull();
   });
 });
 

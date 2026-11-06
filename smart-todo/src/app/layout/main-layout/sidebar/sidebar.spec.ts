@@ -99,6 +99,18 @@ describe('Sidebar', () => {
     expect(navSpy).toHaveBeenCalledWith(['/tasks'], { queryParams: { view: 'all' } });
   });
 
+  it('should render Starred navigation button and navigate on click', () => {
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate');
+    const starredBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('nav button')).find((btn) =>
+      btn.textContent?.includes('Starred'),
+    );
+    expect(starredBtn).toBeTruthy();
+
+    starredBtn?.click();
+    expect(navSpy).toHaveBeenCalledWith(['/tasks'], { queryParams: { view: 'starred' } });
+  });
+
   it('should not render Archive menu in navigation', () => {
     const archiveBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
       btn.textContent?.includes('Archive'),

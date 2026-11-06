@@ -62,7 +62,10 @@ import { TodoItem } from '../../models';
 export class TodosPage {
   private readonly route = inject(ActivatedRoute);
   private readonly queryParams = toSignal(this.route.queryParamMap);
-  readonly isAllTasks = computed(() => this.queryParams()?.get('view') === 'all');
+  readonly currentView = computed(() => this.queryParams()?.get('view'));
+  readonly isAllTasks = computed(() => this.currentView() === 'all');
+  readonly isStarredTasks = computed(() => this.currentView() === 'starred');
+  readonly isAggregateView = computed(() => this.isAllTasks() || this.isStarredTasks());
 
   protected readonly store = inject(TodosStore);
   protected readonly todoListsStore = inject(TodoListsStore);
@@ -75,6 +78,14 @@ export class TodosPage {
 
   constructor() {
     effect(() => {
+      if (this.isStarredTasks()) {
+        if (this.lastSelectedListId !== 'starred') {
+          this.lastSelectedListId = 'starred';
+          this.store.loadInitialStarredTodos();
+        }
+        return;
+      }
+
       if (this.isAllTasks()) {
         if (this.lastSelectedListId !== 'all') {
           this.lastSelectedListId = 'all';
@@ -138,7 +149,7 @@ export class TodosPage {
   }
 
   onDropActive(event: CdkDragDrop<TodoItem[]>): void {
-    if (this.isAllTasks() || event.previousIndex === event.currentIndex) return;
+    if (this.isAggregateView() || event.previousIndex === event.currentIndex) return;
 
     const activeList = this.store.visibleActiveTodos();
     const item = activeList[event.previousIndex];
