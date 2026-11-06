@@ -7,6 +7,7 @@ import {
 import { MAX_TODOS_PER_LIST, ORDER_STEP } from '../../common/constants/quotas.constants.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { GetTodosQueryDto } from './dto/get-todos-query.dto.js';
+import { GetAllTodosQueryDto } from './dto/get-all-todos-query.dto.js';
 import { ReorderTodoDto } from './dto/reorder-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
 import { TodosRepository, TodoItemSummary } from './todos.repository.js';
@@ -107,6 +108,38 @@ export class TodosService {
         activeCount: counts.activeCount,
         completedCount: counts.completedCount,
         quotaLimit: MAX_TODOS_PER_LIST,
+      },
+    };
+  }
+
+  async getAllUserTodos(
+    userId: string,
+    query: GetAllTodosQueryDto,
+  ): Promise<PaginatedTodosResponse> {
+    const limit = query.limit ?? 20;
+    const rawItems = await this.todosRepository.findAllTodosByUserId({
+      userId,
+      isCompleted: query.completed,
+      cursor: query.cursor,
+      limit,
+      starred: query.starred,
+    });
+
+    const hasMore = rawItems.length > limit;
+    const items = hasMore ? rawItems.slice(0, limit) : rawItems;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
+
+    const counts = await this.todosRepository.countAllByUserId(userId, query.starred);
+
+    return {
+      items,
+      hasMore,
+      nextCursor,
+      meta: {
+        totalCount: counts.totalCount,
+        activeCount: counts.activeCount,
+        completedCount: counts.completedCount,
+        quotaLimit: MAX_TODOS_PER_LIST * 3,
       },
     };
   }
