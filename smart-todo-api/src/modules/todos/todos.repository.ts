@@ -11,6 +11,7 @@ export interface TodoItemSummary {
   order: number;
   createdAt: Date;
   updatedAt: Date;
+  listName?: string;
 }
 
 @Injectable()
@@ -217,5 +218,78 @@ export class TodosRepository {
     await client.todoItem.delete({
       where: { id },
     });
+  }
+
+  async findAllTodosByUserId(params: {
+    userId: string;
+    isCompleted: boolean;
+    cursor?: string;
+    limit: number;
+    starred?: boolean;
+    tx?: Prisma.TransactionClient;
+  }): Promise<TodoItemSummary[]> {
+    const client = params.tx ?? this.prisma;
+    const where: Prisma.TodoItemWhereInput = {
+      userId: params.userId,
+      isCompleted: params.isCompleted,
+      ...(params.starred !== undefined ? { list: { isStarred: params.starred } } : {}),
+    };
+
+    const items = await client.todoItem.findMany({
+      where,
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      take: params.limit + 1,
+      ...(params.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        listId: true,
+        userId: true,
+        text: true,
+        isCompleted: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+        list: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    return items.map((item) => ({
+      id: item.id,
+      listId: item.listId,
+      userId: item.userId,
+      text: item.text,
+      isCompleted: item.isCompleted,
+      order: item.order,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      listName: item.list.name,
+    }));
+  }
+
+  async countAllByUserId(
+    userId: string,
+    starred?: boolean,
+    tx?: Prisma.TransactionClient,
+  ): Promise<{ totalCount: number; activeCount: number; completedCount: number }> {
+    const client = tx ?? this.prisma;
+    const whereBase: Prisma.TodoItemWhereInput = {
+      userId,
+      ...(starred !== undefined ? { list: { isStarred: starred } } : {}),
+    };
+
+    const [totalCount, activeCount] = await Promise.all([
+      client.todoItem.count({ where: whereBase }),
+      client.todoItem.count({ where: { ...whereBase, isCompleted: false } }),
+    ]);
+
+    return {
+      totalCount,
+      activeCount,
+      completedCount: totalCount - activeCount,
+    };
   }
 }

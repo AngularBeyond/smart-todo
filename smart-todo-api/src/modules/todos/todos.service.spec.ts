@@ -20,6 +20,8 @@ describe('TodosService', () => {
     findActiveTodosByListId: ReturnType<typeof vi.fn>;
     batchUpdateOrders: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
+    findAllTodosByUserId: ReturnType<typeof vi.fn>;
+    countAllByUserId: ReturnType<typeof vi.fn>;
   };
 
   const userId = 'user-123';
@@ -50,6 +52,8 @@ describe('TodosService', () => {
       findActiveTodosByListId: vi.fn(),
       batchUpdateOrders: vi.fn(),
       delete: vi.fn(),
+      findAllTodosByUserId: vi.fn(),
+      countAllByUserId: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -524,6 +528,108 @@ describe('TodosService', () => {
           completedCount: 1,
         },
       });
+    });
+  });
+
+  describe('getAllUserTodos', () => {
+    it('returns paginated items and counts for user', async () => {
+      const mockItems: TodoItemSummary[] = [
+        {
+          id: 'todo-1',
+          listId: 'list-1',
+          userId,
+          text: 'Task 1',
+          isCompleted: false,
+          order: 1000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          listName: 'List One',
+        },
+        {
+          id: 'todo-2',
+          listId: 'list-2',
+          userId,
+          text: 'Task 2',
+          isCompleted: false,
+          order: 2000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          listName: 'List Two',
+        },
+      ];
+
+      repository.findAllTodosByUserId.mockResolvedValue(mockItems);
+      repository.countAllByUserId.mockResolvedValue({
+        totalCount: 2,
+        activeCount: 2,
+        completedCount: 0,
+      });
+
+      const result = await service.getAllUserTodos(userId, { completed: false, limit: 20 });
+
+      expect(repository.findAllTodosByUserId).toHaveBeenCalledWith({
+        userId,
+        isCompleted: false,
+        cursor: undefined,
+        limit: 20,
+        starred: undefined,
+      });
+      expect(result).toEqual({
+        items: mockItems,
+        hasMore: false,
+        nextCursor: null,
+        meta: {
+          totalCount: 2,
+          activeCount: 2,
+          completedCount: 0,
+          quotaLimit: 120,
+        },
+      });
+    });
+
+    it('sets hasMore and nextCursor when returned items exceed limit', async () => {
+      const item1: TodoItemSummary = {
+        id: 'todo-1',
+        listId: 'list-1',
+        userId,
+        text: 'Task 1',
+        isCompleted: true,
+        order: 1000,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        listName: 'List One',
+      };
+      const item2: TodoItemSummary = {
+        id: 'todo-2',
+        listId: 'list-2',
+        userId,
+        text: 'Task 2',
+        isCompleted: true,
+        order: 2000,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        listName: 'List Two',
+      };
+
+      repository.findAllTodosByUserId.mockResolvedValue([item1, item2]);
+      repository.countAllByUserId.mockResolvedValue({
+        totalCount: 5,
+        activeCount: 3,
+        completedCount: 2,
+      });
+
+      const result = await service.getAllUserTodos(userId, { completed: true, limit: 1, starred: true });
+
+      expect(repository.findAllTodosByUserId).toHaveBeenCalledWith({
+        userId,
+        isCompleted: true,
+        cursor: undefined,
+        limit: 1,
+        starred: true,
+      });
+      expect(result.items).toEqual([item1]);
+      expect(result.hasMore).toBe(true);
+      expect(result.nextCursor).toBe('todo-1');
     });
   });
 });
