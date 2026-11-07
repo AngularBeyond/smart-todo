@@ -6,12 +6,23 @@ import {
   HttpInterceptorFn,
   HttpRequest,
 } from '@angular/common/http';
-import { catchError, switchMap, throwError } from 'rxjs';
+import {
+  catchError,
+  finalize,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  switchMap,
+  throwError,
+} from 'rxjs';
 import { Dispatcher } from '@ngrx/signals/events';
 import { environment } from '../../../environments/environment';
 import { AppStore } from '../store/app.store';
 import { userLogout } from '../store/events/auth.events';
 import { ApiResponse } from '../http/api-response.model';
+
+let refreshObservable$: Observable<string | null> | null = null;
 
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const appStore = inject(AppStore);
@@ -47,29 +58,39 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         !isRefreshRequest &&
         !isAuthPublicRequest
       ) {
-        return http
-          .post<ApiResponse<{ accessToken: string }>>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true })
-          .pipe(
-            switchMap((refreshRes) => {
-              const newAccessToken = refreshRes?.data?.accessToken;
-              if (newAccessToken) {
-                appStore.setAccessToken(newAccessToken);
-                const retriedReq = req.clone({
-                  setHeaders: {
-                    Authorization: `Bearer ${newAccessToken}`,
-                  },
-                  withCredentials: true,
-                });
-                return next(retriedReq);
-              }
-              dispatcher.dispatch(userLogout());
-              return throwError(() => error);
-            }),
-            catchError((refreshErr) => {
-              dispatcher.dispatch(userLogout());
-              return throwError(() => refreshErr);
-            }),
-          );
+        if (!refreshObservable$) {
+          refreshObservable$ = http
+            .post<ApiResponse<{ accessToken: string }>>(
+              `${environment.apiUrl}/auth/refresh`,
+              {},
+              { withCredentials: true },
+            )
+            .pipe(
+              map((res) => res?.data?.accessToken ?? null),
+              catchError(() => of(null)),
+              shareReplay(1),
+              finalize(() => {
+                refreshObservable$ = null;
+              }),
+            );
+        }
+
+        return refreshObservable$.pipe(
+          switchMap((newAccessToken) => {
+            if (newAccessToken) {
+              appStore.setAccessToken(newAccessToken);
+              const retriedReq = req.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${newAccessToken}`,
+                },
+                withCredentials: true,
+              });
+              return next(retriedReq);
+            }
+            dispatcher.dispatch(userLogout());
+            return throwError(() => error);
+          }),
+        );
       }
 
       return throwError(() => error);
