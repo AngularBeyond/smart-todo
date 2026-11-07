@@ -183,6 +183,7 @@ describe('TodosService', () => {
       expect(repository.findTodosByCursor).toHaveBeenCalledWith({
         listId,
         isCompleted: false,
+        query: undefined,
         cursor: undefined,
         limit: 20,
       });
@@ -241,6 +242,7 @@ describe('TodosService', () => {
       expect(repository.findTodosByCursor).toHaveBeenCalledWith({
         listId,
         isCompleted: true,
+        query: undefined,
         cursor: 'comp-1',
         limit: 10,
       });
@@ -248,6 +250,35 @@ describe('TodosService', () => {
       expect(result.hasMore).toBe(false);
       expect(result.nextCursor).toBeNull();
       expect(result.meta.completedCount).toBe(5);
+    });
+
+    it('should query both active and completed todos when completed is undefined and query search is provided', async () => {
+      repository.findListByIdAndUserId.mockResolvedValue({ id: listId });
+      const mockItems: TodoItemSummary[] = [
+        { ...mockCreatedTodo, id: 't1', text: 'Buy milk', isCompleted: false },
+        { ...mockCreatedTodo, id: 't2', text: 'Drink milk', isCompleted: true },
+      ];
+      repository.findTodosByCursor.mockResolvedValue(mockItems);
+      repository.countCountsByListId.mockResolvedValue({
+        totalCount: 2,
+        activeCount: 1,
+        completedCount: 1,
+      });
+
+      const result = await service.getTodos(userId, listId, {
+        query: 'milk',
+        limit: 40,
+      });
+
+      expect(repository.findTodosByCursor).toHaveBeenCalledWith({
+        listId,
+        isCompleted: undefined,
+        query: 'milk',
+        cursor: undefined,
+        limit: 40,
+      });
+      expect(result.items).toHaveLength(2);
+      expect(result.hasMore).toBe(false);
     });
   });
 
@@ -570,6 +601,7 @@ describe('TodosService', () => {
       expect(repository.findAllTodosByUserId).toHaveBeenCalledWith({
         userId,
         isCompleted: false,
+        query: undefined,
         cursor: undefined,
         limit: 20,
         starred: undefined,
@@ -623,6 +655,7 @@ describe('TodosService', () => {
       expect(repository.findAllTodosByUserId).toHaveBeenCalledWith({
         userId,
         isCompleted: true,
+        query: undefined,
         cursor: undefined,
         limit: 1,
         starred: true,
@@ -630,6 +663,41 @@ describe('TodosService', () => {
       expect(result.items).toEqual([item1]);
       expect(result.hasMore).toBe(true);
       expect(result.nextCursor).toBe('todo-1');
+    });
+
+    it('should query all user todos with search query when query parameter is provided', async () => {
+      const item1: TodoItemSummary = {
+        id: 'todo-1',
+        listId: 'list-1',
+        userId,
+        text: 'Clean room',
+        isCompleted: false,
+        order: 1000,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        listName: 'List One',
+      };
+      repository.findAllTodosByUserId.mockResolvedValue([item1]);
+      repository.countAllByUserId.mockResolvedValue({
+        totalCount: 1,
+        activeCount: 1,
+        completedCount: 0,
+      });
+
+      const result = await service.getAllUserTodos(userId, {
+        query: 'room',
+        limit: 40,
+      });
+
+      expect(repository.findAllTodosByUserId).toHaveBeenCalledWith({
+        userId,
+        isCompleted: undefined,
+        query: 'room',
+        cursor: undefined,
+        limit: 40,
+        starred: undefined,
+      });
+      expect(result.items).toEqual([item1]);
     });
   });
 });

@@ -84,20 +84,33 @@ export class TodosRepository {
 
   async findTodosByCursor(params: {
     listId: string;
-    isCompleted: boolean;
+    isCompleted?: boolean;
+    query?: string;
     cursor?: string;
     limit: number;
     tx?: Prisma.TransactionClient;
   }): Promise<TodoItemSummary[]> {
     const client = params.tx ?? this.prisma;
+    const where: Prisma.TodoItemWhereInput = {
+      listId: params.listId,
+      ...(params.isCompleted !== undefined ? { isCompleted: params.isCompleted } : {}),
+      ...(params.query
+        ? {
+            text: {
+              contains: params.query,
+            },
+          }
+        : {}),
+    };
+
     return client.todoItem.findMany({
-      where: {
-        listId: params.listId,
-        isCompleted: params.isCompleted,
-      },
-      orderBy: params.isCompleted
-        ? [{ updatedAt: 'desc' }, { id: 'desc' }]
-        : [{ order: 'asc' }, { id: 'asc' }],
+      where,
+      orderBy:
+        params.isCompleted === true
+          ? [{ updatedAt: 'desc' }, { id: 'desc' }]
+          : params.isCompleted === false
+            ? [{ order: 'asc' }, { id: 'asc' }]
+            : [{ isCompleted: 'asc' }, { order: 'asc' }, { updatedAt: 'desc' }, { id: 'desc' }],
       take: params.limit + 1,
       ...(params.cursor
         ? {
@@ -222,7 +235,8 @@ export class TodosRepository {
 
   async findAllTodosByUserId(params: {
     userId: string;
-    isCompleted: boolean;
+    isCompleted?: boolean;
+    query?: string;
     cursor?: string;
     limit: number;
     starred?: boolean;
@@ -231,13 +245,25 @@ export class TodosRepository {
     const client = params.tx ?? this.prisma;
     const where: Prisma.TodoItemWhereInput = {
       userId: params.userId,
-      isCompleted: params.isCompleted,
+      ...(params.isCompleted !== undefined ? { isCompleted: params.isCompleted } : {}),
       ...(params.starred !== undefined ? { list: { isStarred: params.starred } } : {}),
+      ...(params.query
+        ? {
+            text: {
+              contains: params.query,
+            },
+          }
+        : {}),
     };
 
     const items = await client.todoItem.findMany({
       where,
-      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      orderBy:
+        params.isCompleted === false
+          ? [{ order: 'asc' }, { id: 'asc' }]
+          : params.isCompleted === true
+            ? [{ updatedAt: 'desc' }, { id: 'desc' }]
+            : [{ isCompleted: 'asc' }, { order: 'asc' }, { updatedAt: 'desc' }, { id: 'desc' }],
       take: params.limit + 1,
       ...(params.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
       select: {

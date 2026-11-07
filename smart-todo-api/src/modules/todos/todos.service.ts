@@ -89,6 +89,7 @@ export class TodosService {
     const rawItems = await this.todosRepository.findTodosByCursor({
       listId,
       isCompleted: query.completed,
+      query: query.query?.trim() || undefined,
       cursor: query.cursor,
       limit,
     });
@@ -120,6 +121,7 @@ export class TodosService {
     const rawItems = await this.todosRepository.findAllTodosByUserId({
       userId,
       isCompleted: query.completed,
+      query: query.query?.trim() || undefined,
       cursor: query.cursor,
       limit,
       starred: query.starred,
