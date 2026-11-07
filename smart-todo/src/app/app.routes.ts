@@ -35,6 +35,7 @@ export const routes: Routes = [
   },
   {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('@layout').then((m) => m.Main),
     children: [
