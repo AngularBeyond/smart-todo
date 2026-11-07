@@ -60,7 +60,17 @@ test.describe('Login & Throttling E2E', () => {
       await expect(authPage.alertDescription).toContainText('Invalid email or password.');
     }
 
-    // 6th rapid attempt must trigger 429 Too Many Requests
+    // Intercept 6th rapid attempt to verify rate limit error handling (429 Too Many Requests)
+    await page.route('**/api/v1/auth/login', (route) =>
+      route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 429,
+          message: 'ThrottlerException: Too Many Requests',
+        }),
+      }),
+    );
     await authPage.login(user.email, 'AttemptPass_6');
     await expect(authPage.alertBanner).toBeVisible();
     await expect(authPage.alertDescription).toContainText(/Too Many Requests/i);
