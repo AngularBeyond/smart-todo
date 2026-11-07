@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { TitleCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
   LucideArrowLeft,
@@ -7,8 +6,9 @@ import {
   LucideCheck,
   LucideChevronRight,
   LucideClock3,
-  LucidePalette,
+  LucideMoon,
   LucideShield,
+  LucideSun,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
 import { AppStore, themeChanged } from '@core';
@@ -21,14 +21,14 @@ import { SettingsStore } from '../../store';
   selector: 'app-settings-page',
   imports: [
     RouterLink,
-    TitleCasePipe,
     LucideArrowLeft,
     LucideBell,
     LucideCheck,
     LucideChevronRight,
     LucideClock3,
-    LucidePalette,
+    LucideMoon,
     LucideShield,
+    LucideSun,
     HlmButton,
     HlmBadge,
     HlmSeparator,
@@ -43,8 +43,7 @@ export class SettingsPage {
   protected readonly appStore = inject(AppStore);
   protected readonly store = inject(SettingsStore);
 
-  toggleTheme(): void {
-    const nextMode = this.appStore.theme() === 'dark' ? 'light' : 'dark';
+  setTheme(nextMode: 'light' | 'dark'): void {
     this.store.setAppearance(nextMode);
     this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
   }

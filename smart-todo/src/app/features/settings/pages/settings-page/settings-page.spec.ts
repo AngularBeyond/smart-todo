@@ -49,49 +49,42 @@ describe('SettingsPage', () => {
   it('should render page title and workspace preferences card', () => {
     expect(element.textContent).toContain('Settings');
     expect(element.textContent).toContain('Workspace preferences');
-    expect(element.textContent).toContain('Appearance');
+    expect(element.textContent).toContain('Preferred theme');
   });
 
-  it('should display active light theme and badge when theme is light', () => {
-    expect(element.textContent).toContain('Light theme is active');
-    const badge = element.querySelector('[hlmbadge]');
-    expect(badge?.textContent?.trim().toLowerCase()).toBe('light');
+  it('should render light and dark theme buttons', () => {
+    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
+    const lightBtn = Array.from(buttons).find((b) => b.textContent?.includes('Light'));
+    const darkBtn = Array.from(buttons).find((b) => b.textContent?.includes('Dark'));
+
+    expect(lightBtn).toBeTruthy();
+    expect(darkBtn).toBeTruthy();
   });
 
-  it('should dispatch themeChanged with dark when toggleTheme is called in light mode', () => {
-    component.toggleTheme();
+  it('should dispatch themeChanged with dark and update store when Dark button is clicked', () => {
+    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
+    const darkBtn = Array.from(buttons).find((b) => b.textContent?.includes('Dark'));
+
+    darkBtn?.click();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(themeChanged({ mode: 'dark' }));
+    expect((component as any).store.settings().appearance).toBe('dark');
   });
 
-  it('should dispatch themeChanged with dark when Appearance button is clicked in light mode', () => {
-    const appearanceBtn = element.querySelector<HTMLButtonElement>(
-      'button[aria-label="Toggle theme"]',
-    );
-    expect(appearanceBtn).toBeTruthy();
-
-    appearanceBtn?.click();
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(themeChanged({ mode: 'dark' }));
-  });
-
-  it('should dispatch themeChanged with light when Appearance button is clicked in dark mode', async () => {
+  it('should dispatch themeChanged with light and update store when Light button is clicked', () => {
     mockTheme.set('dark');
     fixture.detectChanges();
-    await fixture.whenStable();
 
-    expect(element.textContent).toContain('Dark theme is active');
+    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
+    const lightBtn = Array.from(buttons).find((b) => b.textContent?.includes('Light'));
 
-    const appearanceBtn = element.querySelector<HTMLButtonElement>(
-      'button[aria-label="Toggle theme"]',
-    );
-    appearanceBtn?.click();
+    lightBtn?.click();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(themeChanged({ mode: 'light' }));
+    expect((component as any).store.settings().appearance).toBe('light');
   });
 
-  it('should update store settings appearance when Appearance button is clicked', () => {
-    const appearanceBtn = element.querySelector<HTMLButtonElement>(
-      'button[aria-label="Toggle theme"]',
-    );
-    appearanceBtn?.click();
+  it('should update store and dispatch themeChanged when setTheme is called directly', () => {
+    component.setTheme('dark');
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(themeChanged({ mode: 'dark' }));
     expect((component as any).store.settings().appearance).toBe('dark');
   });
 });
