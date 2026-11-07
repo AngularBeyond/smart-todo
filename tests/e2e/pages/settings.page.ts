@@ -20,7 +20,15 @@ export class SettingsPage extends BasePage {
   }
 
   async gotoSettings(): Promise<void> {
-    await this.goto('/settings');
+    if (!this.page.url().includes('/settings')) {
+      if (await this.profileMenuButton.isVisible()) {
+        await this.openProfileMenu();
+        await this.page.locator('a[routerLink="/settings"], a:has-text("Settings")').click();
+      } else {
+        await this.goto('/settings');
+      }
+    }
+    await this.page.waitForURL(/\/settings/);
     await this.heading.waitFor({ state: 'visible' });
   }
 

@@ -14,6 +14,7 @@ import {
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmAlertImports } from '@spartan-ng/helm/alert';
 import { UserProfile } from '@core';
 import { UpdateProfileRequest } from '../../models';
 
@@ -26,6 +27,7 @@ import { UpdateProfileRequest } from '../../models';
     LucideUserRound,
     HlmButton,
     HlmInput,
+    HlmAlertImports,
   ],
   styleUrl: './profile-form.scss',
   templateUrl: './profile-form.html',

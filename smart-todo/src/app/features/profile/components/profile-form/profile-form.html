@@ -9,6 +9,33 @@
     </div>
   </div>
 
+  @if (error(); as apiError) {
+    <div hlmAlert variant="destructive" class="mb-5 flex items-start gap-3">
+      <div class="flex-1">
+        <h4 hlmAlertTitle>Error</h4>
+        <p hlmAlertDescription>{{ apiError }}</p>
+      </div>
+      <button
+        type="button"
+        (click)="clearStatus.emit()"
+        aria-label="Dismiss error"
+        class="text-muted-foreground hover:text-foreground"
+      >
+        <span class="sr-only">Dismiss</span>
+        ×
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div hlmAlert class="mb-5 flex items-start gap-3 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+      <div class="flex-1">
+        <h4 hlmAlertTitle>Success</h4>
+        <p hlmAlertDescription>Profile updated successfully.</p>
+      </div>
+    </div>
+  }
+
   <form (submit)="handleSubmit($event)" class="flex flex-col gap-5">
     <div class="grid gap-5 sm:grid-cols-2">
       <div class="flex flex-col gap-2">

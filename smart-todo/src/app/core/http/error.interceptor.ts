@@ -61,7 +61,8 @@ function handleUnauthorized(url: string, dispatcher: Dispatcher): void {
     !url.includes('/auth/logout') &&
     !url.includes('/auth/login') &&
     !url.includes('/auth/register') &&
-    !url.includes('/auth/refresh')
+    !url.includes('/auth/refresh') &&
+    !url.includes('/auth/authenticated')
   ) {
     dispatcher.dispatch(userLogout());
   }

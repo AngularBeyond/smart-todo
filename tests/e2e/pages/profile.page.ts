@@ -26,8 +26,8 @@ export class ProfilePage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.heading = page.locator('h1:has-text("Profile")');
-    this.fullNameBadge = page.locator('.sm\\:items-end p.font-medium, div:has(h1) ~ div p.font-medium');
-    this.initialsBadge = page.locator('.sm\\:items-end .rounded-full, div:has(h1) ~ div .rounded-full');
+    this.fullNameBadge = page.locator('app-profile-page div:has(.size-14) p.font-medium');
+    this.initialsBadge = page.locator('app-profile-page .size-14');
 
     this.firstNameInput = page.locator('input#profile-name');
     this.lastNameInput = page.locator('input#profile-lastName');
@@ -46,7 +46,16 @@ export class ProfilePage extends BasePage {
   }
 
   async gotoProfile(): Promise<void> {
-    await this.goto('/profile');
+    // If not already on /profile, navigate via profile menu or direct URL
+    if (!this.page.url().includes('/profile')) {
+      if (await this.profileMenuButton.isVisible()) {
+        await this.openProfileMenu();
+        await this.page.locator('a[routerLink="/profile"], a:has-text("Profile")').click();
+      } else {
+        await this.goto('/profile');
+      }
+    }
+    await this.page.waitForURL(/\/profile/);
     await this.heading.waitFor({ state: 'visible' });
   }
 
