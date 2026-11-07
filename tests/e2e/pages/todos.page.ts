@@ -1,0 +1,118 @@
+import { Locator, Page } from '@playwright/test';
+import { BasePage } from './base.page';
+import { SidebarComponent } from './sidebar.component';
+
+export class TodosPage extends BasePage {
+  readonly sidebar: SidebarComponent;
+  readonly createTaskInput: Locator;
+  readonly addTaskButton: Locator;
+  readonly quotaBadge: Locator;
+  readonly activeSection: Locator;
+  readonly activeRows: Locator;
+  readonly completedSection: Locator;
+  readonly completedToggle: Locator;
+  readonly completedBadge: Locator;
+  readonly completedRows: Locator;
+  readonly searchInput: Locator;
+  readonly clearSearchButton: Locator;
+  readonly searchSpinner: Locator;
+
+  constructor(page: Page) {
+    super(page);
+    this.sidebar = new SidebarComponent(page);
+    this.createTaskInput = page.locator('input[aria-label="New task input"]');
+    this.addTaskButton = page.locator('app-todo-create-bar button:has-text("Add task")');
+    this.quotaBadge = page.locator('app-todo-create-bar span[hlmbadge]');
+    this.activeSection = page.locator('section:has([cdkdroplist])');
+    this.activeRows = page.locator('section [cdkdroplist] app-todo-item-row');
+    this.completedSection = page.locator('app-completed-section');
+    this.completedToggle = page.locator('button[aria-label="Toggle completed tasks history"]');
+    this.completedBadge = page.locator('app-completed-section span[hlmbadge]');
+    this.completedRows = page.locator('app-completed-section app-todo-item-row');
+    this.searchInput = page.locator('input[placeholder="Filter tasks (press / to focus)"]');
+    this.clearSearchButton = page.locator('button[aria-label="Clear filter"]');
+    this.searchSpinner = page.locator('svg.animate-spin');
+  }
+
+  async gotoWorkspace(): Promise<void> {
+    await this.goto('/');
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  getActiveRow(text: string): Locator {
+    return this.activeRows.filter({ hasText: text }).first();
+  }
+
+  getCompletedRow(text: string): Locator {
+    return this.completedRows.filter({ hasText: text }).first();
+  }
+
+  async createTodo(text: string): Promise<void> {
+    await this.createTaskInput.fill(text);
+    await this.addTaskButton.click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async getActiveTodoTexts(): Promise<string[]> {
+    const textButtons = this.activeRows.locator('button[aria-label^="Click or double click to edit task"]');
+    return textButtons.allInnerTexts();
+  }
+
+  async getCompletedTodoTexts(): Promise<string[]> {
+    const textButtons = this.completedRows.locator('button[aria-label^="Click or double click to edit task"]');
+    return textButtons.allInnerTexts();
+  }
+
+  async toggleActiveTodo(text: string): Promise<void> {
+    const row = this.getActiveRow(text);
+    await row.locator('button[aria-label^="Mark as complete"]').click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async toggleCompletedTodo(text: string): Promise<void> {
+    const row = this.getCompletedRow(text);
+    await row.locator('button[aria-label^="Mark as incomplete"]').click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async renameTodo(oldText: string, newText: string): Promise<void> {
+    const row = this.getActiveRow(oldText);
+    const textButton = row.locator('button[aria-label^="Click or double click to edit task"]');
+    await textButton.click();
+    const editInput = row.locator('input[aria-label^="Edit task text"]');
+    await editInput.waitFor({ state: 'visible' });
+    await editInput.fill(newText);
+    await editInput.press('Enter');
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async deleteActiveTodo(text: string): Promise<void> {
+    const row = this.getActiveRow(text);
+    await row.hover();
+    const deleteBtn = row.locator('button[aria-label^="Delete task"]');
+    await deleteBtn.click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async toggleCompletedSection(): Promise<void> {
+    await this.completedToggle.click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async search(query: string): Promise<void> {
+    await this.searchInput.fill(query);
+    // Allow debounce and network request to finish
+    await this.page.waitForTimeout(450);
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  async clearSearch(): Promise<void> {
+    if (await this.clearSearchButton.isVisible()) {
+      await this.clearSearchButton.click();
+    } else {
+      await this.searchInput.press('Escape');
+    }
+    await this.page.waitForTimeout(450);
+    await this.page.waitForLoadState('networkidle');
+  }
+}
