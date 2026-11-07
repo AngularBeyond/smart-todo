@@ -34,6 +34,8 @@ export class CompletedSectionComponent {
   readonly isExpanded = input<boolean>(false);
   readonly isLoading = input<boolean>(false);
   readonly hasMore = input<boolean>(false);
+  readonly isSearchActive = input<boolean>(false);
+  readonly searchQuery = input<string>('');
 
   readonly toggleExpand = output<void>();
   readonly toggleTodo = output<TodoItem>();

@@ -164,4 +164,13 @@ describe('TodoItemRowComponent', () => {
     const textContent = fixture.nativeElement.textContent;
     expect(textContent).toContain('Personal Projects');
   });
+
+  it('highlights matched search query in mark tag', () => {
+    componentRef.setInput('searchQuery', 'almond');
+    fixture.detectChanges();
+
+    const markEl = fixture.nativeElement.querySelector('mark');
+    expect(markEl).toBeTruthy();
+    expect(markEl?.textContent).toBe('almond');
+  });
 });

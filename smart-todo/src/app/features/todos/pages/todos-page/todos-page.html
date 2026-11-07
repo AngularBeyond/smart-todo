@@ -103,15 +103,30 @@
   <div class="mb-5 flex items-center justify-between gap-3">
     <!-- Filter Tasks Input (left, longer, responsive) -->
     <div class="relative flex-1 max-w-xs sm:max-w-sm md:max-w-md">
-      <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
+      @if (store.isSearching()) {
+        <svg lucideLoader2 class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground"></svg>
+      } @else {
+        <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
+      }
       <input
+        #filterInput
         hlmInput
         type="text"
-        [ngModel]="store.query()"
-        (ngModelChange)="store.setQuery($event)"
-        placeholder="Filter tasks"
-        class="h-9 w-full pl-8 text-xs"
+        [formField]="searchForm.query"
+        (keydown.escape)="clearSearch()"
+        placeholder="Filter tasks (press / to focus)"
+        class="h-9 w-full pl-8 pr-8 text-xs"
       />
+      @if (searchModel().query) {
+        <button
+          type="button"
+          (click)="clearSearch()"
+          aria-label="Clear filter"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+        >
+          <svg lucideX class="size-3.5"></svg>
+        </button>
+      }
     </div>
 
     <!-- Star & Delete Actions (right) -->
@@ -175,17 +190,18 @@
   <section class="border-y border-border">
     <div
       cdkDropList
-      [cdkDropListDisabled]="isAggregateView()"
+      [cdkDropListDisabled]="isAggregateView() || store.isSearchActive()"
       [cdkDropListData]="store.visibleActiveTodos()"
       (cdkDropListDropped)="onDropActive($event)"
     >
       @for (task of store.visibleActiveTodos(); track task.id) {
         <app-todo-item-row
           cdkDrag
-          [cdkDragDisabled]="isAggregateView()"
+          [cdkDragDisabled]="isAggregateView() || store.isSearchActive()"
           [cdkDragData]="task"
           [todo]="task"
-          [isDraggable]="!isAggregateView()"
+          [isDraggable]="!isAggregateView() && !store.isSearchActive()"
+          [searchQuery]="store.query()"
           (toggleComplete)="onToggleComplete(task)"
           (textUpdated)="onUpdateText(task.id, $event)"
           (deleteClicked)="onDeleteTodo(task)"
@@ -201,12 +217,12 @@
 
     @if (store.visibleActiveTodos().length === 0) {
       <div class="py-12 text-center text-sm text-muted-foreground">
-        {{ store.query() ? 'No tasks match that filter.' : (isStarredTasks() ? 'No starred tasks yet.' : (isAllTasks() ? 'No tasks yet.' : 'No tasks in this list yet. Add one above!')) }}
+        {{ store.isSearchActive() ? 'No active tasks match that filter.' : (isStarredTasks() ? 'No starred tasks yet.' : (isAllTasks() ? 'No tasks yet.' : 'No tasks in this list yet. Add one above!')) }}
       </div>
     }
 
     <!-- Active Todos Infinite Scroll Sentinel -->
-    @if (store.hasMoreActive()) {
+    @if (store.hasMoreActive() && !store.isSearchActive()) {
       <div
         appInfiniteScrollSentinel
         [disabled]="store.activeLoading()"
@@ -224,11 +240,13 @@
   <!-- Completed Tasks Section -->
   <div class="mt-7">
     <app-completed-section
-      [completedTodos]="store.completedTodos()"
+      [completedTodos]="store.visibleCompletedTodos()"
       [completedCount]="store.completedCount()"
       [isExpanded]="store.isCompletedExpanded()"
-      [isLoading]="store.completedLoading()"
+      [isLoading]="store.isSearchActive() ? store.isSearching() : store.completedLoading()"
       [hasMore]="store.hasMoreCompleted()"
+      [isSearchActive]="store.isSearchActive()"
+      [searchQuery]="store.query()"
       (toggleExpand)="onToggleCompletedSection()"
       (toggleTodo)="onToggleComplete($event)"
       (updateTodoText)="onUpdateText($event.todoId, $event.text)"

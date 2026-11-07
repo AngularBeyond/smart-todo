@@ -4,7 +4,7 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Dispatcher } from '@ngrx/signals/events';
 import { tapResponse } from '@ngrx/operators';
-import { EMPTY, pipe } from 'rxjs';
+import { EMPTY, of, pipe } from 'rxjs';
 import { concatMap, exhaustMap, filter, switchMap, tap } from 'rxjs/operators';
 import {
   adjustListCounts,
@@ -39,6 +39,10 @@ export interface TodosState {
   activeLoading: boolean;
   completedLoading: boolean;
   query: string;
+  isSearching: boolean;
+  searchActiveTodos: TodoItem[];
+  searchCompletedTodos: TodoItem[];
+  preSearchExpandedState: boolean | null;
   newTask: string;
   editingId: string | number | null;
   editValue: string;
@@ -60,6 +64,10 @@ export const initialTodosState: TodosState = {
   activeLoading: false,
   completedLoading: false,
   query: '',
+  isSearching: false,
+  searchActiveTodos: [],
+  searchCompletedTodos: [],
+  preSearchExpandedState: null,
   newTask: '',
   editingId: null,
   editValue: '',
@@ -68,7 +76,7 @@ export const initialTodosState: TodosState = {
 export const TodosStore = signalStore(
   withState<TodosState>(initialTodosState),
   withRequestStatus(),
-  withComputed(({ activeTodos, completedTodos, totalCount, completedCount, query, isCompletedExpanded, viewMode }) => ({
+  withComputed(({ activeTodos, completedTodos, totalCount, completedCount, query, searchActiveTodos, searchCompletedTodos, isCompletedExpanded, viewMode }) => ({
     isAllTasks: computed(() => viewMode() === 'all'),
     isStarredTasks: computed(() => viewMode() === 'starred'),
     isAggregateView: computed(() => viewMode() === 'all' || viewMode() === 'starred'),
@@ -79,22 +87,24 @@ export const TodosStore = signalStore(
       if (total === 0) return 100;
       return Math.round((completedCount() / total) * 100);
     }),
+    isSearchActive: computed(() => query().trim().length > 0),
     visibleActiveTodos: computed(() => {
-      const q = query().toLowerCase().trim();
-      return q
-        ? activeTodos().filter((t) => t.text.toLowerCase().includes(q))
-        : activeTodos();
+      if (query().trim().length > 0) {
+        return searchActiveTodos();
+      }
+      return activeTodos();
+    }),
+    visibleCompletedTodos: computed(() => {
+      if (query().trim().length > 0) {
+        return searchCompletedTodos();
+      }
+      return completedTodos();
     }),
     // Backward-compatibility aliases for existing mockup templates
-    tasks: computed(() => activeTodos()),
-    completed: computed(() => completedTodos()),
+    tasks: computed(() => (query().trim().length > 0 ? searchActiveTodos() : activeTodos())),
+    completed: computed(() => (query().trim().length > 0 ? searchCompletedTodos() : completedTodos())),
     showCompleted: computed(() => isCompletedExpanded()),
-    visibleTasks: computed(() => {
-      const q = query().toLowerCase().trim();
-      return q
-        ? activeTodos().filter((t) => t.text.toLowerCase().includes(q))
-        : activeTodos();
-    }),
+    visibleTasks: computed(() => (query().trim().length > 0 ? searchActiveTodos() : activeTodos())),
     activeList: computed(() => 'My Tasks'),
   })),
   withMethods(
@@ -108,7 +118,7 @@ export const TodosStore = signalStore(
           filter(() => {
             const listId = store.currentListId();
             const loading = store.completedLoading();
-            if ((!listId && !store.isAggregateView()) || loading) return false;
+            if (store.isSearchActive() || (!listId && !store.isAggregateView()) || loading) return false;
             if (store.completedTodos().length > 0 && !store.hasMoreCompleted()) return false;
             return true;
           }),
@@ -167,6 +177,11 @@ export const TodosStore = signalStore(
                 completedCount: 0,
                 activeLoading: true,
                 completedLoading: false,
+                query: '',
+                isSearching: false,
+                searchActiveTodos: [],
+                searchCompletedTodos: [],
+                preSearchExpandedState: null,
               },
               setPending(),
             );
@@ -225,6 +240,11 @@ export const TodosStore = signalStore(
                 completedCount: 0,
                 activeLoading: true,
                 completedLoading: false,
+                query: '',
+                isSearching: false,
+                searchActiveTodos: [],
+                searchCompletedTodos: [],
+                preSearchExpandedState: null,
               },
               setPending(),
             );
@@ -283,6 +303,11 @@ export const TodosStore = signalStore(
                 completedCount: 0,
                 activeLoading: true,
                 completedLoading: false,
+                query: '',
+                isSearching: false,
+                searchActiveTodos: [],
+                searchCompletedTodos: [],
+                preSearchExpandedState: null,
               },
               setPending(),
             );
@@ -454,12 +479,14 @@ export const TodosStore = signalStore(
           if (wasCompleted) {
             patchState(store, {
               completedTodos: store.completedTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
+              searchCompletedTodos: store.searchCompletedTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
               editingId: null,
               editValue: '',
             });
           } else {
             patchState(store, {
               activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
+              searchActiveTodos: store.searchActiveTodos().map((t) => (t.id === todoId ? { ...t, text: trimmed } : t)),
               editingId: null,
               editValue: '',
             });
@@ -474,10 +501,12 @@ export const TodosStore = signalStore(
                   if (wasCompleted) {
                     patchState(store, {
                       completedTodos: store.completedTodos().map((t) => (t.id === todoId ? updated : t)),
+                      searchCompletedTodos: store.searchCompletedTodos().map((t) => (t.id === todoId ? updated : t)),
                     });
                   } else {
                     patchState(store, {
                       activeTodos: store.activeTodos().map((t) => (t.id === todoId ? updated : t)),
+                      searchActiveTodos: store.searchActiveTodos().map((t) => (t.id === todoId ? updated : t)),
                     });
                   }
                 },
@@ -486,10 +515,12 @@ export const TodosStore = signalStore(
                   if (wasCompleted) {
                     patchState(store, {
                       completedTodos: store.completedTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
+                      searchCompletedTodos: store.searchCompletedTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
                     });
                   } else {
                     patchState(store, {
                       activeTodos: store.activeTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
+                      searchActiveTodos: store.searchActiveTodos().map((t) => (t.id === todoId ? { ...t, text: previousText } : t)),
                     });
                   }
                   const message =
@@ -516,6 +547,8 @@ export const TodosStore = signalStore(
             patchState(store, {
               activeTodos: store.activeTodos().filter((t) => t.id !== todo.id),
               completedTodos: [{ ...todo, isCompleted: true, done: true }, ...store.completedTodos()],
+              searchActiveTodos: store.searchActiveTodos().filter((t) => t.id !== todo.id),
+              searchCompletedTodos: [{ ...todo, isCompleted: true, done: true }, ...store.searchCompletedTodos()],
               activeCount: Math.max(0, store.activeCount() - 1),
               completedCount: store.completedCount() + 1,
             });
@@ -525,6 +558,8 @@ export const TodosStore = signalStore(
             patchState(store, {
               completedTodos: store.completedTodos().filter((t) => t.id !== todo.id),
               activeTodos: [{ ...todo, isCompleted: false, done: false }, ...store.activeTodos()],
+              searchCompletedTodos: store.searchCompletedTodos().filter((t) => t.id !== todo.id),
+              searchActiveTodos: [{ ...todo, isCompleted: false, done: false }, ...store.searchActiveTodos()],
               activeCount: store.activeCount() + 1,
               completedCount: Math.max(0, store.completedCount() - 1),
             });
@@ -540,10 +575,12 @@ export const TodosStore = signalStore(
                   if (targetIsCompleted) {
                     patchState(store, {
                       completedTodos: store.completedTodos().map((t) => (t.id === todo.id ? updated : t)),
+                      searchCompletedTodos: store.searchCompletedTodos().map((t) => (t.id === todo.id ? updated : t)),
                     });
                   } else {
                     patchState(store, {
                       activeTodos: store.activeTodos().map((t) => (t.id === todo.id ? updated : t)),
+                      searchActiveTodos: store.searchActiveTodos().map((t) => (t.id === todo.id ? updated : t)),
                     });
                   }
                 },
@@ -553,6 +590,8 @@ export const TodosStore = signalStore(
                     patchState(store, {
                       completedTodos: store.completedTodos().filter((t) => t.id !== todo.id),
                       activeTodos: [todo, ...store.activeTodos()],
+                      searchCompletedTodos: store.searchCompletedTodos().filter((t) => t.id !== todo.id),
+                      searchActiveTodos: [todo, ...store.searchActiveTodos()],
                       activeCount: store.activeCount() + 1,
                       completedCount: Math.max(0, store.completedCount() - 1),
                     });
@@ -561,6 +600,8 @@ export const TodosStore = signalStore(
                     patchState(store, {
                       activeTodos: store.activeTodos().filter((t) => t.id !== todo.id),
                       completedTodos: [todo, ...store.completedTodos()],
+                      searchActiveTodos: store.searchActiveTodos().filter((t) => t.id !== todo.id),
+                      searchCompletedTodos: [todo, ...store.searchCompletedTodos()],
                       activeCount: Math.max(0, store.activeCount() - 1),
                       completedCount: store.completedCount() + 1,
                     });
@@ -588,6 +629,7 @@ export const TodosStore = signalStore(
           if (wasCompleted) {
             patchState(store, {
               completedTodos: store.completedTodos().filter((t) => t.id !== todo.id),
+              searchCompletedTodos: store.searchCompletedTodos().filter((t) => t.id !== todo.id),
               totalCount: Math.max(0, store.totalCount() - 1),
               completedCount: Math.max(0, store.completedCount() - 1),
             });
@@ -595,6 +637,7 @@ export const TodosStore = signalStore(
           } else {
             patchState(store, {
               activeTodos: store.activeTodos().filter((t) => t.id !== todo.id),
+              searchActiveTodos: store.searchActiveTodos().filter((t) => t.id !== todo.id),
               totalCount: Math.max(0, store.totalCount() - 1),
               activeCount: Math.max(0, store.activeCount() - 1),
             });
@@ -619,6 +662,7 @@ export const TodosStore = signalStore(
                   if (wasCompleted) {
                     patchState(store, {
                       completedTodos: [todo, ...store.completedTodos()],
+                      searchCompletedTodos: [todo, ...store.searchCompletedTodos()],
                       totalCount: store.totalCount() + 1,
                       completedCount: store.completedCount() + 1,
                     });
@@ -626,6 +670,7 @@ export const TodosStore = signalStore(
                   } else {
                     patchState(store, {
                       activeTodos: [todo, ...store.activeTodos()],
+                      searchActiveTodos: [todo, ...store.searchActiveTodos()],
                       totalCount: store.totalCount() + 1,
                       activeCount: store.activeCount() + 1,
                     });
@@ -708,6 +753,72 @@ export const TodosStore = signalStore(
       ),
     );
 
+    const searchTodos = rxMethod<string>(
+      pipe(
+        tap((q) => {
+          const trimmed = q.trim();
+          if (!trimmed) {
+            const prev = store.preSearchExpandedState();
+            patchState(store, {
+              query: '',
+              isSearching: false,
+              searchActiveTodos: [],
+              searchCompletedTodos: [],
+              isCompletedExpanded: prev !== null ? prev : store.isCompletedExpanded(),
+              preSearchExpandedState: null,
+            });
+            return;
+          }
+
+          const currentPre = store.preSearchExpandedState();
+          patchState(store, {
+            query: trimmed,
+            isSearching: true,
+            preSearchExpandedState: currentPre !== null ? currentPre : store.isCompletedExpanded(),
+            isCompletedExpanded: true,
+          });
+        }),
+        filter((q) => q.trim().length > 0),
+        switchMap((q) => {
+          const listId = store.currentListId();
+          const viewMode = store.viewMode();
+          let url: string;
+
+          if (viewMode === 'starred') {
+            url = `/api/v1/todos?query=${encodeURIComponent(q.trim())}&starred=true&limit=40`;
+          } else if (viewMode === 'all') {
+            url = `/api/v1/todos?query=${encodeURIComponent(q.trim())}&limit=40`;
+          } else if (listId) {
+            url = `/api/v1/lists/${listId}/todos?query=${encodeURIComponent(q.trim())}&limit=40`;
+          } else {
+            return of(null);
+          }
+
+          return httpService.get<PaginatedTodosResponse>(url).pipe(
+            tapResponse({
+              next: (response) => {
+                const items = response.data.items;
+                const active = items.filter((item) => !item.isCompleted);
+                const completed = items.filter((item) => item.isCompleted);
+                patchState(store, {
+                  searchActiveTodos: active,
+                  searchCompletedTodos: completed,
+                  isSearching: false,
+                });
+              },
+              error: (error: HttpErrorResponse) => {
+                const message =
+                  error.error?.message ||
+                  (typeof error.error === 'string' ? error.error : null) ||
+                  HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
+                patchState(store, { isSearching: false }, setError(message));
+              },
+            }),
+          );
+        }),
+      ),
+    );
+
     return {
       loadInitialForList,
       loadInitialAllTodos,
@@ -719,10 +830,16 @@ export const TodosStore = signalStore(
       toggleTodoCompletion,
       deleteTodo,
       reorderActiveTodo,
+      searchTodos,
       toggleCompletedSection(): void {
         const nextExpanded = !store.isCompletedExpanded();
         patchState(store, { isCompletedExpanded: nextExpanded });
-        if (nextExpanded && store.completedTodos().length === 0 && store.completedCount() > 0) {
+        if (
+          nextExpanded &&
+          !store.isSearchActive() &&
+          store.completedTodos().length === 0 &&
+          store.completedCount() > 0
+        ) {
           loadMoreCompletedTodos();
         }
       },
@@ -730,7 +847,10 @@ export const TodosStore = signalStore(
         patchState(store, { newTask });
       },
       setQuery(query: string): void {
-        patchState(store, { query });
+        searchTodos(query);
+      },
+      clearSearch(): void {
+        searchTodos('');
       },
       toggleShowCompleted(): void {
         const nextExpanded = !store.isCompletedExpanded();
@@ -766,6 +886,10 @@ export const TodosStore = signalStore(
           editingId: null,
           editValue: '',
           query: '',
+          isSearching: false,
+          searchActiveTodos: [],
+          searchCompletedTodos: [],
+          preSearchExpandedState: null,
         });
       },
       // Backward-compatibility helpers for template before STORY-5.4 & STORY-5.5
