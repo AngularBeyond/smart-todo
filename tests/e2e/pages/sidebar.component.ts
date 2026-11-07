@@ -10,7 +10,7 @@ export class SidebarComponent {
   readonly unstarredDropList: Locator;
 
   constructor(protected readonly page: Page) {
-    this.aside = page.locator('aside.bg-sidebar');
+    this.aside = page.locator('aside.bg-sidebar:visible');
     this.allTasksButton = this.aside.locator('button:has-text("All tasks")');
     this.starredTasksButton = this.aside.locator('nav button:has-text("Starred")');
     this.newListInput = this.aside.locator('input#new-list-input');
