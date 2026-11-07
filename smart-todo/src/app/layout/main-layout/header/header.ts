@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideSparkles,
@@ -30,8 +30,7 @@ import { HlmSeparator } from '@spartan-ng/helm/separator';
     HlmButton,
     HlmSeparator,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './header.css',
+  styleUrl: './header.scss',
   templateUrl: './header.html',
 })
 export class Header implements OnDestroy {

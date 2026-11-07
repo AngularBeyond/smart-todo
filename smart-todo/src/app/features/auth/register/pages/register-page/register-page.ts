@@ -40,7 +40,7 @@ import { INITIAL_REGISTER_FEATURES } from '../../constants';
     HlmAlertImports,
   ],
   providers: [RegisterStore],
-  styleUrl: './register-page.css',
+  styleUrl: './register-page.scss',
   templateUrl: './register-page.html',
 })
 export class RegisterPage {

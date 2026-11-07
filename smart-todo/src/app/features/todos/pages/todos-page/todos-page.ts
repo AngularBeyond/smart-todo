@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -55,8 +55,7 @@ import { TodoItem } from '../../models';
     CompletedSectionComponent,
   ],
   providers: [TodosStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './todos-page.css',
+  styleUrl: './todos-page.scss',
   templateUrl: './todos-page.html',
 })
 export class TodosPage {

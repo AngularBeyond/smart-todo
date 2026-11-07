@@ -55,7 +55,7 @@ import { HlmTooltip } from '@ui';
   host: {
     class: 'flex shrink-0',
   },
-  styleUrl: './sidebar.css',
+  styleUrl: './sidebar.scss',
   templateUrl: './sidebar.html',
 })
 export class Sidebar implements OnInit {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -8,7 +8,7 @@ import {
   LucidePlus,
   LucideSearch,
   LucideTag,
-  LucideTrash2,
+  LucideTrash,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
@@ -27,15 +27,14 @@ import { TagsStore } from '../../store';
     LucidePlus,
     LucideSearch,
     LucideTag,
-    LucideTrash2,
+    LucideTrash,
     HlmButton,
     HlmBadge,
     HlmInput,
     HlmSeparator,
   ],
   providers: [TagsStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './tags-page.css',
+  styleUrl: './tags-page.scss',
   templateUrl: './tags-page.html',
 })
 export class TagsPage {

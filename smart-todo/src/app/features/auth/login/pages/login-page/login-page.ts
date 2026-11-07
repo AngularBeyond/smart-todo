@@ -32,7 +32,7 @@ import { LoginStore } from '../../store/login.store';
     HlmAlertImports,
   ],
   providers: [LoginStore],
-  styleUrl: './login-page.css',
+  styleUrl: './login-page.scss',
   templateUrl: './login-page.html',
 })
 export class LoginPage {

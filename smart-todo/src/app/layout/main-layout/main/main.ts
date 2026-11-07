@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AppStore, setMobileSidebarOpen } from '@core';
 import { Dispatcher } from '@ngrx/signals/events';
@@ -9,8 +9,7 @@ import { Sidebar } from '../sidebar/sidebar';
 @Component({
   selector: 'app-main',
   imports: [Header, Sidebar, RouterOutlet, HlmSheetImports],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './main.css',
+  styleUrl: './main.scss',
   templateUrl: './main.html',
 })
 export class Main {

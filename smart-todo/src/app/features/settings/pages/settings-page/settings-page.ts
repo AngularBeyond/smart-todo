@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideArrowLeft,
@@ -32,8 +32,7 @@ import { SettingsStore } from '../../store';
     HlmSeparator,
   ],
   providers: [SettingsStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './settings-page.css',
+  styleUrl: './settings-page.scss',
   templateUrl: './settings-page.html',
 })
 export class SettingsPage {
