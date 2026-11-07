@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -35,8 +34,7 @@ import { ChangePasswordRequest } from '../../models';
     HlmInput,
     HlmAlertImports,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './change-password-form.css',
+  styleUrl: './change-password-form.scss',
   templateUrl: './change-password-form.html',
 })
 export class ChangePasswordFormComponent {

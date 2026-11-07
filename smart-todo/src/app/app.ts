@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HlmToasterImports } from '@ui';
 import { AppStore } from '@core';
@@ -6,8 +6,7 @@ import { AppStore } from '@core';
 @Component({
   imports: [RouterOutlet, HlmToasterImports],
   selector: 'app-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './app.css',
+  styleUrl: './app.scss',
   templateUrl: './app.html',
 })
 export class App {

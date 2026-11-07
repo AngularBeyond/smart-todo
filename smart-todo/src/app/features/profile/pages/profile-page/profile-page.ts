@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideArrowLeft } from '@lucide/angular';
 import { AppStore } from '@core';
@@ -14,8 +14,7 @@ import { ChangePasswordFormComponent, ProfileFormComponent } from '../../compone
     ChangePasswordFormComponent,
   ],
   providers: [ProfileStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './profile-page.css',
+  styleUrl: './profile-page.scss',
   templateUrl: './profile-page.html',
 })
 export class ProfilePage implements OnInit {

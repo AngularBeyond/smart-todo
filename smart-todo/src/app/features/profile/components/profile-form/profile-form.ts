@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -28,8 +27,7 @@ import { UpdateProfileRequest } from '../../models';
     HlmButton,
     HlmInput,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './profile-form.css',
+  styleUrl: './profile-form.scss',
   templateUrl: './profile-form.html',
 })
 export class ProfileFormComponent {
