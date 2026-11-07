@@ -7,7 +7,7 @@ export class BasePage {
 
   constructor(protected readonly page: Page) {
     this.profileMenuButton = page.locator('button[aria-label="Open profile menu"]');
-    this.logoutButton = page.locator('button:has-text("Log out")');
+    this.logoutButton = page.locator('button:has-text("Logout"), button:has-text("Log out")');
     this.themeToggleButton = page.locator('button[aria-label="Toggle theme"]');
   }
 
@@ -21,7 +21,18 @@ export class BasePage {
   }
 
   async openProfileMenu(): Promise<void> {
-    await this.profileMenuButton.click();
+    if (await this.logoutButton.isVisible()) {
+      return;
+    }
+    // Hovering opens the menu via (mouseenter)
+    await this.profileMenuButton.hover();
+    try {
+      await this.logoutButton.waitFor({ state: 'visible', timeout: 2000 });
+    } catch {
+      // Fallback: click if hover alone didn't open
+      await this.profileMenuButton.click();
+      await this.logoutButton.waitFor({ state: 'visible', timeout: 5000 });
+    }
   }
 
   async logout(): Promise<void> {
