@@ -31,3 +31,7 @@ docker-compose.override.yml
 # Internal Docs
 initial-docs/
 
+# Playwright Test Artifacts
+playwright-report/
+test-results/
+
