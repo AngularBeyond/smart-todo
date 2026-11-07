@@ -21,8 +21,10 @@
       "@ui": ["./src/app/ui/index.ts"],
       "@ui/*": ["./src/app/ui/*"],
       "@spartan-ng/helm/*": ["./src/app/ui/spartan-ui/*", "./src/app/ui/spartan-ui/*/index.ts"],
-      "@pattern": ["./src/app/pattern/index.ts"],
-      "@pattern/*": ["./src/app/pattern/*"],
+      "@patterns": ["./src/app/patterns/index.ts"],
+      "@patterns/*": ["./src/app/patterns/*"],
+      "@pattern": ["./src/app/patterns/index.ts"],
+      "@pattern/*": ["./src/app/patterns/*"],
       "@features/*": ["./src/app/features/*"]
     }
   },
