@@ -45,6 +45,7 @@ export class SettingsPage {
 
   toggleTheme(): void {
     const nextMode = this.appStore.theme() === 'dark' ? 'light' : 'dark';
+    this.store.setAppearance(nextMode);
     this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
   }
 }
