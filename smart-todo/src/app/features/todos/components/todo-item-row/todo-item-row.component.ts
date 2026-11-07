@@ -36,6 +36,9 @@ import { formatTodoMetadata } from '../../pure-functions';
   ],
   templateUrl: './todo-item-row.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'block',
+  },
 })
 export class TodoItemRowComponent {
   readonly todo = input.required<TodoItem>();
