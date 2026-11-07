@@ -12,6 +12,11 @@
     "api:test": "pnpm --prefix smart-todo-api test",
     "api:lint": "pnpm --prefix smart-todo-api lint",
     "web": "pnpm --prefix smart-todo start",
-    "web:build": "pnpm --prefix smart-todo build"
+    "web:build": "pnpm --prefix smart-todo build",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0"
   }
 }
