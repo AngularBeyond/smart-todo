@@ -50,11 +50,6 @@ export const routes: Routes = [
           import('./features/todos/pages/todos-page/todos-page').then((m) => m.TodosPage),
       },
       {
-        path: 'tags',
-        loadComponent: () =>
-          import('./features/tags/pages/tags-page/tags-page').then((m) => m.TagsPage),
-      },
-      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/pages/settings-page/settings-page').then((m) => m.SettingsPage),
