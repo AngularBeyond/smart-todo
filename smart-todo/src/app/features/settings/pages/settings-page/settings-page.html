@@ -28,25 +28,36 @@
       </div>
 
       <div class="flex flex-col">
-        <!-- Appearance Option -->
-        <button
-          type="button"
-          (click)="toggleTheme()"
-          aria-label="Toggle theme"
-          class="flex w-full items-center gap-3 py-3 text-left cursor-pointer"
-        >
-          <span class="flex size-9 items-center justify-center bg-primary/10 text-primary">
-            <svg lucidePalette class="size-4"></svg>
-          </span>
-          <span class="flex-1">
-            <span class="block text-sm font-medium">Appearance</span>
-            <span class="block text-xs text-muted-foreground">
-              {{ appStore.theme() | titlecase }} theme is active
-            </span>
-          </span>
-          <span hlmBadge variant="secondary" class="capitalize">{{ appStore.theme() }}</span>
-          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
-        </button>
+        <!-- Preferred Theme Option -->
+        <div class="flex flex-col gap-2 py-2">
+          <span class="text-xs font-medium">Preferred theme</span>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              (click)="setTheme('light')"
+              class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors cursor-pointer"
+              [class.border-primary]="appStore.theme() === 'light'"
+              [class.bg-primary/10]="appStore.theme() === 'light'"
+              [class.text-primary]="appStore.theme() === 'light'"
+              [class.border-border]="appStore.theme() !== 'light'"
+              [class.text-muted-foreground]="appStore.theme() !== 'light'"
+            >
+              <svg lucideSun class="size-4"></svg> Light
+            </button>
+            <button
+              type="button"
+              (click)="setTheme('dark')"
+              class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors cursor-pointer"
+              [class.border-primary]="appStore.theme() === 'dark'"
+              [class.bg-primary/10]="appStore.theme() === 'dark'"
+              [class.text-primary]="appStore.theme() === 'dark'"
+              [class.border-border]="appStore.theme() !== 'dark'"
+              [class.text-muted-foreground]="appStore.theme() !== 'dark'"
+            >
+              <svg lucideMoon class="size-4"></svg> Dark
+            </button>
+          </div>
+        </div>
 
         <div hlmSeparator></div>
 
