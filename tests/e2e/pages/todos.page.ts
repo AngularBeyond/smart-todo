@@ -40,11 +40,19 @@ export class TodosPage extends BasePage {
   }
 
   getActiveRow(text: string): Locator {
-    return this.activeRows.filter({ hasText: text }).first();
+    return this.activeRows
+      .filter({
+        has: this.page.locator(`[aria-label*="${text}"]`),
+      })
+      .first();
   }
 
   getCompletedRow(text: string): Locator {
-    return this.completedRows.filter({ hasText: text }).first();
+    return this.completedRows
+      .filter({
+        has: this.page.locator(`[aria-label*="${text}"]`),
+      })
+      .first();
   }
 
   async createTodo(text: string): Promise<void> {
