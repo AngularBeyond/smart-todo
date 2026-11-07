@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   input,
@@ -12,7 +11,7 @@ import {
   LucideGripVertical,
   LucideCheck,
   LucideCircle,
-  LucideTrash2,
+  LucideTrash,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -22,23 +21,19 @@ import { formatTodoMetadata } from '../../pure-functions';
 
 @Component({
   selector: 'app-todo-item-row',
-  standalone: true,
   imports: [
     FormsModule,
     CdkDragHandle,
     LucideGripVertical,
     LucideCheck,
     LucideCircle,
-    LucideTrash2,
+    LucideTrash,
     HlmButton,
     HlmInput,
     AutoFocusDirective,
   ],
   templateUrl: './todo-item-row.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    class: 'block',
-  },
+  styleUrl: './todo-item-row.component.scss',
 })
 export class TodoItemRowComponent {
   readonly todo = input.required<TodoItem>();
