@@ -123,4 +123,40 @@ export class TodosPage extends BasePage {
     await this.page.waitForTimeout(450);
     await this.page.waitForLoadState('networkidle');
   }
+
+  async dragActiveTodo(sourceText: string, targetText: string): Promise<void> {
+    const sourceRow = this.getActiveRow(sourceText);
+    const targetRow = this.getActiveRow(targetText);
+    const dragHandle = sourceRow.locator('[cdkdraghandle], div[aria-label="Drag to reorder task"]').first();
+
+    const handleBox = await dragHandle.boundingBox();
+    const targetBox = await targetRow.boundingBox();
+
+    if (!handleBox || !targetBox) {
+      throw new Error(`Unable to calculate bounding boxes for drag: "${sourceText}" -> "${targetText}"`);
+    }
+
+    const startX = handleBox.x + handleBox.width / 2;
+    const startY = handleBox.y + handleBox.height / 2;
+    const isMovingDown = targetBox.y > handleBox.y;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    // Exceed CDK pointer drag threshold (5px)
+    const activateY = isMovingDown ? startY + 15 : startY - 15;
+    await this.page.mouse.move(startX, activateY, { steps: 10 });
+    await this.page.waitForTimeout(100);
+
+    // Target slightly beyond midpoint in movement direction
+    const targetY = isMovingDown
+      ? targetBox.y + targetBox.height / 2 + 15
+      : targetBox.y + targetBox.height / 2 - 15;
+    await this.page.mouse.move(targetBox.x + targetBox.width / 2, targetY, { steps: 20 });
+    await this.page.waitForTimeout(150);
+    await this.page.mouse.up();
+    // Wait for CDK drag preview animation to complete and detach
+    await this.page.locator('.cdk-drag-preview').waitFor({ state: 'detached' }).catch(() => {});
+    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('networkidle');
+  }
 }
