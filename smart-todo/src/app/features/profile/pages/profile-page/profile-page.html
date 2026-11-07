@@ -28,12 +28,10 @@
     <!-- Personal Details Form Component -->
     <app-profile-form
       [profile]="store.profile()"
-      [currentTheme]="appStore.theme()"
       [isLoading]="store.isPending()"
       [error]="store.error()"
       [success]="store.profileSuccess()"
       (save)="store.updateProfile($event)"
-      (themeChange)="onThemeChange($event)"
       (clearStatus)="store.clearStatus()"
     />
 

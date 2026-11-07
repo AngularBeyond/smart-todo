@@ -9,12 +9,10 @@ import { UpdateProfileRequest } from '../../models';
   template: `
     <app-profile-form
       [profile]="profile()"
-      [currentTheme]="currentTheme()"
       [isLoading]="isLoading()"
       [error]="error()"
       [success]="success()"
       (save)="onSave($event)"
-      (themeChange)="onThemeChange($event)"
       (clearStatus)="onClearStatus()"
     />
   `,
@@ -26,21 +24,15 @@ class TestHostComponent {
     lastName: 'Smith',
     email: 'john@example.com',
   });
-  readonly currentTheme = signal<'light' | 'dark'>('light');
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
   readonly success = signal(false);
 
   lastSavePayload: UpdateProfileRequest | null = null;
-  lastThemeChanged: 'light' | 'dark' | null = null;
   cleared = false;
 
   onSave(payload: UpdateProfileRequest): void {
     this.lastSavePayload = payload;
-  }
-
-  onThemeChange(theme: 'light' | 'dark'): void {
-    this.lastThemeChanged = theme;
   }
 
   onClearStatus(): void {
@@ -75,32 +67,8 @@ describe('ProfileFormComponent', () => {
     expect(emailInput?.value).toBe('john@example.com');
   });
 
-  it('should emit themeChange when clicking Dark theme button', async () => {
-    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
-    const darkButton = Array.from(buttons).find((b) => b.textContent?.includes('Dark'));
-    expect(darkButton).toBeTruthy();
-
-    darkButton?.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(host.lastThemeChanged).toBe('dark');
-  });
-
-  it('should emit themeChange when clicking Light theme button', async () => {
-    host.currentTheme.set('dark');
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
-    const lightButton = Array.from(buttons).find((b) => b.textContent?.includes('Light'));
-    expect(lightButton).toBeTruthy();
-
-    lightButton?.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(host.lastThemeChanged).toBe('light');
+  it('should not render preferred theme section in profile form', () => {
+    expect(element.textContent).not.toContain('Preferred theme');
   });
 
   it('should emit save with updated profile data on submit', async () => {

@@ -5,7 +5,7 @@
     </span>
     <div>
       <h2 class="font-semibold">Personal details</h2>
-      <p class="text-sm text-muted-foreground">How your name and appearance appear across Smart Todo.</p>
+      <p class="text-sm text-muted-foreground">How your name appears across Smart Todo.</p>
     </div>
   </div>
 
@@ -59,37 +59,6 @@
         />
       </div>
       <p class="text-[11px] text-muted-foreground">Email address is managed by your account and cannot be modified directly.</p>
-    </div>
-
-    <!-- Theme Preference Selector -->
-    <div class="flex flex-col gap-2">
-      <span class="text-xs font-medium">Preferred theme</span>
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          (click)="setTheme('light')"
-          class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors"
-          [class.border-primary]="currentTheme() === 'light'"
-          [class.bg-primary/10]="currentTheme() === 'light'"
-          [class.text-primary]="currentTheme() === 'light'"
-          [class.border-border]="currentTheme() !== 'light'"
-          [class.text-muted-foreground]="currentTheme() !== 'light'"
-        >
-          <svg lucideSun class="size-4"></svg> Light
-        </button>
-        <button
-          type="button"
-          (click)="setTheme('dark')"
-          class="flex items-center justify-center gap-2 border px-4 py-2.5 text-xs font-medium transition-colors"
-          [class.border-primary]="currentTheme() === 'dark'"
-          [class.bg-primary/10]="currentTheme() === 'dark'"
-          [class.text-primary]="currentTheme() === 'dark'"
-          [class.border-border]="currentTheme() !== 'dark'"
-          [class.text-muted-foreground]="currentTheme() !== 'dark'"
-        >
-          <svg lucideMoon class="size-4"></svg> Dark
-        </button>
-      </div>
     </div>
 
     <div class="flex justify-end pt-2">

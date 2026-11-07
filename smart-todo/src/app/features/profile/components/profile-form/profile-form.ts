@@ -10,8 +10,6 @@ import {
 import { form, FormField, maxLength } from '@angular/forms/signals';
 import {
   LucideMail,
-  LucideMoon,
-  LucideSun,
   LucideUserRound,
 } from '@lucide/angular';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -24,8 +22,6 @@ import { UpdateProfileRequest } from '../../models';
   imports: [
     FormField,
     LucideMail,
-    LucideMoon,
-    LucideSun,
     LucideUserRound,
     HlmButton,
     HlmInput,
@@ -40,9 +36,7 @@ export class ProfileFormComponent {
   readonly error = input<string | null>(null);
   readonly success = input<boolean>(false);
 
-  readonly currentTheme = input<'light' | 'dark'>('light');
   readonly save = output<UpdateProfileRequest>();
-  readonly themeChange = output<'light' | 'dark'>();
   readonly clearStatus = output<void>();
 
   readonly model = signal<{
@@ -69,10 +63,6 @@ export class ProfileFormComponent {
         this.profileForm().reset();
       });
     });
-  }
-
-  setTheme(theme: 'light' | 'dark'): void {
-    this.themeChange.emit(theme);
   }
 
   handleSubmit(event?: Event): void {

@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideArrowLeft } from '@lucide/angular';
-import { Dispatcher } from '@ngrx/signals/events';
-import { AppStore, themeChanged } from '@core';
+import { AppStore } from '@core';
 import { ProfileStore } from '../../store';
 import { ChangePasswordFormComponent, ProfileFormComponent } from '../../components';
 
@@ -20,7 +19,6 @@ import { ChangePasswordFormComponent, ProfileFormComponent } from '../../compone
   templateUrl: './profile-page.html',
 })
 export class ProfilePage implements OnInit {
-  private readonly dispatcher = inject(Dispatcher);
   protected readonly store = inject(ProfileStore);
   protected readonly appStore = inject(AppStore);
 
@@ -30,9 +28,5 @@ export class ProfilePage implements OnInit {
       this.store.setProfile(cachedProfile);
     }
     this.store.loadProfile();
-  }
-
-  onThemeChange(mode: 'light' | 'dark'): void {
-    this.dispatcher.dispatch(themeChanged({ mode }));
   }
 }
