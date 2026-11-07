@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { form, FormField, maxLength } from '@angular/forms/signals';
 import {
+  LucideCheck,
   LucideMail,
   LucideUserRound,
 } from '@lucide/angular';
@@ -21,6 +22,7 @@ import { UpdateProfileRequest } from '../../models';
   selector: 'app-profile-form',
   imports: [
     FormField,
+    LucideCheck,
     LucideMail,
     LucideUserRound,
     HlmButton,
