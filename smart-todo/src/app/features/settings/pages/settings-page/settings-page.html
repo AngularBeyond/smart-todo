@@ -28,6 +28,29 @@
       </div>
 
       <div class="flex flex-col">
+        <!-- Notifications Option -->
+        <button
+          type="button"
+          (click)="store.toggleNotifications()"
+          class="flex items-center gap-3 py-3 text-left cursor-pointer"
+        >
+          <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground">
+            <svg lucideBell class="size-4"></svg>
+          </span>
+          <span class="flex-1">
+            <span class="block text-sm font-medium">Notifications</span>
+            <span class="block text-xs text-muted-foreground"
+              >Reminders and daily progress updates</span
+            >
+          </span>
+          <span hlmBadge variant="secondary">{{
+            store.settings().notifications ? 'On' : 'Off'
+          }}</span>
+          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
+        </button>
+
+        <div hlmSeparator></div>
+
         <!-- Preferred Theme Option -->
         <div class="flex flex-col gap-2 py-2">
           <span class="text-xs font-medium">Preferred theme</span>
@@ -58,50 +81,6 @@
             </button>
           </div>
         </div>
-
-        <div hlmSeparator></div>
-
-        <!-- Start of Week Option -->
-        <button
-          type="button"
-          (click)="store.toggleStartOfWeek()"
-          class="flex items-center gap-3 py-3 text-left"
-        >
-          <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground">
-            <svg lucideClock3 class="size-4"></svg>
-          </span>
-          <span class="flex-1">
-            <span class="block text-sm font-medium">Start of week</span>
-            <span class="block text-xs text-muted-foreground"
-              >Choose how your weekly rhythm begins</span
-            >
-          </span>
-          <span class="text-xs text-muted-foreground">{{ store.settings().startOfWeek }}</span>
-          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
-        </button>
-
-        <div hlmSeparator></div>
-
-        <!-- Notifications Option -->
-        <button
-          type="button"
-          (click)="store.toggleNotifications()"
-          class="flex items-center gap-3 py-3 text-left"
-        >
-          <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground">
-            <svg lucideBell class="size-4"></svg>
-          </span>
-          <span class="flex-1">
-            <span class="block text-sm font-medium">Notifications</span>
-            <span class="block text-xs text-muted-foreground"
-              >Reminders and daily progress updates</span
-            >
-          </span>
-          <span hlmBadge variant="secondary">{{
-            store.settings().notifications ? 'On' : 'Off'
-          }}</span>
-          <svg lucideChevronRight class="size-4 text-muted-foreground"></svg>
-        </button>
       </div>
     </section>
 

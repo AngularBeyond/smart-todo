@@ -46,10 +46,12 @@ describe('SettingsPage', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render page title and workspace preferences card', () => {
+  it('should render page title and workspace preferences card with notifications and theme but without start of week', () => {
     expect(element.textContent).toContain('Settings');
     expect(element.textContent).toContain('Workspace preferences');
+    expect(element.textContent).toContain('Notifications');
     expect(element.textContent).toContain('Preferred theme');
+    expect(element.textContent).not.toContain('Start of week');
   });
 
   it('should render light and dark theme buttons', () => {
