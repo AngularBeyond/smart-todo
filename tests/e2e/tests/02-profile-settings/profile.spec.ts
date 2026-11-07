@@ -40,7 +40,7 @@ test.describe('Profile Management E2E', () => {
 
     // Reload page and verify persistence from database
     await page.reload();
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
     await expect(profilePage.firstNameInput).toHaveValue('Grace');
     await expect(profilePage.lastNameInput).toHaveValue('Hopper');
     await expect(profilePage.fullNameBadge).toHaveText('Grace Hopper');
