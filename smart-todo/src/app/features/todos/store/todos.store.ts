@@ -137,8 +137,10 @@ export const TodosStore = signalStore(
               tapResponse({
                 next: (response) => {
                   const data = response.data;
+                  const existingIds = new Set(store.completedTodos().map((t) => t.id));
+                  const newItems = data.items.filter((item) => !existingIds.has(item.id));
                   patchState(store, {
-                    completedTodos: [...store.completedTodos(), ...data.items],
+                    completedTodos: [...store.completedTodos(), ...newItems],
                     completedCursor: data.nextCursor,
                     hasMoreCompleted: data.hasMore,
                     completedLoading: false,
@@ -199,6 +201,7 @@ export const TodosStore = signalStore(
                         activeTodos: data.items,
                         activeCursor: data.nextCursor,
                         hasMoreActive: data.hasMore,
+                        hasMoreCompleted: data.meta.completedCount > 0,
                         totalCount: data.meta.totalCount,
                         activeCount: data.meta.activeCount,
                         completedCount: data.meta.completedCount,
@@ -262,6 +265,7 @@ export const TodosStore = signalStore(
                         activeTodos: data.items,
                         activeCursor: data.nextCursor,
                         hasMoreActive: data.hasMore,
+                        hasMoreCompleted: data.meta.completedCount > 0,
                         totalCount: data.meta.totalCount,
                         activeCount: data.meta.activeCount,
                         completedCount: data.meta.completedCount,
@@ -325,6 +329,7 @@ export const TodosStore = signalStore(
                         activeTodos: data.items,
                         activeCursor: data.nextCursor,
                         hasMoreActive: data.hasMore,
+                        hasMoreCompleted: data.meta.completedCount > 0,
                         totalCount: data.meta.totalCount,
                         activeCount: data.meta.activeCount,
                         completedCount: data.meta.completedCount,
@@ -837,8 +842,8 @@ export const TodosStore = signalStore(
         if (
           nextExpanded &&
           !store.isSearchActive() &&
-          store.completedTodos().length === 0 &&
-          store.completedCount() > 0
+          store.completedCount() > 0 &&
+          (store.completedTodos().length === 0 || store.hasMoreCompleted())
         ) {
           loadMoreCompletedTodos();
         }
