@@ -86,4 +86,12 @@ describe('SettingsPage', () => {
     appearanceBtn?.click();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(themeChanged({ mode: 'light' }));
   });
+
+  it('should update store settings appearance when Appearance button is clicked', () => {
+    const appearanceBtn = element.querySelector<HTMLButtonElement>(
+      'button[aria-label="Toggle theme"]',
+    );
+    appearanceBtn?.click();
+    expect((component as any).store.settings().appearance).toBe('dark');
+  });
 });
