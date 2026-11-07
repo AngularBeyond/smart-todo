@@ -50,7 +50,9 @@ describe('SettingsPage', () => {
     expect(element.textContent).toContain('Settings');
     expect(element.textContent).toContain('Workspace preferences');
     expect(element.textContent).toContain('Notifications');
+    expect(element.textContent).toContain('Reminders and daily progress updates');
     expect(element.textContent).toContain('Preferred theme');
+    expect(element.textContent).toContain('Customize your workspace theme and appearance');
     expect(element.textContent).not.toContain('Start of week');
   });
 
