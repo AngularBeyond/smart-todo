@@ -17,7 +17,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { AutoFocusDirective } from '@ui';
 import { TodoItem } from '../../models';
-import { formatTodoMetadata } from '../../pure-functions';
+import { formatTodoMetadata, highlightText } from '../../pure-functions';
 
 @Component({
   selector: 'app-todo-item-row',
@@ -34,10 +34,14 @@ import { formatTodoMetadata } from '../../pure-functions';
   ],
   templateUrl: './todo-item-row.component.html',
   styleUrl: './todo-item-row.component.scss',
+  host: {
+    class: 'block',
+  },
 })
 export class TodoItemRowComponent {
   readonly todo = input.required<TodoItem>();
   readonly isDraggable = input<boolean>(true);
+  readonly searchQuery = input<string>('');
 
   readonly toggleComplete = output<void>();
   readonly textUpdated = output<string>();
@@ -49,6 +53,10 @@ export class TodoItemRowComponent {
   readonly metadataText = computed(() => {
     const item = this.todo();
     return formatTodoMetadata(item.createdAt, item.updatedAt);
+  });
+
+  readonly textSegments = computed(() => {
+    return highlightText(this.todo().text, this.searchQuery());
   });
 
   startEditing(): void {

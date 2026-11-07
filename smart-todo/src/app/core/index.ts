@@ -17,5 +17,5 @@ export * from './auth';
 export * from './store';
 
 // Pure Functions
-export * from './pure-functions/order-calculator.util';
+export * from './pure-functions';
 

@@ -749,5 +749,123 @@ describe('TodosStore', () => {
       expect(httpService.patch).not.toHaveBeenCalled();
     });
   });
+
+  describe('searchTodos and filter behavior', () => {
+    it('executes single API call with limit=40 and query without completed param for current list', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialForList('list-1');
+
+      const mockSearchResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [mockActiveTodo, mockCompletedTodo],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 2,
+            activeCount: 1,
+            completedCount: 1,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(mockSearchResponse));
+
+      store.searchTodos('task');
+
+      expect(httpService.get).toHaveBeenCalledWith(
+        '/api/v1/lists/list-1/todos?query=task&limit=40',
+      );
+      expect(store.isSearchActive()).toBe(true);
+      expect(store.visibleActiveTodos()).toEqual([mockActiveTodo]);
+      expect(store.visibleCompletedTodos()).toEqual([mockCompletedTodo]);
+      expect(store.isCompletedExpanded()).toBe(true);
+    });
+
+    it('restores previous accordion state and clears search on clearSearch()', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialForList('list-1');
+      expect(store.isCompletedExpanded()).toBe(false);
+
+      const mockSearchResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [mockActiveTodo],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 1,
+            activeCount: 1,
+            completedCount: 0,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(mockSearchResponse));
+      store.searchTodos('Active');
+
+      expect(store.isSearchActive()).toBe(true);
+      expect(store.isCompletedExpanded()).toBe(true);
+
+      store.clearSearch();
+
+      expect(store.isSearchActive()).toBe(false);
+      expect(store.query()).toBe('');
+      expect(store.isCompletedExpanded()).toBe(false);
+      expect(store.visibleActiveTodos()).toEqual([mockActiveTodo]);
+    });
+
+    it('searches in all tasks view using /api/v1/todos', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialAllTodos();
+
+      const mockSearchResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [mockActiveTodo],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 1,
+            activeCount: 1,
+            completedCount: 0,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(mockSearchResponse));
+
+      store.searchTodos('task');
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?query=task&limit=40');
+      expect(store.visibleActiveTodos()).toEqual([mockActiveTodo]);
+    });
+
+    it('searches in starred tasks view using /api/v1/todos?starred=true', () => {
+      httpService.get.mockReturnValue(of(mockInitialResponse));
+      store.loadInitialStarredTodos();
+
+      const mockSearchResponse: ApiResponse<PaginatedTodosResponse> = {
+        success: true,
+        data: {
+          items: [mockActiveTodo],
+          hasMore: false,
+          nextCursor: null,
+          meta: {
+            totalCount: 1,
+            activeCount: 1,
+            completedCount: 0,
+            quotaLimit: 40,
+          },
+        },
+      };
+      httpService.get.mockReturnValueOnce(of(mockSearchResponse));
+
+      store.searchTodos('task');
+
+      expect(httpService.get).toHaveBeenCalledWith('/api/v1/todos?query=task&starred=true&limit=40');
+      expect(store.visibleActiveTodos()).toEqual([mockActiveTodo]);
+    });
+  });
 });
 

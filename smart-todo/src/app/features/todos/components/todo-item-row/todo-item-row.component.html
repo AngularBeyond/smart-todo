@@ -63,7 +63,13 @@
         [class.text-muted-foreground]="todo().isCompleted"
         [attr.aria-label]="'Click or double click to edit task: ' + todo().text"
       >
-        {{ todo().text }}
+        @for (segment of textSegments(); track $index) {
+          @if (segment.isMatch) {
+            <mark class="rounded-xs bg-amber-500/25 px-0.5 font-semibold text-amber-700 dark:bg-amber-400/30 dark:text-amber-300">{{ segment.text }}</mark>
+          } @else {
+            <span>{{ segment.text }}</span>
+          }
+        }
       </button>
     }
 

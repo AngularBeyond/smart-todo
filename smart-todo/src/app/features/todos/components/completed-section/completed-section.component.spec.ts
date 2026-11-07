@@ -115,4 +115,17 @@ describe('CompletedSectionComponent', () => {
     component.onLoadMore();
     expect(loadMoreSpy).toHaveBeenCalled();
   });
+
+  it('renders search-specific empty state and badge count during search', () => {
+    componentRef.setInput('isExpanded', true);
+    componentRef.setInput('isSearchActive', true);
+    componentRef.setInput('completedTodos', []);
+    componentRef.setInput('completedCount', 10);
+    componentRef.setInput('searchQuery', 'milk');
+    fixture.detectChanges();
+
+    const badge = fixture.nativeElement.querySelector('[hlmBadge]') as HTMLElement;
+    expect(badge.textContent?.trim()).toBe('0');
+    expect(fixture.nativeElement.textContent).toContain('No completed tasks match that filter.');
+  });
 });

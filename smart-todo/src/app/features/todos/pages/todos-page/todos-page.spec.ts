@@ -2,7 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DatePipe } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, ParamMap } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { patchState } from '@ngrx/signals';
@@ -30,16 +31,24 @@ describe('TodosPage', () => {
   let fixture: ComponentFixture<TodosPage>;
   let component: TodosPage;
   let dispatcher: Dispatcher;
+  let queryParamMap$: BehaviorSubject<ParamMap>;
 
   beforeEach(async () => {
+    queryParamMap$ = new BehaviorSubject(convertToParamMap({}));
+
     await TestBed.configureTestingModule({
       imports: [TodosPage],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([]),
         provideDispatcher(),
         TodoListsStore,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            queryParamMap: queryParamMap$.asObservable(),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -214,7 +223,7 @@ describe('TodosPage', () => {
 
   it('renders filter tasks input and does not render removed buttons or footer info', () => {
     const el = fixture.nativeElement as HTMLElement;
-    const filterInput = el.querySelector('input[placeholder="Filter tasks"]');
+    const filterInput = el.querySelector('input[placeholder*="Filter tasks"]');
     expect(filterInput).toBeTruthy();
 
     expect(el.querySelector('button[aria-label="More options"]')).toBeFalsy();
@@ -302,12 +311,7 @@ describe('TodosPage', () => {
   });
 
   it('renders All tasks header and hides creation bar and list actions when in all view', () => {
-    Object.defineProperty(component, 'isAllTasks', {
-      value: () => true,
-    });
-    Object.defineProperty(component, 'isAggregateView', {
-      value: () => true,
-    });
+    queryParamMap$.next(convertToParamMap({ view: 'all' }));
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
@@ -318,12 +322,8 @@ describe('TodosPage', () => {
   });
 
   it('does not reorder active todos when in all view', () => {
-    Object.defineProperty(component, 'isAllTasks', {
-      value: () => true,
-    });
-    Object.defineProperty(component, 'isAggregateView', {
-      value: () => true,
-    });
+    queryParamMap$.next(convertToParamMap({ view: 'all' }));
+    fixture.detectChanges();
     const store = (component as any).store;
     const reorderSpy = vi.spyOn(store, 'reorderActiveTodo');
 
@@ -336,12 +336,7 @@ describe('TodosPage', () => {
   });
 
   it('renders Starred tasks header and hides creation bar and list actions when in starred view', () => {
-    Object.defineProperty(component, 'isStarredTasks', {
-      value: () => true,
-    });
-    Object.defineProperty(component, 'isAggregateView', {
-      value: () => true,
-    });
+    queryParamMap$.next(convertToParamMap({ view: 'starred' }));
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
@@ -349,6 +344,41 @@ describe('TodosPage', () => {
     expect(el.querySelector('app-todo-create-bar')).toBeNull();
     expect(el.querySelector('button[aria-label="Star list"]')).toBeNull();
     expect(el.querySelector('button[aria-label="Delete list"]')).toBeNull();
+  });
+
+  it('clears search when clearSearch is called', () => {
+    component.searchModel.set({ query: 'urgent' });
+    const store = (component as any).store;
+    const clearSpy = vi.spyOn(store, 'clearSearch');
+
+    component.clearSearch();
+    expect(component.searchModel().query).toBe('');
+    expect(clearSpy).toHaveBeenCalled();
+  });
+
+  it('disables drag-and-drop when search is active', () => {
+    const store = (component as any).store;
+    patchState(store, {
+      query: 'groceries',
+      searchActiveTodos: [
+        {
+          id: 's-1',
+          text: 'Buy groceries',
+          isCompleted: false,
+          order: 1000,
+          listId: 'list-123',
+          createdAt: '2026-01-01',
+          updatedAt: '2026-01-01',
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const dropListEl = fixture.nativeElement.querySelector('[cdkdroplist]');
+    expect(dropListEl.classList.contains('cdk-drop-list-disabled')).toBe(true);
+
+    const row = fixture.nativeElement.querySelector('app-todo-item-row');
+    expect(row).toBeTruthy();
   });
 });
 

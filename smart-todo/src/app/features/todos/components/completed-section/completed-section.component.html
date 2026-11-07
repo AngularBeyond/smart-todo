@@ -16,7 +16,7 @@
     </span>
     <span class="text-sm font-semibold">Completed</span>
     <span hlmBadge variant="secondary" class="font-mono text-[10px]">
-      {{ completedCount() }}
+      {{ isSearchActive() ? completedTodos().length : completedCount() }}
     </span>
     <span class="ml-auto text-xs text-muted-foreground">
       {{ isExpanded() ? 'Hide history' : 'View history' }}
@@ -39,6 +39,7 @@
         <app-todo-item-row
           [todo]="todo"
           [isDraggable]="false"
+          [searchQuery]="searchQuery()"
           (toggleComplete)="onToggleTodo(todo)"
           (textUpdated)="onUpdateText(todo.id, $event)"
           (deleteClicked)="onDeleteTodo(todo)"
@@ -48,12 +49,12 @@
       <!-- Empty State inside expanded section -->
       @if (!isLoading() && completedTodos().length === 0) {
         <div class="py-8 text-center text-sm text-muted-foreground">
-          No completed tasks yet.
+          {{ isSearchActive() ? 'No completed tasks match that filter.' : 'No completed tasks yet.' }}
         </div>
       }
 
       <!-- Infinite Scroll Sentinel & Bottom Spinner for next page -->
-      @if (hasMore()) {
+      @if (hasMore() && !isSearchActive()) {
         <div
           appInfiniteScrollSentinel
           [disabled]="isLoading()"

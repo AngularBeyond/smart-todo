@@ -1,14 +1,26 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  HostListener,
+  inject,
+  signal,
+  untracked,
+  ViewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { debounce, form, FormField } from '@angular/forms/signals';
 import { CdkDrag, CdkDragDrop, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
 import {
   LucideSearch,
   LucideLoader2,
   LucideStar,
   LucideTrash,
+  LucideX,
 } from '@lucide/angular';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -36,6 +48,7 @@ import { TodoItem } from '../../models';
   selector: 'app-todos-page',
   imports: [
     DatePipe,
+    FormField,
     FormsModule,
     CdkDropList,
     CdkDrag,
@@ -44,6 +57,7 @@ import { TodoItem } from '../../models';
     LucideLoader2,
     LucideStar,
     LucideTrash,
+    LucideX,
     HlmBadge,
     HlmButton,
     HlmInput,
@@ -59,6 +73,8 @@ import { TodoItem } from '../../models';
   templateUrl: './todos-page.html',
 })
 export class TodosPage {
+  @ViewChild('filterInput') filterInputRef?: ElementRef<HTMLInputElement>;
+
   private readonly route = inject(ActivatedRoute);
   private readonly queryParams = toSignal(this.route.queryParamMap);
   readonly currentView = computed(() => this.queryParams()?.get('view'));
@@ -75,11 +91,24 @@ export class TodosPage {
 
   private lastSelectedListId: string | null = null;
 
+  readonly searchModel = signal({ query: '' });
+  readonly searchForm = form(this.searchModel, (s) => {
+    debounce(s.query, 400);
+  });
+
   constructor() {
+    effect(() => {
+      const q = this.searchModel().query;
+      untracked(() => {
+        this.store.setQuery(q);
+      });
+    });
+
     effect(() => {
       if (this.isStarredTasks()) {
         if (this.lastSelectedListId !== 'starred') {
           this.lastSelectedListId = 'starred';
+          this.searchModel.set({ query: '' });
           this.store.loadInitialStarredTodos();
         }
         return;
@@ -88,6 +117,7 @@ export class TodosPage {
       if (this.isAllTasks()) {
         if (this.lastSelectedListId !== 'all') {
           this.lastSelectedListId = 'all';
+          this.searchModel.set({ query: '' });
           this.store.loadInitialAllTodos();
         }
         return;
@@ -96,15 +126,34 @@ export class TodosPage {
       const selected = this.todoListsStore.selectedList();
       if (!selected) {
         this.lastSelectedListId = null;
+        this.searchModel.set({ query: '' });
         this.store.resetForNewList();
         return;
       }
 
       if (this.lastSelectedListId !== selected.id) {
         this.lastSelectedListId = selected.id;
+        this.searchModel.set({ query: '' });
         this.store.loadInitialForList(selected.id);
       }
     });
+  }
+
+  clearSearch(): void {
+    this.searchModel.set({ query: '' });
+    this.store.clearSearch();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleGlobalKeydown(event: KeyboardEvent): void {
+    if (
+      event.key === '/' &&
+      (event.target as HTMLElement)?.tagName !== 'INPUT' &&
+      (event.target as HTMLElement)?.tagName !== 'TEXTAREA'
+    ) {
+      event.preventDefault();
+      this.filterInputRef?.nativeElement?.focus();
+    }
   }
 
   onRenameList(listId: string, name: string): void {
