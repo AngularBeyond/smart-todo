@@ -8,6 +8,7 @@ export class SidebarComponent {
   readonly createListButton: Locator;
   readonly quotaIndicator: Locator;
   readonly unstarredDropList: Locator;
+  readonly aboutButton: Locator;
 
   constructor(protected readonly page: Page) {
     this.aside = page.locator('aside.bg-sidebar:visible');
@@ -17,6 +18,7 @@ export class SidebarComponent {
     this.createListButton = this.aside.locator('button[aria-label="Create list"]');
     this.quotaIndicator = this.aside.locator('label[for="new-list-input"] + span');
     this.unstarredDropList = this.aside.locator('[cdkdroplist]');
+    this.aboutButton = this.aside.locator('button:has-text("About")');
   }
 
   getUnstarredItem(name: string): Locator {
@@ -78,5 +80,11 @@ export class SidebarComponent {
 
   async isAddListDisabled(): Promise<boolean> {
     return await this.newListInput.isDisabled();
+  }
+
+  async gotoAbout(): Promise<void> {
+    await this.aboutButton.click();
+    await this.page.waitForURL(/\/about/);
+    await this.page.waitForLoadState('networkidle');
   }
 }
