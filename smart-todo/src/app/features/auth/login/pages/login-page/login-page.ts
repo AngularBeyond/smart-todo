@@ -50,9 +50,9 @@ export class LoginPage {
   });
 
   readonly features = [
-    'A focused home for every task',
-    'Simple lists that keep you moving',
-    'Progress you can actually feel',
+    'Proactive task prioritization & breakdown',
+    'AG-UI contextual agent presence in Angular',
+    'Safe A2UI action dispatching & rollbacks',
   ];
 
   handleSubmit(): void {

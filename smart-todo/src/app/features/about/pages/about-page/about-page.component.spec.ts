@@ -27,25 +27,25 @@ describe('AboutPageComponent', () => {
   it('should render the hero section, headline, and project philosophy', () => {
     const heroHeadline = element.querySelector('h1');
     expect(heroHeadline).not.toBeNull();
-    expect(heroHeadline?.textContent).toContain('A calmer starting point for building better products.');
+    expect(heroHeadline?.textContent).toContain('The Agentic way of building modern applications in Angular.');
 
-    expect(element.textContent).toContain('A project worth sharing');
-    expect(element.textContent).toContain('Smart Todo is an open, thoughtfully designed template');
-    expect(element.textContent).toContain('Copy it. Learn from it. Make it yours.');
+    expect(element.textContent).toContain('An Agentic Blueprint');
+    expect(element.textContent).toContain('Smart Todo is an open-source reference template demonstrating how to adopt Agentic AI');
+    expect(element.textContent).toContain('Explore the code. Adopt the pattern. Build the future.');
   });
 
   it('should render the three core value pillars', () => {
     expect(element.textContent).toContain('01');
-    expect(element.textContent).toContain('Learn in context');
-    expect(element.textContent).toContain('See how product thinking, visual systems, and real interactions fit together');
+    expect(element.textContent).toContain('The Agentic Way');
+    expect(element.textContent).toContain('See how autonomous AI agents, AG-UI visual patterns');
 
     expect(element.textContent).toContain('02');
-    expect(element.textContent).toContain('Start with momentum');
-    expect(element.textContent).toContain('Use the foundation for your next experiment');
+    expect(element.textContent).toContain('AG-UI & A2UI in Action');
+    expect(element.textContent).toContain('Discover how agents interact with typed signal stores');
 
     expect(element.textContent).toContain('03');
-    expect(element.textContent).toContain('Make it personal');
-    expect(element.textContent).toContain('Treat every screen as an invitation to improve');
+    expect(element.textContent).toContain('A Production Template');
+    expect(element.textContent).toContain('Fork a rock-solid foundation with Angular 22');
   });
 
   it('should render the modern stack section with all 5 real technology cards', () => {
@@ -80,7 +80,7 @@ describe('AboutPageComponent', () => {
   it('should render the template footer with remix notice and year badge', () => {
     const footer = element.querySelector('footer');
     expect(footer).not.toBeNull();
-    expect(footer?.textContent).toContain('Smart Todo is made to be remixed.');
+    expect(footer?.textContent).toContain('Smart Todo is made to be remixed for Agentic AI.');
     expect(footer?.textContent).toContain('Open template · 2026');
   });
 });

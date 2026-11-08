@@ -13,14 +13,14 @@ export class AboutPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.heroSubhead = page.locator('text=A project worth sharing');
-    this.heroHeading = page.locator('h1:has-text("A calmer starting point for building better products")');
-    this.heroDescription = page.locator('text=Smart Todo is an open, thoughtfully designed template');
-    this.heroCallout = page.locator('text=Copy it. Learn from it. Make it yours.');
+    this.heroSubhead = page.locator('text=An Agentic Blueprint');
+    this.heroHeading = page.locator('h1:has-text("The Agentic way of building modern applications in Angular")');
+    this.heroDescription = page.locator('text=Smart Todo is an open-source reference template demonstrating how to adopt Agentic AI');
+    this.heroCallout = page.locator('text=Explore the code. Adopt the pattern. Build the future.');
     this.valuePillars = page.locator('section:has-text("01") div:has(h2)');
     this.techCards = page.locator('section:has-text("Built with") div.grid > div');
     this.externalLinks = page.locator('section:has-text("Keep exploring") a');
-    this.footer = page.locator('footer:has-text("Smart Todo is made to be remixed.")');
+    this.footer = page.locator('footer:has-text("Smart Todo is made to be remixed for Agentic AI.")');
   }
 
   async gotoAbout(): Promise<void> {
