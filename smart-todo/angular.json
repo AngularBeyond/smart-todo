@@ -63,12 +63,20 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json",
+            "allowedHosts": true
+          },
           "configurations": {
             "production": {
               "buildTarget": "smart-todo:build:production"
             },
             "development": {
               "buildTarget": "smart-todo:build:development"
+            },
+            "tunnel": {
+              "buildTarget": "smart-todo:build:development",
+              "allowedHosts": true
             }
           },
           "defaultConfiguration": "development"
