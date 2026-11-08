@@ -19,6 +19,8 @@ node_modules/
 .env.test.local
 .env.production.local
 .env.local
+tests/.env.e2e
+!tests/.env.e2e.example
 
 # temp directory
 .temp

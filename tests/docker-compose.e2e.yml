@@ -3,13 +3,15 @@ services:
     image: mysql:8.0
     container_name: smart_todo_e2e_mysql
     restart: unless-stopped
+    env_file:
+      - .env.e2e
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_NAME:-smart_todo_e2e}
+      MYSQL_DATABASE: ${DB_NAME:-smart_todo}
       MYSQL_USER: ${DB_USER:-smart_todo_user}
       MYSQL_PASSWORD: ${DB_PASSWORD:-smart_todo_pass}
     ports:
-      - '3307:3306'
+      - '${DB_PORT:-3307}:3306'
     volumes:
       - mysql_e2e_data:/var/lib/mysql
     healthcheck:
