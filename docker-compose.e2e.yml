@@ -1,0 +1,22 @@
+services:
+  mysql-e2e:
+    image: mysql:8.0
+    container_name: smart_todo_e2e_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-smart_todo_e2e}
+      MYSQL_USER: ${DB_USER:-smart_todo_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-smart_todo_pass}
+    ports:
+      - '3307:3306'
+    volumes:
+      - mysql_e2e_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', '${DB_USER:-smart_todo_user}', '-p${DB_PASSWORD:-smart_todo_pass}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql_e2e_data:

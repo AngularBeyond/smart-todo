@@ -26,9 +26,9 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --prefix smart-todo-api start',
+      command: 'DATABASE_URL="mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo" pnpm --prefix smart-todo-api start',
       url: 'http://localhost:3000/api/v1/health',
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 120 * 1000,
       cwd: path.resolve(__dirname, '..'),
     },
