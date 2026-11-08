@@ -47,9 +47,14 @@ describe('Header', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render brand logo, title, and agentic slogan', () => {
+  it('should render brand logo, title, and agentic slogan with responsive hidden class on mobile', () => {
     expect(element.textContent).toContain('Smart Todo');
     expect(element.textContent).toContain('Your tasks, orchestrated by agents.');
+
+    const brandLogo = element.querySelector<HTMLAnchorElement>('a[routerLink="/"]');
+    expect(brandLogo).toBeTruthy();
+    expect(brandLogo?.classList.contains('hidden')).toBe(true);
+    expect(brandLogo?.classList.contains('md:flex')).toBe(true);
   });
 
   it('should dispatch toggleMobileSidebar when hamburger button is clicked', () => {

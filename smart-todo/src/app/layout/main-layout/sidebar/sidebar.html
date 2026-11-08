@@ -12,6 +12,20 @@
   [class.min-h-[calc(100vh-4rem)]]="variant() === 'desktop'"
   [class.w-full]="variant() === 'mobile'"
 >
+  @if (variant() === 'mobile') {
+    <div class="flex h-16 items-center border-b border-border px-5 -mx-5 -mt-7 mb-6 bg-card">
+      <a routerLink="/" class="flex items-center gap-3 text-left pr-8" (click)="closeMobile()">
+        <div class="flex size-9 items-center justify-center bg-primary text-primary-foreground shadow-sm">
+          <svg lucideSparkles class="size-4"></svg>
+        </div>
+        <div>
+          <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Smart Todo</p>
+          <p class="text-xs text-foreground/70">Your tasks, orchestrated by agents.</p>
+        </div>
+      </a>
+    </div>
+  }
+
   <div class="mb-8 flex items-center">
     <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Your space</span>
   </div>
