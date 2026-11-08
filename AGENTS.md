@@ -57,6 +57,8 @@ You can refer to the complete rules at `agents/skills/nestjs-best-practices/AGEN
 ### 6.1 Strict Folder Hierarchy (Under `tests/`)
 All E2E testing assets, configurations, and generated artifacts MUST reside strictly under `/tests/`:
 - `tests/playwright.config.ts`: Master Playwright configuration file (`testDir: './e2e'`).
+- `tests/.env.e2e`: Dedicated environment variables for E2E testing and database isolation.
+- `tests/.env.e2e.example`: Environment template for E2E configurations.
 - `tests/docker-compose.e2e.yml`: Dedicated Podman/Docker Compose definition for the isolated E2E MySQL container.
 - `tests/tsconfig.e2e.json`: TypeScript configuration for E2E tests and Playwright fixtures.
 - `tests/e2e/tests/`: Organized test suites by feature domain (`01-auth/`, `02-profile-settings/`, `03-todo-lists/`, `04-todos/`, `05-security/`, `06-about/`).
@@ -70,7 +72,7 @@ All E2E testing assets, configurations, and generated artifacts MUST reside stri
 > **NEVER TOUCH THE DEVELOPMENT DATABASE (`smart_todo` ON PORT 3306)**
 > - E2E tests MUST ALWAYS execute against the isolated **E2E MySQL container** (`smart_todo_e2e_mysql` on **port 3307**).
 > - `smart-todo-api/.env` must ALWAYS point to `localhost:3306/smart_todo` so the developer's local dev server is never switched or polluted.
-> - The Playwright `webServer` block in `tests/playwright.config.ts` passes `DATABASE_URL="mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo"` and `reuseExistingServer: false` to ensure test runs NEVER hijack the dev server running on port 3000.
+> - The Playwright `webServer` block in `tests/playwright.config.ts` automatically parses `tests/.env.e2e` and injects its variables directly into the test API process with `reuseExistingServer: false` to ensure test runs NEVER hijack the dev server running on port 3000.
 
 ### 6.3 E2E Commands
 - **Start E2E Database Container:** `pnpm db:e2e:up`
