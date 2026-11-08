@@ -201,7 +201,13 @@
       type="button"
       hlmBtn
       variant="ghost"
-      class="w-full justify-start gap-3 px-3 text-muted-foreground hover:text-foreground"
+      (click)="selectAbout()"
+      class="w-full justify-start gap-3 px-3 transition-colors"
+      [class.bg-sidebar-accent]="isAboutActive()"
+      [class.font-medium]="isAboutActive()"
+      [class.text-sidebar-accent-foreground]="isAboutActive()"
+      [class.text-muted-foreground]="!isAboutActive()"
+      aria-label="About Smart Todo"
     >
       <svg lucideBadgeInfo class="size-4"></svg>
       <span>About</span>

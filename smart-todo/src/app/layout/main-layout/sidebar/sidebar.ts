@@ -23,6 +23,7 @@ import {
   loadTodoLists,
   reorderUnstarredList,
   selectTodoList,
+  setMobileSidebarOpen,
   toggleStarTodoList,
   TodoListSummary,
   TodoListsStore,
@@ -79,8 +80,12 @@ export class Sidebar implements OnInit {
     return (this.currentUrl() ?? '').includes('view=starred');
   });
 
+  readonly isAboutActive = computed(() => {
+    return (this.currentUrl() ?? '').startsWith('/about');
+  });
+
   readonly isListActive = computed(() => {
-    return !this.isAllTasksActive() && !this.isStarredTasksActive();
+    return !this.isAllTasksActive() && !this.isStarredTasksActive() && !this.isAboutActive();
   });
 
   readonly variant = input<'desktop' | 'mobile'>('desktop');
@@ -93,16 +98,32 @@ export class Sidebar implements OnInit {
   }
 
   selectAllTasks(): void {
+    if (this.variant() === 'mobile') {
+      this.dispatcher.dispatch(setMobileSidebarOpen({ isOpen: false }));
+    }
     this.router.navigate(['/tasks'], { queryParams: { view: 'all' } });
   }
 
   selectStarredTasks(): void {
+    if (this.variant() === 'mobile') {
+      this.dispatcher.dispatch(setMobileSidebarOpen({ isOpen: false }));
+    }
     this.router.navigate(['/tasks'], { queryParams: { view: 'starred' } });
   }
 
   selectList(listId: string): void {
+    if (this.variant() === 'mobile') {
+      this.dispatcher.dispatch(setMobileSidebarOpen({ isOpen: false }));
+    }
     this.dispatcher.dispatch(selectTodoList({ listId }));
     this.router.navigate(['/']);
+  }
+
+  selectAbout(): void {
+    if (this.variant() === 'mobile') {
+      this.dispatcher.dispatch(setMobileSidebarOpen({ isOpen: false }));
+    }
+    this.router.navigate(['/about']);
   }
 
   toggleStar(listId: string, event: MouseEvent): void {
