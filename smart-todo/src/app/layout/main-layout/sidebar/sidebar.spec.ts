@@ -7,6 +7,7 @@ import {
   loadTodoLists,
   reorderUnstarredList,
   selectTodoList,
+  setMobileSidebarOpen,
   toggleStarTodoList,
   TodoListSummary,
   TodoListsStore,
@@ -59,7 +60,7 @@ describe('Sidebar', () => {
     await TestBed.configureTestingModule({
       imports: [Sidebar],
       providers: [
-        provideRouter([]),
+        provideRouter([{ path: '**', component: Sidebar }]),
         provideDispatcher(),
         { provide: TodoListsStore, useValue: mockTodoListsStore },
       ],
@@ -284,6 +285,46 @@ describe('Sidebar', () => {
 
     const infoIcon = quotaFixture.nativeElement.querySelector('svg[lucideInfo]');
     expect(infoIcon).toBeTruthy();
+  });
+
+  it('should navigate to /about on clicking About button in desktop mode', () => {
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate');
+    const aboutBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
+      btn.textContent?.includes('About'),
+    );
+    expect(aboutBtn).toBeTruthy();
+
+    aboutBtn?.click();
+    expect(navSpy).toHaveBeenCalledWith(['/about']);
+  });
+
+  it('should close mobile sidebar drawer and navigate to /about when variant is mobile', () => {
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate');
+
+    fixture.componentRef.setInput('variant', 'mobile');
+    fixture.detectChanges();
+
+    component.selectAbout();
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      setMobileSidebarOpen({ isOpen: false }),
+    );
+    expect(navSpy).toHaveBeenCalledWith(['/about']);
+  });
+
+  it('should apply active state classes to About button when on /about route', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/about');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const aboutBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((btn) =>
+      btn.textContent?.includes('About'),
+    );
+    expect(aboutBtn?.classList.contains('bg-sidebar-accent')).toBe(true);
+    expect(aboutBtn?.classList.contains('text-sidebar-accent-foreground')).toBe(true);
   });
 });
 
