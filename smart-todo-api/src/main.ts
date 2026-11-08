@@ -10,8 +10,13 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
   app.use(cookieParser());
+  const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:4200')
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:4200',
+    origin: allowedOrigins,
     credentials: true,
   });
   app.useGlobalPipes(
