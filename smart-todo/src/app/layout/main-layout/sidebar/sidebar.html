@@ -9,8 +9,10 @@
   [class.px-5]="true"
   [class.py-7]="true"
   [class.h-full]="true"
+  [class.min-h-full]="variant() === 'mobile'"
   [class.min-h-[calc(100vh-4rem)]]="variant() === 'desktop'"
   [class.w-full]="variant() === 'mobile'"
+  [class.flex-1]="variant() === 'mobile'"
 >
   @if (variant() === 'mobile') {
     <div class="flex h-16 items-center border-b border-border px-5 -mx-5 -mt-7 mb-6 bg-card">
