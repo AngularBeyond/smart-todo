@@ -52,3 +52,31 @@ You can refer to the complete rules at `agents/skills/nestjs-best-practices/AGEN
 3. **Verification Gate Before Every Commit:**
    - Never commit or mark a story complete until TypeScript compilation (`tsc --noEmit`), linting (`eslint`), and unit tests (`vitest` / `jest`) pass with zero errors.
 
+## 6. End-to-End (E2E) Testing Architecture & Rules (Playwright)
+
+### 6.1 Strict Folder Hierarchy (Under `tests/`)
+All E2E testing assets, configurations, and generated artifacts MUST reside strictly under `/tests/`:
+- `tests/playwright.config.ts`: Master Playwright configuration file (`testDir: './e2e'`).
+- `tests/docker-compose.e2e.yml`: Dedicated Podman/Docker Compose definition for the isolated E2E MySQL container.
+- `tests/tsconfig.e2e.json`: TypeScript configuration for E2E tests and Playwright fixtures.
+- `tests/e2e/tests/`: Organized test suites by feature domain (`01-auth/`, `02-profile-settings/`, `03-todo-lists/`, `04-todos/`, `05-security/`, `06-about/`).
+- `tests/e2e/pages/`: Page Object Models (POMs) extending `BasePage`.
+- `tests/e2e/fixtures/`: Synthetic test data generators (`test-data.ts`).
+- `tests/playwright-report/`: HTML test execution reports (gitignored).
+- `tests/test-results/`: Execution screenshots, traces, and videos (gitignored).
+
+### 6.2 Strict Database Isolation Mandate
+> [!CRITICAL]
+> **NEVER TOUCH THE DEVELOPMENT DATABASE (`smart_todo` ON PORT 3306)**
+> - E2E tests MUST ALWAYS execute against the isolated **E2E MySQL container** (`smart_todo_e2e_mysql` on **port 3307**).
+> - `smart-todo-api/.env` must ALWAYS point to `localhost:3306/smart_todo` so the developer's local dev server is never switched or polluted.
+> - The Playwright `webServer` block in `tests/playwright.config.ts` passes `DATABASE_URL="mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo"` and `reuseExistingServer: false` to ensure test runs NEVER hijack the dev server running on port 3000.
+
+### 6.3 E2E Commands
+- **Start E2E Database Container:** `pnpm db:e2e:up`
+- **Stop E2E Database Container:** `pnpm db:e2e:down`
+- **Run All E2E Tests:** `pnpm test:e2e` (runs `playwright test -c tests/playwright.config.ts`)
+- **Run Specific E2E Suite / Spec:** `pnpm test:e2e tests/e2e/tests/<suite>/<spec>.spec.ts`
+- **Interactive UI Mode:** `pnpm test:e2e:ui`
+- **Port 3000 Safety Rule:** If the local development API is running on port 3000 (`pnpm api`), stop it before running `pnpm test:e2e`. Playwright's `reuseExistingServer: false` acts as a fail-safe check, intentionally preventing test execution if port 3000 is already bound to a development server.
+
