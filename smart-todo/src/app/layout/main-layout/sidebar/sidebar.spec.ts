@@ -326,5 +326,28 @@ describe('Sidebar', () => {
     expect(aboutBtn?.classList.contains('bg-sidebar-accent')).toBe(true);
     expect(aboutBtn?.classList.contains('text-sidebar-accent-foreground')).toBe(true);
   });
+
+  it('should not render brand logo header when variant is desktop', () => {
+    fixture.componentRef.setInput('variant', 'desktop');
+    fixture.detectChanges();
+
+    const logo = element.querySelector('a[routerLink="/"]');
+    expect(logo).toBeNull();
+  });
+
+  it('should render brand logo header and close mobile drawer on click when variant is mobile', () => {
+    fixture.componentRef.setInput('variant', 'mobile');
+    fixture.detectChanges();
+
+    const logo = element.querySelector<HTMLAnchorElement>('a[routerLink="/"]');
+    expect(logo).toBeTruthy();
+    expect(logo?.textContent).toContain('Smart Todo');
+    expect(logo?.textContent).toContain('Your tasks, orchestrated by agents.');
+
+    component.closeMobile();
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      setMobileSidebarOpen({ isOpen: false }),
+    );
+  });
 });
 

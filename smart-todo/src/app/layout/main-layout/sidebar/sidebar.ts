@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import {
@@ -16,6 +16,7 @@ import {
   LucideInfo,
   LucideBadgeInfo,
   LucideGripVertical,
+  LucideSparkles,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
 import {
@@ -37,6 +38,7 @@ import { HlmTooltip } from '@ui';
 @Component({
   selector: 'app-sidebar',
   imports: [
+    RouterLink,
     FormsModule,
     CdkDropList,
     CdkDrag,
@@ -47,6 +49,7 @@ import { HlmTooltip } from '@ui';
     LucideInfo,
     LucideBadgeInfo,
     LucideGripVertical,
+    LucideSparkles,
     HlmButton,
     HlmBadge,
     HlmInput,
@@ -94,6 +97,12 @@ export class Sidebar implements OnInit {
   ngOnInit(): void {
     if (this.todoListsStore.lists().length === 0) {
       this.dispatcher.dispatch(loadTodoLists());
+    }
+  }
+
+  closeMobile(): void {
+    if (this.variant() === 'mobile') {
+      this.dispatcher.dispatch(setMobileSidebarOpen({ isOpen: false }));
     }
   }
 
