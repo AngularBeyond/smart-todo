@@ -1,7 +1,7 @@
-# Smart TODO — Reference Template for Agentic AI Integration
+# Smart TODO — Reference Template for Agentic AI Integration in Angular
 
 <p align="center">
-  <strong>A calm, modern, and production-ready full-stack application designed as a developer blueprint for adopting Agentic AI (AG-UI & A2UI) in real-world software.</strong>
+  <strong>A modern, production-grade reference application showcasing the Agentic Way of task management—harnessing AG-UI and A2UI orchestration in Angular.</strong>
 </p>
 
 <p align="center">

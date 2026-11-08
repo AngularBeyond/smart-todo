@@ -35,9 +35,9 @@ test.describe('About Page & Project Showcase E2E', () => {
     await expect(aboutPage.heroCallout).toBeVisible();
 
     // Verify Three Value Pillars
-    await expect(page.locator('h2:has-text("Learn in context")')).toBeVisible();
-    await expect(page.locator('h2:has-text("Start with momentum")')).toBeVisible();
-    await expect(page.locator('h2:has-text("Make it personal")')).toBeVisible();
+    await expect(page.locator('h2:has-text("The Agentic Way")')).toBeVisible();
+    await expect(page.locator('h2:has-text("AG-UI & A2UI in Action")')).toBeVisible();
+    await expect(page.locator('h2:has-text("A Production Template")')).toBeVisible();
 
     // Verify 5 Real Technology Stack Cards
     const techStacks = [

@@ -1,5 +1,5 @@
 export const INITIAL_REGISTER_FEATURES = [
-  'A focused home for every task',
-  'Simple lists that keep you moving',
-  'Progress you can actually feel',
+  'Context-aware agent assistance on every screen',
+  'Deterministic action execution & state sync',
+  'Full-stack typed safety with NestJS & Prisma',
 ];
