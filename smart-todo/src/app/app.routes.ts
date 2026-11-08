@@ -60,6 +60,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/profile/pages/profile-page/profile-page').then((m) => m.ProfilePage),
       },
+      {
+        path: 'about',
+        loadComponent: () =>
+          import('./features/about/pages/about-page/about-page.component').then((m) => m.AboutPageComponent),
+      },
     ],
   },
   {
