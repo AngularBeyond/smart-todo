@@ -24,6 +24,7 @@ import {
 import { toast } from '@spartan-ng/brain/sonner';
 import {
   apiErrorOccurred,
+  apiInfoOccurred,
   apiSuccessOccurred,
   profileSynced,
   selectTodoList,
@@ -94,6 +95,14 @@ export const AppStore = signalStore(
       handleApiSuccess$: events.on(apiSuccessOccurred).pipe(
         tap((evt) => {
           toast.success(evt.payload.message, {
+            position: 'top-center',
+          });
+        }),
+      ),
+
+      handleApiInfo$: events.on(apiInfoOccurred).pipe(
+        tap((evt) => {
+          toast(evt.payload.message, {
             position: 'top-center',
           });
         }),

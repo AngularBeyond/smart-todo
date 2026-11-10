@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { adjustListCounts, ApiResponse, HttpService } from '@core';
+import { adjustListCounts, apiInfoOccurred, ApiResponse, HttpService } from '@core';
 import { DeleteTodoResponse, PaginatedTodosResponse, TodoItem, TodoResponse } from '../models';
 import { TodosStore } from './todos.store';
 
@@ -398,6 +398,9 @@ describe('TodosStore', () => {
           listId: 'list-1',
           activeDelta: -1,
         }),
+      );
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        apiInfoOccurred({ message: 'Task completed' }),
       );
     });
 

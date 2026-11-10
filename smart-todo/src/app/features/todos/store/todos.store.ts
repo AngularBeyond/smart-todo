@@ -8,6 +8,7 @@ import { EMPTY, of, pipe } from 'rxjs';
 import { concatMap, exhaustMap, filter, switchMap, tap } from 'rxjs/operators';
 import {
   adjustListCounts,
+  apiInfoOccurred,
   calculateNewOrder,
   HTTP_ERROR_MESSAGES,
   HttpService,
@@ -582,6 +583,7 @@ export const TodosStore = signalStore(
                       completedTodos: store.completedTodos().map((t) => (t.id === todo.id ? updated : t)),
                       searchCompletedTodos: store.searchCompletedTodos().map((t) => (t.id === todo.id ? updated : t)),
                     });
+                    dispatcher.dispatch(apiInfoOccurred({ message: 'Task completed' }));
                   } else {
                     patchState(store, {
                       activeTodos: store.activeTodos().map((t) => (t.id === todo.id ? updated : t)),
