@@ -8,6 +8,7 @@ import { HTTP_ERROR_MESSAGES, HttpService } from '@core';
 import { AppStore } from './app.store';
 import {
   apiErrorOccurred,
+  apiInfoOccurred,
   apiSuccessOccurred,
   profileSynced,
   selectTodoList,
@@ -20,12 +21,13 @@ import {
 import { ApiResponse } from '../http/api-response.model';
 import { UserProfile } from '../models/user-profile.model';
 
-vi.mock('@spartan-ng/brain/sonner', () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-  },
-}));
+vi.mock('@spartan-ng/brain/sonner', () => {
+  const toastFn = vi.fn() as any;
+  toastFn.error = vi.fn();
+  toastFn.success = vi.fn();
+  toastFn.info = vi.fn();
+  return { toast: toastFn };
+});
 
 describe('AppStore', () => {
   let store: InstanceType<typeof AppStore>;
@@ -202,6 +204,15 @@ describe('AppStore', () => {
     it('should display a success toast when apiSuccessOccurred event is dispatched', () => {
       dispatcher.dispatch(apiSuccessOccurred({ message: 'Profile updated successfully' }));
       expect(toast.success).toHaveBeenCalledWith('Profile updated successfully', {
+        position: 'top-center',
+      });
+    });
+  });
+
+  describe('apiInfoOccurred Event', () => {
+    it('should display a default toast when apiInfoOccurred event is dispatched', () => {
+      dispatcher.dispatch(apiInfoOccurred({ message: 'Task completed' }));
+      expect(toast).toHaveBeenCalledWith('Task completed', {
         position: 'top-center',
       });
     });
