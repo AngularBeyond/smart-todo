@@ -35,6 +35,11 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const isApiRequest = req.url.includes(environment.apiUrl) || req.url.includes('/api/v1/') || req.url.includes('/v1/');
   const isRefreshRequest = req.url.includes('/auth/refresh');
   const isAuthPublicRequest = req.url.includes('/auth/login') || req.url.includes('/auth/register');
+  const isAuthExcludedFromRefresh =
+    isAuthPublicRequest ||
+    isRefreshRequest ||
+    req.url.includes('/auth/logout') ||
+    req.url.includes('/auth/authenticated');
 
   if (isApiRequest && token && !isAuthPublicRequest) {
     authReq = req.clone({
@@ -55,8 +60,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         error instanceof HttpErrorResponse &&
         error.status === 401 &&
         isApiRequest &&
-        !isRefreshRequest &&
-        !isAuthPublicRequest
+        !isAuthExcludedFromRefresh
       ) {
         if (!refreshObservable$) {
           refreshObservable$ = http
