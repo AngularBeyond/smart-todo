@@ -119,7 +119,7 @@ describe('AuthService', () => {
     });
 
     it('should login user, update lastLoginAt, set cookie and return tokens', async () => {
-      const mockPasswordHash = await import('argon2').then((m) => m.hash('password123'));
+      const mockPasswordHash = await import('@node-rs/argon2').then((m) => m.hash('password123'));
       const mockUser = {
         id: 'user-1',
         name: 'Jane',
@@ -191,7 +191,7 @@ describe('AuthService', () => {
 
   describe('changePassword', () => {
     it('should throw BadRequestException if current password does not match', async () => {
-      const mockPasswordHash = await import('argon2').then((m) => m.hash('correctpassword'));
+      const mockPasswordHash = await import('@node-rs/argon2').then((m) => m.hash('correctpassword'));
       prismaMock.user.findUnique.mockResolvedValue({
         id: 'user-1',
         passwordHash: mockPasswordHash,
@@ -208,7 +208,7 @@ describe('AuthService', () => {
     });
 
     it('should update password hash, revoke tokens, set cookie, and return new access token', async () => {
-      const mockPasswordHash = await import('argon2').then((m) => m.hash('currentpass'));
+      const mockPasswordHash = await import('@node-rs/argon2').then((m) => m.hash('currentpass'));
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
