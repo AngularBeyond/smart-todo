@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
+import * as argon2 from '@node-rs/argon2';
 import { randomBytes, createHash } from 'crypto';
 import type { Response } from 'express';
 import { PrismaService } from '../../prisma/prisma.service.js';
