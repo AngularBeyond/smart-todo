@@ -12,15 +12,15 @@ import {
 } from '@ngrx/signals';
 import { Dispatcher, Events, withEventHandlers } from '@ngrx/signals/events';
 import { catchError, EMPTY, filter, switchMap, tap } from 'rxjs';
+import { HTTP_ERROR_MESSAGES } from '../http/http-error-messages.constants';
+import { HttpService } from '../http/http.service';
 import {
-  HTTP_ERROR_MESSAGES,
-  HttpService,
   setError,
   setFulfilled,
   setIdle,
   setPending,
   withRequestStatus,
-} from '../index';
+} from './custom-features/request-status.feature';
 import { toast } from '@spartan-ng/brain/sonner';
 import {
   apiErrorOccurred,

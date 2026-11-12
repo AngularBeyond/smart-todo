@@ -1,10 +1,21 @@
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+
+vi.mock('@spartan-ng/brain/sonner', () => {
+  const toastFn = vi.fn((..._args: any[]) => {}) as any;
+  toastFn.error = vi.fn((..._args: any[]) => {});
+  toastFn.success = vi.fn((..._args: any[]) => {});
+  toastFn.info = vi.fn((..._args: any[]) => {});
+  return { toast: toastFn };
+});
+
 import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, Router, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { toast } from '@spartan-ng/brain/sonner';
-import { HTTP_ERROR_MESSAGES, HttpService } from '@core';
+import { HTTP_ERROR_MESSAGES } from '../http/http-error-messages.constants';
+import { HttpService } from '../http/http.service';
 import { AppStore } from './app.store';
 import {
   apiErrorOccurred,
@@ -20,14 +31,6 @@ import {
 } from './events';
 import { ApiResponse } from '../http/api-response.model';
 import { UserProfile } from '../models/user-profile.model';
-
-vi.mock('@spartan-ng/brain/sonner', () => {
-  const toastFn = vi.fn() as any;
-  toastFn.error = vi.fn();
-  toastFn.success = vi.fn();
-  toastFn.info = vi.fn();
-  return { toast: toastFn };
-});
 
 describe('AppStore', () => {
   let store: InstanceType<typeof AppStore>;
