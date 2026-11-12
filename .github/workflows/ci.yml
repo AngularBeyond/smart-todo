@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify Codebase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.29.3
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Backend - Lint & Typecheck
+        run: |
+          pnpm --prefix smart-todo-api lint
+          pnpm --prefix smart-todo-api exec tsc --noEmit
+
+      - name: Backend - Unit Tests
+        run: pnpm --prefix smart-todo-api test
+
+      - name: Frontend - Typecheck
+        run: pnpm --prefix smart-todo exec tsc --noEmit
+
+      - name: Frontend - Unit Tests
+        run: pnpm --prefix smart-todo ng test --watch=false
