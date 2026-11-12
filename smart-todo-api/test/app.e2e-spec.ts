@@ -101,7 +101,7 @@ describe('AppController (e2e)', () => {
         },
       });
 
-      const cookies = response.headers['set-cookie'];
+      const cookies = response.headers['set-cookie'] as unknown as string[];
       expect(cookies).toBeDefined();
       const hasRefreshTokenCookie = cookies?.some((cookie: string) =>
         cookie.includes('refresh_token'),

@@ -15,6 +15,7 @@ describe('TodosController', () => {
   };
 
   const user: UserPayload = {
+    userId: 'user-123',
     sub: 'user-123',
     email: 'test@example.com',
   };
