@@ -29,10 +29,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --prefix smart-todo-api install --frozen-lockfile
+          pnpm --prefix smart-todo install --frozen-lockfile
+
+      - name: Backend - Prisma Generate
+        run: pnpm --prefix smart-todo-api exec prisma generate
 
       - name: Backend - Lint & Typecheck
         run: |
