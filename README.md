@@ -1,4 +1,4 @@
-# Smart TODO — Reference Template for Agentic AI Integration in Angular
+# Smart TODO — Reference Template for Generative UI Integration in Angular
 
 <p align="center">
   <strong>A modern, production-grade reference application showcasing the Agentic Way of task management—harnessing AG-UI and A2UI orchestration in Angular.</strong>
@@ -54,27 +54,21 @@ The monorepo is engineered with industry-leading patterns and separation of conc
 smart-todo/
 ├── smart-todo/             # Frontend: Angular 22 Single Page Application
 ├── smart-todo-api/         # Backend: NestJS 12+ Modular REST API
-├── tests/                  # Testing: Playwright E2E Suite with Containerized DB Isolation
+├── tests/                  # Testing: Playwright E2E Suite with Isolated Database
 └── docs/                   # Specifications: PRD, Architecture, and User Flows
 ```
 
 ### Frontend (`smart-todo/`)
 - **Angular 22:** Standalone components, signals-first reactivity (`signal()`, `computed()`, `linkedSignal()`), and zoneless-ready architecture.
-- **Tomas Trajan 5-Layer Macro Architecture:** Strict boundaries separating `core`, `layout`, `ui`, `features`, and `patterns`.
-- **9-Folder Feature Slices:** Predictable folder organization (`pages`, `components`, `store`, `constants`, `models`, `pure-functions`, `services`, `directives`, `pipes`).
 - **Spartan UI & Tailwind CSS:** Accessible, headless primitives (`@spartan-ng/brain`) paired with styled components (`@spartan-ng/helm`) and native dark/light theme persistence.
 - **NgRx SignalStore & Events:** Decoupled, reactive state management using `@ngrx/signals` and `@ngrx/signals/events`.
-- **Testing:** 290+ unit tests powered by **Vitest**.
 
 ### Backend (`smart-todo-api/`)
 - **NestJS 12+:** Modular architecture with strict dependency injection and zero circular dependencies.
 - **Prisma ORM & MySQL 8.0:** Fully typed database client with versioned incremental migrations.
-- **Deterministic Float Math:** High-performance task reordering using fractional float ordering (`(prev + next) / 2`), eliminating full-table re-indexes on drag-and-drop.
-- **Security & Reliability:** Argon2 password hashing, HTTP-only JWT refresh cookies, global exception filters, strict DTO validation pipes, and rate limiting via NestJS Throttler.
 
 ### End-to-End Testing (`tests/`)
 - **Playwright Test Suite:** 40+ E2E tests validating registration, session persistence, quotas, drag-and-drop, debounced search highlighting, and multi-tenant security isolation.
-- **Database Isolation Mandate:** E2E tests execute strictly against a dedicated MySQL container on **port 3307**, completely isolating test data from the local development database on **port 3306**.
 
 ---
 
@@ -83,7 +77,6 @@ smart-todo/
 ### Prerequisites
 - **Node.js** >= 22.x
 - **pnpm** >= 9.x
-- **Podman** or **Docker** (with `podman-compose` or `docker-compose`)
 
 ### 1. Clone & Install Dependencies
 ```bash
@@ -99,7 +92,7 @@ cp .env.example .env
 ```
 
 ### 3. Start the Development Database
-Start the primary MySQL container on port 3306:
+Start the local MySQL database on port 3306:
 ```bash
 pnpm db:up
 ```
@@ -136,7 +129,7 @@ pnpm api:test
 
 ### End-to-End (E2E) Tests
 ```bash
-# 1. Start the isolated E2E database container (port 3307)
+# 1. Start the isolated E2E database (port 3307)
 pnpm db:e2e:up
 
 # 2. Run Playwright E2E suite
@@ -145,7 +138,7 @@ pnpm test:e2e
 # Interactive UI Mode with debugger & trace viewer
 pnpm test:e2e:ui
 
-# 3. Stop E2E database container when done
+# 3. Stop E2E database when done
 pnpm db:e2e:down
 ```
 
@@ -171,34 +164,11 @@ smart-todo-monorepo/
 │       ├── config/               # JWT, CORS, and rate limiting configuration
 │       └── modules/              # Auth, profile, maintenance, todo-lists, todos
 ├── tests/                        # Playwright E2E Test Suite
-│   ├── docker-compose.e2e.yml    # Isolated MySQL container (port 3307)
+│   ├── docker-compose.e2e.yml    # Isolated MySQL service (port 3307)
 │   ├── .env.e2e                  # Dedicated E2E configuration
 │   └── e2e/                      # Page objects, fixtures, and domain test specs
 └── docs/                         # Specifications & Architecture blueprints
 ```
-
----
-
-## 🗺 Roadmap
-
-- [x] **Phase 1: Foundation & Core Experience**
-  - [x] Dual-layout architecture & Tomas Trajan 5-layer folder hierarchy
-  - [x] Authentication & token refresh lifecycle (Argon2 + JWT cookies)
-  - [x] Todo list management & hard quota enforcement (max 3 lists)
-  - [x] Task CRUD, drag-and-drop reordering, and inline editing
-  - [x] Live debounced search with query highlighting
-  - [x] Dark/light theme persistence and user settings
-  - [x] About page and project showcase
-  - [x] Full Playwright E2E testing suite with database isolation
-- [ ] **Phase 2: Deployment & Operations**
-  - [ ] Production containerization & CI/CD deployment
-  - [ ] Two-Factor Authentication (2FA) verification flow (`/verify`)
-- [ ] **Phase 3: Agentic AI Integration (AG-UI & A2UI)**
-  - [ ] Embedded AI agent assistant inside the main workspace
-  - [ ] Natural language task breakdown & smart prioritization
-  - [ ] Action-to-UI (A2UI) event orchestration for automated mutations
-  - [ ] Ambient agent status indicators and human-in-the-loop review gates
-
 ---
 
 ## 🤝 Contributing & Remixing
@@ -211,17 +181,6 @@ If you build an AI agent integration, experiment with AG-UI widgets, or remix th
 3. Commit your Changes (`git commit -m 'feat: introduce agentic task decomposition'`)
 4. Push to the Branch (`git push origin feature/agentic-feature`)
 5. Open a Pull Request
-
----
-
-## 👨‍💻 Creator & Links
-
-Crafted with care by **Marco Tello**.
-
-- **GitHub Repository:** [AngularBeyond/smart-todo](https://github.com/AngularBeyond/smart-todo)
-- **Creator GitHub:** [@marcotello](https://github.com/marcotello)
-- **Twitter / X:** [@marcotello](https://x.com/marcotello)
-- **LinkedIn:** [marcotello](https://www.linkedin.com/in/marcotello/)
 
 ---
 
