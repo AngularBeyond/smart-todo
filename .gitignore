@@ -12,6 +12,7 @@ node_modules/
 .cursor/
 .antigravity/
 .vscode/
+.agents/
 
 # dotenv environment variable files
 .env
