@@ -1,21 +1,12 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-
-vi.mock('@spartan-ng/brain/sonner', () => {
-  const toastFn = vi.fn((..._args: any[]) => {}) as any;
-  toastFn.error = vi.fn((..._args: any[]) => {});
-  toastFn.success = vi.fn((..._args: any[]) => {});
-  toastFn.info = vi.fn((..._args: any[]) => {});
-  return { toast: toastFn };
-});
-
 import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, Router, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
-import { toast } from '@spartan-ng/brain/sonner';
 import { HTTP_ERROR_MESSAGES } from '../http/http-error-messages.constants';
 import { HttpService } from '../http/http.service';
+import { ToastService } from '../services/toast.service';
 import { AppStore } from './app.store';
 import {
   apiErrorOccurred,
@@ -41,6 +32,12 @@ describe('AppStore', () => {
   };
   let dispatcher: Dispatcher;
   let router: Router;
+  let toastMock: {
+    show: ReturnType<typeof vi.fn>;
+    success: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    info: ReturnType<typeof vi.fn>;
+  };
 
   const mockProfile: UserProfile = {
     id: 'user-123',
@@ -60,6 +57,12 @@ describe('AppStore', () => {
       post: vi.fn(),
       patch: vi.fn().mockReturnValue(of({ success: true, data: { profile: mockProfile } })),
     };
+    toastMock = {
+      show: vi.fn(),
+      success: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+    };
     vi.clearAllMocks();
 
     TestBed.configureTestingModule({
@@ -68,6 +71,7 @@ describe('AppStore', () => {
         provideDispatcher(),
         AppStore,
         { provide: HttpService, useValue: httpMock },
+        { provide: ToastService, useValue: toastMock },
       ],
     });
 
@@ -190,14 +194,14 @@ describe('AppStore', () => {
   describe('apiErrorOccurred Event', () => {
     it('should display an error toast when apiErrorOccurred event is dispatched', () => {
       dispatcher.dispatch(apiErrorOccurred({ message: 'Custom API Error' }));
-      expect(toast.error).toHaveBeenCalledWith('Custom API Error', {
+      expect(toastMock.error).toHaveBeenCalledWith('Custom API Error', {
         position: 'top-center',
       });
     });
 
     it('should fallback to UNKNOWN_ERROR if message is empty', () => {
       dispatcher.dispatch(apiErrorOccurred({ message: '' }));
-      expect(toast.error).toHaveBeenCalledWith(HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
+      expect(toastMock.error).toHaveBeenCalledWith(HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
         position: 'top-center',
       });
     });
@@ -206,7 +210,7 @@ describe('AppStore', () => {
   describe('apiSuccessOccurred Event', () => {
     it('should display a success toast when apiSuccessOccurred event is dispatched', () => {
       dispatcher.dispatch(apiSuccessOccurred({ message: 'Profile updated successfully' }));
-      expect(toast.success).toHaveBeenCalledWith('Profile updated successfully', {
+      expect(toastMock.success).toHaveBeenCalledWith('Profile updated successfully', {
         position: 'top-center',
       });
     });
@@ -215,7 +219,7 @@ describe('AppStore', () => {
   describe('apiInfoOccurred Event', () => {
     it('should display a default toast when apiInfoOccurred event is dispatched', () => {
       dispatcher.dispatch(apiInfoOccurred({ message: 'Task completed' }));
-      expect(toast).toHaveBeenCalledWith('Task completed', {
+      expect(toastMock.show).toHaveBeenCalledWith('Task completed', {
         position: 'top-center',
       });
     });

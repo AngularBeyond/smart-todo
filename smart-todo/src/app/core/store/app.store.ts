@@ -21,7 +21,7 @@ import {
   setPending,
   withRequestStatus,
 } from './custom-features/request-status.feature';
-import { toast } from '@spartan-ng/brain/sonner';
+import { ToastService } from '../services/toast.service';
 import {
   apiErrorOccurred,
   apiInfoOccurred,
@@ -82,11 +82,12 @@ export const AppStore = signalStore(
       httpService = inject(HttpService),
       themeService = inject(ThemeService),
       router = inject(Router),
+      toastService = inject(ToastService),
     ) => {
       return {
       handleApiError$: events.on(apiErrorOccurred).pipe(
         tap((evt) => {
-          toast.error(evt.payload.message || HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
+          toastService.error(evt.payload.message || HTTP_ERROR_MESSAGES.UNKNOWN_ERROR, {
             position: 'top-center',
           });
         }),
@@ -94,7 +95,7 @@ export const AppStore = signalStore(
 
       handleApiSuccess$: events.on(apiSuccessOccurred).pipe(
         tap((evt) => {
-          toast.success(evt.payload.message, {
+          toastService.success(evt.payload.message, {
             position: 'top-center',
           });
         }),
@@ -102,7 +103,7 @@ export const AppStore = signalStore(
 
       handleApiInfo$: events.on(apiInfoOccurred).pipe(
         tap((evt) => {
-          toast(evt.payload.message, {
+          toastService.show(evt.payload.message, {
             position: 'top-center',
           });
         }),
