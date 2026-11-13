@@ -53,7 +53,8 @@ You can refer to the complete rules at `agents/skills/nestjs-best-practices/AGEN
    - Never commit or mark a story complete until TypeScript compilation (`tsc --noEmit`), linting (`eslint`), and unit tests (`vitest` / `jest`) pass with zero errors.
 4. **Zero Hardcoded Credentials & Secret Hygiene:**
    - NEVER write, inline, default, or fallback any credentials, database passwords, API tokens, JWT secrets, or connection strings in code files, deployment scripts, or test fixtures that will be committed to the repository.
-   - All secrets, tokens, and environment-dependent variables MUST strictly reside in `.env` (which must be gitignored) or be injected dynamically at runtime via CI/CD secret runners (e.g., GitHub Secrets). Always use `.env.example` templates with empty placeholders for documentation.
+   - NEVER use, write, or expose real usernames, database user accounts, hosting account IDs, server hostnames, tenant identifiers, or actual user credentials in ANY code, scripts, configuration templates (`.env.example`), markdown documentation, commit messages, or test fixtures.
+   - All secrets, tokens, and environment-dependent variables MUST strictly reside in `.env` (which must be gitignored) or be injected dynamically at runtime via CI/CD secret runners (e.g., GitHub Secrets). Always use `.env.example` templates with generic placeholder values (`your_username`, `db_user`, `password`, `your_token`) for documentation.
 
 ## 6. End-to-End (E2E) Testing Architecture & Rules (Playwright)
 
