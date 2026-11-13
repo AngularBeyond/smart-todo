@@ -41,13 +41,11 @@ jobs:
               - 'smart-todo-api/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
-              - 'scripts/**'
               - '.github/workflows/deploy.yml'
             web:
               - 'smart-todo/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
-              - 'scripts/**'
               - '.github/workflows/deploy.yml'
 
   deploy-api:
@@ -81,13 +79,20 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm --prefix smart-todo-api exec prisma migrate deploy
 
+      - name: Checkout Deployment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: AngularBeyond/smart-todo-infra
+          token: ${{ secrets.INFRA_REPO_ACCESS_TOKEN || github.token }}
+          path: infra
+
       - name: Deploy API to Hostinger
         env:
           HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
           JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
           JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-        run: node scripts/deploy-hostinger.mjs api
+        run: node infra/scripts/deploy-hostinger.mjs api
 
   deploy-web:
     name: Deploy Frontend Web
@@ -118,8 +123,15 @@ jobs:
       - name: Build Angular Frontend
         run: pnpm web:build
 
+      - name: Checkout Deployment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: AngularBeyond/smart-todo-infra
+          token: ${{ secrets.INFRA_REPO_ACCESS_TOKEN || github.token }}
+          path: infra
+
       - name: Deploy Frontend to Hostinger
         env:
           HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
-        run: node scripts/deploy-hostinger.mjs web
+        run: node infra/scripts/deploy-hostinger.mjs web

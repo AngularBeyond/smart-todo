@@ -51,6 +51,9 @@ You can refer to the complete rules at `agents/skills/nestjs-best-practices/AGEN
    - All responses use `{ success: true, data: T }`.
 3. **Verification Gate Before Every Commit:**
    - Never commit or mark a story complete until TypeScript compilation (`tsc --noEmit`), linting (`eslint`), and unit tests (`vitest` / `jest`) pass with zero errors.
+4. **Zero Hardcoded Credentials & Secret Hygiene:**
+   - NEVER write, inline, default, or fallback any credentials, database passwords, API tokens, JWT secrets, or connection strings in code files, deployment scripts, or test fixtures that will be committed to the repository.
+   - All secrets, tokens, and environment-dependent variables MUST strictly reside in `.env` (which must be gitignored) or be injected dynamically at runtime via CI/CD secret runners (e.g., GitHub Secrets). Always use `.env.example` templates with empty placeholders for documentation.
 
 ## 6. End-to-End (E2E) Testing Architecture & Rules (Playwright)
 
