@@ -11,12 +11,14 @@ describe('authGuard', () => {
   let router: Router;
   let httpMock: {
     get: ReturnType<typeof vi.fn>;
+    post: ReturnType<typeof vi.fn>;
   };
   let dispatcher: Dispatcher;
 
   beforeEach(() => {
     httpMock = {
-      get: vi.fn(),
+      get: vi.fn().mockReturnValue(of({ success: true, data: { profile: null } })),
+      post: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -36,17 +38,18 @@ describe('authGuard', () => {
     appStore.clear();
   });
 
-  it('should allow access immediately if store is already authenticated', () => {
+  it('should allow access immediately if store is already authenticated and has access token', () => {
     appStore.setAuthenticated(true);
+    appStore.setAccessToken('valid-token');
 
     const result = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
 
     expect(result).toBe(true);
-    expect(httpMock.get).not.toHaveBeenCalled();
+    expect(httpMock.post).not.toHaveBeenCalled();
   });
 
-  it('should verify session via API and dispatch userAuthenticated when valid', async () => {
-    httpMock.get.mockReturnValue(of({ success: true, data: { authenticated: true } }));
+  it('should restore session via refresh endpoint and dispatch userAuthenticated when valid', async () => {
+    httpMock.post.mockReturnValue(of({ success: true, data: { accessToken: 'new-token' } }));
 
     const obs$ = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
 
@@ -55,13 +58,15 @@ describe('authGuard', () => {
       allowed = res;
     });
 
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/auth/authenticated');
+    expect(httpMock.post).toHaveBeenCalledWith('/api/v1/auth/refresh', {});
     expect(allowed).toBe(true);
+    expect(appStore.accessToken()).toBe('new-token');
+    expect(appStore.isAuthenticated()).toBe(true);
     expect(dispatcher.dispatch).toHaveBeenCalled();
   });
 
-  it('should redirect to /login if API reports unauthenticated', async () => {
-    httpMock.get.mockReturnValue(of({ success: false }));
+  it('should redirect to /login if refresh reports unauthenticated', async () => {
+    httpMock.post.mockReturnValue(of({ success: false }));
 
     const obs$ = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
 
@@ -74,8 +79,8 @@ describe('authGuard', () => {
     expect((allowed as UrlTree).toString()).toBe('/login');
   });
 
-  it('should redirect to /login if API call throws an error', async () => {
-    httpMock.get.mockReturnValue(throwError(() => new Error('Network error')));
+  it('should redirect to /login if refresh call throws an error', async () => {
+    httpMock.post.mockReturnValue(throwError(() => new Error('Network error')));
 
     const obs$ = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
 
