@@ -19,13 +19,15 @@ describe('AppThrottlerGuard', () => {
       get: vi.fn((key: string, defaultValue: number) => configMap.get(key) ?? defaultValue),
     } as unknown as ConfigService;
 
+    const incrementMock = vi.fn().mockResolvedValue({
+      totalHits: 1,
+      timeToExpire: 60000,
+      isBlocked: false,
+      timeToBlockExpire: 0,
+    });
+
     const mockStorage = {
-      increment: vi.fn().mockResolvedValue({
-        totalHits: 1,
-        timeToExpire: 60000,
-        isBlocked: false,
-        timeToBlockExpire: 0,
-      }),
+      increment: incrementMock,
     } as unknown as ThrottlerStorage;
 
     const mockReflector = new Reflector();
@@ -55,7 +57,7 @@ describe('AppThrottlerGuard', () => {
 
     const canActivate = await guard.canActivate(mockContext);
     expect(canActivate).toBe(true);
-    expect(mockStorage.increment).toHaveBeenCalledWith(
+    expect(incrementMock).toHaveBeenCalledWith(
       expect.any(String),
       60000,
       40,
