@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { GlobalHttpExceptionFilter } from './http-exception.filter.js';
 
 describe('GlobalHttpExceptionFilter', () => {
@@ -30,6 +30,9 @@ describe('GlobalHttpExceptionFilter', () => {
   });
 
   it('should format unexpected errors into 500 error envelope', () => {
+    const loggerSpy = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => {});
     const filter = new GlobalHttpExceptionFilter();
     const jsonMock = vi.fn();
     const statusMock = vi.fn().mockReturnValue({ json: jsonMock });
@@ -53,5 +56,10 @@ describe('GlobalHttpExceptionFilter', () => {
         path: '/api/v1/crash',
       }),
     );
+    expect(loggerSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Unexpected database failure'),
+      expect.any(String),
+    );
+    loggerSpy.mockRestore();
   });
 });
