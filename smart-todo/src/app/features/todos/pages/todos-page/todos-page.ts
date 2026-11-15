@@ -18,14 +18,11 @@ import { CdkDrag, CdkDragDrop, CdkDragPlaceholder, CdkDropList } from '@angular/
 import {
   LucideSearch,
   LucideLoader2,
-  LucideStar,
-  LucideTrash,
   LucideX,
 } from '@lucide/angular';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
 import { Dispatcher } from '@ngrx/signals/events';
 import {
   AppStore,
@@ -55,13 +52,10 @@ import { TodoItem } from '../../models';
     CdkDragPlaceholder,
     LucideSearch,
     LucideLoader2,
-    LucideStar,
-    LucideTrash,
     LucideX,
     HlmBadge,
     HlmButton,
     HlmInput,
-    HlmAlertDialogImports,
     InfiniteScrollSentinelDirective,
     ListHeaderComponent,
     TodoCreateBarComponent,
@@ -92,6 +86,7 @@ export class TodosPage {
   private lastSelectedListId: string | null = null;
 
   readonly searchModel = signal({ query: '' });
+  readonly isSearchOpen = signal(false);
   readonly searchForm = form(this.searchModel, (s) => {
     debounce(s.query, 400);
   });
@@ -142,6 +137,18 @@ export class TodosPage {
   clearSearch(): void {
     this.searchModel.set({ query: '' });
     this.store.clearSearch();
+  }
+
+  toggleSearch(): void {
+    const next = !this.isSearchOpen();
+    this.isSearchOpen.set(next);
+    if (!next) {
+      this.clearSearch();
+    } else {
+      setTimeout(() => {
+        this.filterInputRef?.nativeElement?.focus();
+      });
+    }
   }
 
   @HostListener('window:keydown', ['$event'])

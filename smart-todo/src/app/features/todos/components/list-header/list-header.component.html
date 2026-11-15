@@ -45,6 +45,79 @@
     <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
       {{ list().activeCount }} active
     </span>
+
+    <!-- Actions Cluster: [Star] [Search] [Waste Basket] -->
+    <div class="flex items-center gap-0.5">
+      <!-- 1. Star Button -->
+      <button
+        hlmBtn
+        variant="ghost"
+        size="icon"
+        type="button"
+        (click)="toggleStar.emit()"
+        [attr.aria-label]="list().isStarred ? 'Unstar list' : 'Star list'"
+        class="size-8"
+        [class.text-amber-500]="list().isStarred"
+        [class.hover:text-amber-600]="list().isStarred"
+        [class.text-muted-foreground]="!list().isStarred"
+      >
+        <svg
+          lucideStar
+          class="size-4"
+          [class.fill-current]="list().isStarred"
+        ></svg>
+      </button>
+
+      <!-- 2. Search Button -->
+      <button
+        hlmBtn
+        variant="ghost"
+        size="icon"
+        type="button"
+        (click)="toggleSearch.emit()"
+        aria-label="Toggle search filter"
+        class="size-8 text-muted-foreground hover:text-foreground"
+        [class.text-primary]="isSearchOpen()"
+        [class.bg-accent]="isSearchOpen()"
+      >
+        <svg lucideSearch class="size-4"></svg>
+      </button>
+
+      <!-- 3. Delete / Waste Basket Button -->
+      <hlm-alert-dialog>
+        <button
+          hlmAlertDialogTrigger
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          type="button"
+          aria-label="Delete list"
+          class="size-8 text-muted-foreground hover:text-destructive"
+        >
+          <svg lucideTrash class="size-4"></svg>
+        </button>
+
+        <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+          <hlm-alert-dialog-header>
+            <h2 hlmAlertDialogTitle>Delete "{{ list().name }}"?</h2>
+            <p hlmAlertDialogDescription>
+              This action cannot be undone. This will permanently delete this todo list and all of its tasks.
+            </p>
+          </hlm-alert-dialog-header>
+          <hlm-alert-dialog-footer>
+            <button hlmAlertDialogCancel hlmBtn variant="outline">Cancel</button>
+            <button
+              hlmAlertDialogAction
+              hlmBtn
+              variant="destructive"
+              (click)="deleteList.emit(); ctx.close()"
+            >
+              Delete List
+            </button>
+          </hlm-alert-dialog-footer>
+        </hlm-alert-dialog-content>
+      </hlm-alert-dialog>
+    </div>
   </div>
 
   <!-- Right Side / Mobile: under H1 right-aligned -->

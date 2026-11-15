@@ -8,11 +8,24 @@
     <div class="mt-2">
       @if (isStarredTasks()) {
         <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <div class="flex flex-wrap items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">Starred tasks</h1>
             <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
               {{ store.activeCount() }} active
             </span>
+            <button
+              hlmBtn
+              variant="ghost"
+              size="icon"
+              type="button"
+              (click)="toggleSearch()"
+              aria-label="Toggle search filter"
+              class="size-8 text-muted-foreground hover:text-foreground"
+              [class.text-primary]="isSearchOpen()"
+              [class.bg-accent]="isSearchOpen()"
+            >
+              <svg lucideSearch class="size-4"></svg>
+            </button>
           </div>
           <div class="flex w-full items-center justify-end shrink-0 sm:w-auto">
             <div class="flex items-center gap-2.5 sm:gap-3">
@@ -28,11 +41,24 @@
         </div>
       } @else if (isAllTasks()) {
         <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <div class="flex flex-wrap items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">All tasks</h1>
             <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
               {{ store.activeCount() }} active
             </span>
+            <button
+              hlmBtn
+              variant="ghost"
+              size="icon"
+              type="button"
+              (click)="toggleSearch()"
+              aria-label="Toggle search filter"
+              class="size-8 text-muted-foreground hover:text-foreground"
+              [class.text-primary]="isSearchOpen()"
+              [class.bg-accent]="isSearchOpen()"
+            >
+              <svg lucideSearch class="size-4"></svg>
+            </button>
           </div>
           <div class="flex w-full items-center justify-end shrink-0 sm:w-auto">
             <div class="flex items-center gap-2.5 sm:gap-3">
@@ -49,7 +75,11 @@
       } @else if (todoListsStore.selectedList(); as currentList) {
         <app-list-header
           [list]="currentList"
+          [isSearchOpen]="isSearchOpen()"
           (renamed)="onRenameList(currentList.id, $event)"
+          (toggleStar)="onToggleStar(currentList.id)"
+          (toggleSearch)="toggleSearch()"
+          (deleteList)="onDeleteList(currentList.id)"
         >
           <!-- Today's progress (mobile: inline under H1 right-aligned; desktop: aligned with H1) -->
           <div class="flex items-center gap-2.5 sm:gap-3">
@@ -64,13 +94,26 @@
         </app-list-header>
       } @else {
         <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <div class="flex flex-wrap items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">
               {{ store.activeList() }}
             </h1>
             <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider">
               {{ store.activeCount() }} active
             </span>
+            <button
+              hlmBtn
+              variant="ghost"
+              size="icon"
+              type="button"
+              (click)="toggleSearch()"
+              aria-label="Toggle search filter"
+              class="size-8 text-muted-foreground hover:text-foreground"
+              [class.text-primary]="isSearchOpen()"
+              [class.bg-accent]="isSearchOpen()"
+            >
+              <svg lucideSearch class="size-4"></svg>
+            </button>
           </div>
           <div class="flex w-full items-center justify-end shrink-0 sm:w-auto">
             <div class="flex items-center gap-2.5 sm:gap-3">
@@ -128,62 +171,6 @@
         </button>
       }
     </div>
-
-    <!-- Star & Delete Actions (right) -->
-    @if (!isAggregateView() && todoListsStore.selectedList(); as currentList) {
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button
-          hlmBtn
-          variant="ghost"
-          size="icon"
-          (click)="onToggleStar(currentList.id)"
-          [attr.aria-label]="currentList.isStarred ? 'Unstar list' : 'Star list'"
-          class="size-8"
-          [class.text-amber-500]="currentList.isStarred"
-          [class.hover:text-amber-600]="currentList.isStarred"
-          [class.text-muted-foreground]="!currentList.isStarred"
-        >
-          <svg
-            lucideStar
-            class="size-4"
-            [class.fill-current]="currentList.isStarred"
-          ></svg>
-        </button>
-
-        <hlm-alert-dialog>
-          <button
-            hlmAlertDialogTrigger
-            hlmBtn
-            variant="ghost"
-            size="icon"
-            aria-label="Delete list"
-            class="size-8 text-muted-foreground hover:text-destructive"
-          >
-            <svg lucideTrash class="size-4"></svg>
-          </button>
-
-          <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
-            <hlm-alert-dialog-header>
-              <h2 hlmAlertDialogTitle>Delete "{{ currentList.name }}"?</h2>
-              <p hlmAlertDialogDescription>
-                This action cannot be undone. This will permanently delete this todo list and all of its tasks.
-              </p>
-            </hlm-alert-dialog-header>
-            <hlm-alert-dialog-footer>
-              <button hlmAlertDialogCancel hlmBtn variant="outline">Cancel</button>
-              <button
-                hlmAlertDialogAction
-                hlmBtn
-                variant="destructive"
-                (click)="onDeleteList(currentList.id); ctx.close()"
-              >
-                Delete List
-              </button>
-            </hlm-alert-dialog-footer>
-          </hlm-alert-dialog-content>
-        </hlm-alert-dialog>
-      </div>
-    }
   </div>
 
   <!-- Active Tasks Section with Drag & Drop -->
