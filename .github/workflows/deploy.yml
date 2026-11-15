@@ -21,8 +21,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-pr:
+    name: Verify PR Merge
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Ensure Commit Came From Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          echo "Checking commit: $COMMIT_SHA"
+          echo "Commit message: $COMMIT_MSG"
+
+          # Check 1: Commit message format (standard merge or squash merge)
+          if echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+|\(#[0-9]+\)"; then
+            echo "✓ Valid PR merge commit message detected."
+            exit 0
+          fi
+
+          # Check 2: Query GitHub API for associated merged PRs (handles rebase merges)
+          PR_COUNT=$(gh api repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls --jq '[.[] | select(.merged_at != null)] | length' 2>/dev/null || echo "0")
+          echo "Associated merged PRs found: $PR_COUNT"
+
+          if [ "$PR_COUNT" -gt 0 ]; then
+            echo "✓ Associated merged pull request confirmed via GitHub API."
+            exit 0
+          fi
+
+          echo "::error::Direct pushes to the 'prod' branch are forbidden! Deployments only run for merged Pull Requests."
+          exit 1
+
   filter:
     name: Detect Changed Services
+    needs: [verify-pr]
+    if: |
+      always() &&
+      (needs.verify-pr.result == 'success' || needs.verify-pr.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       api: ${{ steps.changes.outputs.api }}
@@ -50,6 +91,7 @@ jobs:
 
   e2e:
     name: Playwright E2E Tests Gate
+    needs: filter
     runs-on: ubuntu-latest
 
     services:
