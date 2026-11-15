@@ -31,7 +31,7 @@ import {
   TodoListsStore,
   toggleStarTodoList,
 } from '@core';
-import { InfiniteScrollSentinelDirective } from '@ui';
+import { AutoFocusDirective, InfiniteScrollSentinelDirective } from '@ui';
 import { TodosStore } from '../../store/todos.store';
 import {
   CompletedSectionComponent,
@@ -56,6 +56,7 @@ import { TodoItem } from '../../models';
     HlmBadge,
     HlmButton,
     HlmInput,
+    AutoFocusDirective,
     InfiniteScrollSentinelDirective,
     ListHeaderComponent,
     TodoCreateBarComponent,
@@ -151,6 +152,14 @@ export class TodosPage {
     }
   }
 
+  onSearchEscape(): void {
+    if (this.searchModel().query) {
+      this.clearSearch();
+    } else {
+      this.isSearchOpen.set(false);
+    }
+  }
+
   @HostListener('window:keydown', ['$event'])
   handleGlobalKeydown(event: KeyboardEvent): void {
     if (
@@ -159,7 +168,12 @@ export class TodosPage {
       (event.target as HTMLElement)?.tagName !== 'TEXTAREA'
     ) {
       event.preventDefault();
-      this.filterInputRef?.nativeElement?.focus();
+      if (!this.isSearchOpen()) {
+        this.isSearchOpen.set(true);
+      }
+      setTimeout(() => {
+        this.filterInputRef?.nativeElement?.focus();
+      });
     }
   }
 

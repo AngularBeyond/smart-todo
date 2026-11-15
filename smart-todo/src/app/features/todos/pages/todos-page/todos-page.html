@@ -142,36 +142,38 @@
     </div>
   }
 
-  <!-- Filter & Actions Bar -->
-  <div class="mb-5 flex items-center justify-between gap-3">
-    <!-- Filter Tasks Input (left, longer, responsive) -->
-    <div class="relative flex-1 max-w-xs sm:max-w-sm md:max-w-md">
-      @if (store.isSearching()) {
-        <svg lucideLoader2 class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground"></svg>
-      } @else {
-        <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
-      }
-      <input
-        #filterInput
-        hlmInput
-        type="text"
-        [formField]="searchForm.query"
-        (keydown.escape)="clearSearch()"
-        placeholder="Filter tasks (press / to focus)"
-        class="h-9 w-full pl-8 pr-8 text-xs"
-      />
-      @if (searchModel().query) {
-        <button
-          type="button"
-          (click)="clearSearch()"
-          aria-label="Clear filter"
-          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
-        >
-          <svg lucideX class="size-3.5"></svg>
-        </button>
-      }
+  <!-- Collapsible Full-Width Search Input -->
+  @if (isSearchOpen()) {
+    <div class="mb-5">
+      <div class="relative w-full">
+        @if (store.isSearching()) {
+          <svg lucideLoader2 class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground"></svg>
+        } @else {
+          <svg lucideSearch class="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"></svg>
+        }
+        <input
+          #filterInput
+          hlmInput
+          appAutoFocus
+          type="text"
+          [formField]="searchForm.query"
+          (keydown.escape)="onSearchEscape()"
+          placeholder="Filter tasks (press / to focus)"
+          class="h-9 w-full pl-8 pr-8 text-xs"
+        />
+        @if (searchModel().query) {
+          <button
+            type="button"
+            (click)="clearSearch()"
+            aria-label="Clear filter"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+          >
+            <svg lucideX class="size-3.5"></svg>
+          </button>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Active Tasks Section with Drag & Drop -->
   <section class="border-y border-border">
