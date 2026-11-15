@@ -31,7 +31,7 @@ import {
   TodoListsStore,
   toggleStarTodoList,
 } from '@core';
-import { AutoFocusDirective, InfiniteScrollSentinelDirective } from '@ui';
+import { AutoFocusDirective, HlmTooltip, InfiniteScrollSentinelDirective } from '@ui';
 import { TodosStore } from '../../store/todos.store';
 import {
   CompletedSectionComponent,
@@ -56,6 +56,7 @@ import { TodoItem } from '../../models';
     HlmBadge,
     HlmButton,
     HlmInput,
+    HlmTooltip,
     AutoFocusDirective,
     InfiniteScrollSentinelDirective,
     ListHeaderComponent,

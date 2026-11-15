@@ -2,7 +2,7 @@ import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucidePencil, LucideSearch, LucideStar, LucideTrash } from '@lucide/angular';
 import { TodoListSummary } from '@core';
-import { AutoFocusDirective } from '@ui';
+import { AutoFocusDirective, HlmTooltip } from '@ui';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmBadge } from '@spartan-ng/helm/badge';
@@ -20,6 +20,7 @@ import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
     HlmButton,
     HlmInput,
     HlmBadge,
+    HlmTooltip,
     HlmAlertDialogImports,
   ],
   templateUrl: './list-header.component.html',
