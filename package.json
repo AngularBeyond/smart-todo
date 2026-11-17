@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Smart TODO Application Monorepo",
+  "type": "module",
   "scripts": {
     "db:up": "podman-compose up -d",
     "db:down": "podman-compose down",
