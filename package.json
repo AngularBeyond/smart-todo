@@ -16,6 +16,7 @@
     "web": "pnpm --prefix smart-todo start",
     "web:tunnel": "pnpm --prefix smart-todo start:tunnel",
     "web:build": "pnpm --prefix smart-todo build",
+    "web:build:staging": "pnpm --prefix smart-todo build:staging",
     "test:e2e": "playwright test -c tests/playwright.config.ts",
     "test:e2e:ui": "playwright test -c tests/playwright.config.ts --ui"
   },
