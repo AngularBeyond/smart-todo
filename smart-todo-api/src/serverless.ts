@@ -68,6 +68,24 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       remoteAddress: req.headers['x-forwarded-for'] || '127.0.0.1',
     };
   }
+
+  // Restore original request path if Vercel edge rewrite modified req.url
+  if (req.url) {
+    try {
+      const urlObj = new URL(req.url, 'http://localhost');
+      if (urlObj.searchParams.has('path')) {
+        const actualPath = urlObj.searchParams.get('path')!;
+        urlObj.searchParams.delete('path');
+        const remainingQuery = urlObj.searchParams.toString();
+        req.url = actualPath + (remainingQuery ? `?${remainingQuery}` : '');
+      } else if (req.headers['x-forwarded-url']) {
+        req.url = req.headers['x-forwarded-url'] as string;
+      }
+    } catch {
+      // Fallback: keep original req.url if URL parsing encounters edge-case input
+    }
+  }
+
   const server = await bootstrapServer();
   server(req, res);
 }

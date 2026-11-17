@@ -17,6 +17,7 @@
     "web:tunnel": "pnpm --prefix smart-todo start:tunnel",
     "web:build": "pnpm --prefix smart-todo build",
     "web:build:staging": "pnpm --prefix smart-todo build:staging",
+    "vercel-build": "pnpm --prefix smart-todo-api exec prisma migrate deploy && pnpm --prefix smart-todo-api exec prisma generate && pnpm --prefix smart-todo-api build && pnpm --prefix smart-todo build:staging",
     "test:e2e": "playwright test -c tests/playwright.config.ts",
     "test:e2e:ui": "playwright test -c tests/playwright.config.ts --ui"
   },
