@@ -16,6 +16,14 @@ export async function bootstrapServer(): Promise<(req: IncomingMessage, res: Ser
     app.use(helmet());
     app.use(cookieParser());
 
+    // Sanitize query parameters to prevent serverless rewrite artifacts (e.g., path) from failing strict ValidationPipe
+    app.use((req: any, _res: any, next: any) => {
+      if (req.query?.path) {
+        delete req.query.path;
+      }
+      next();
+    });
+
     app.enableCors({
       origin: (
         origin: string | undefined,
@@ -70,7 +78,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   // Restore original request path if Vercel edge rewrite modified req.url
-  if (req.url) {
+  if (req.headers['x-forwarded-url']) {
+    req.url = req.headers['x-forwarded-url'] as string;
+  } else if (req.url) {
     try {
       const urlObj = new URL(req.url, 'http://localhost');
       if (urlObj.searchParams.has('path')) {
@@ -78,8 +88,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         urlObj.searchParams.delete('path');
         const remainingQuery = urlObj.searchParams.toString();
         req.url = actualPath + (remainingQuery ? `?${remainingQuery}` : '');
-      } else if (req.headers['x-forwarded-url']) {
-        req.url = req.headers['x-forwarded-url'] as string;
       }
     } catch {
       // Fallback: keep original req.url if URL parsing encounters edge-case input

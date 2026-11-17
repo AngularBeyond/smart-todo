@@ -7,8 +7,8 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/api/v1/:path*",
-      "destination": "/api/index.ts?path=/api/v1/:path*"
+      "source": "/api/v1/(.*)",
+      "destination": "/api/index.ts"
     },
     {
       "source": "/(.*)",
