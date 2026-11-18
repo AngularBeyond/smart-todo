@@ -45,50 +45,96 @@
   </section>
 
   <!-- Built With (Tech Stack) -->
-  <section class="grid gap-8 border-b border-border py-10 md:grid-cols-[0.7fr_1.3fr]">
+  <section class="grid gap-8 border-b border-border py-12 md:grid-cols-[0.7fr_1.3fr]">
     <div>
-      <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Built with</p>
-      <h2 class="mt-3 text-2xl font-semibold">A modern, readable stack</h2>
+      <p class="font-mono text-[10px] uppercase tracking-widest text-primary">Built with</p>
+      <h2 class="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">A modern, readable stack</h2>
+      <p class="mt-2 text-sm leading-6 text-muted-foreground">
+        Carefully selected technologies engineered for long-term maintainability, strict typing, and high performance.
+      </p>
     </div>
-    <div class="grid gap-3 sm:grid-cols-2">
+    <div class="grid gap-4 sm:grid-cols-2">
       @for (tech of technologies; track tech.name) {
-        <div class="border border-border bg-card p-4 transition-colors hover:border-primary/40">
-          <p class="font-medium">{{ tech.name }}</p>
-          <p class="mt-1 text-xs text-muted-foreground">{{ tech.detail }}</p>
+        <div
+          class="group relative flex flex-col justify-between rounded-xl border border-border/80 bg-card/60 p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card hover:shadow-md dark:bg-card/40 dark:hover:bg-card"
+        >
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                @if (tech.iconName === 'layers') {
+                  <svg lucideLayers class="size-4.5"></svg>
+                } @else if (tech.iconName === 'sparkles') {
+                  <svg lucideSparkles class="size-4.5"></svg>
+                } @else if (tech.iconName === 'paintbrush') {
+                  <svg lucidePaintbrush class="size-4.5"></svg>
+                } @else if (tech.iconName === 'server') {
+                  <svg lucideServer class="size-4.5"></svg>
+                } @else if (tech.iconName === 'database') {
+                  <svg lucideDatabase class="size-4.5"></svg>
+                }
+              </span>
+              <span hlmBadge variant="outline" class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                {{ tech.category }}
+              </span>
+            </div>
+            <h3 class="mt-4 text-base font-semibold text-foreground transition-colors group-hover:text-primary">
+              {{ tech.name }}
+            </h3>
+            <p class="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              {{ tech.detail }}
+            </p>
+          </div>
         </div>
       }
     </div>
   </section>
 
   <!-- Keep Exploring (Links) -->
-  <section class="grid gap-8 py-10 md:grid-cols-[0.7fr_1.3fr]">
+  <section class="grid gap-8 py-12 md:grid-cols-[0.7fr_1.3fr]">
     <div>
-      <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Keep exploring</p>
-      <h2 class="mt-3 text-2xl font-semibold">Find the source</h2>
+      <p class="font-mono text-[10px] uppercase tracking-widest text-primary">Keep exploring</p>
+      <h2 class="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Find the source</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">
         Follow the project, connect with its creator, and bring your own perspective to the next version.
       </p>
     </div>
-    <div class="grid gap-2">
+    <div class="grid gap-3 sm:grid-cols-2">
       @for (link of links; track link.label) {
         <a
           [href]="link.href"
           target="_blank"
           rel="noreferrer"
-          class="group flex items-center gap-3 border-b border-border py-3 text-sm transition-colors hover:text-primary"
+          class="group relative flex flex-col justify-between rounded-xl border border-border/80 bg-card/60 p-4.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card hover:shadow-md dark:bg-card/40 dark:hover:bg-card"
         >
-          @if (link.iconName === 'code') {
-            <svg lucideCode2 class="size-4 shrink-0"></svg>
-          } @else if (link.iconName === 'message') {
-            <svg lucideMessageCircle class="size-4 shrink-0"></svg>
-          } @else if (link.iconName === 'briefcase') {
-            <svg lucideBriefcaseBusiness class="size-4 shrink-0"></svg>
-          }
-          <span>{{ link.label }}</span>
-          <svg
-            lucideArrowUpRight
-            class="ml-auto size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-          ></svg>
+          <div class="flex items-start justify-between gap-3">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              @if (link.iconName === 'code') {
+                <svg lucideCode2 class="size-4.5"></svg>
+              } @else if (link.iconName === 'message') {
+                <svg lucideMessageCircle class="size-4.5"></svg>
+              } @else if (link.iconName === 'briefcase') {
+                <svg lucideBriefcaseBusiness class="size-4.5"></svg>
+              }
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span hlmBadge variant="secondary" class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                {{ link.badge }}
+              </span>
+              <svg
+                lucideArrowUpRight
+                class="size-4 text-muted-foreground/70 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
+              ></svg>
+            </span>
+          </div>
+
+          <div class="mt-3">
+            <h3 class="text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+              {{ link.label }}
+            </h3>
+            <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {{ link.description }}
+            </p>
+          </div>
         </a>
       }
     </div>
