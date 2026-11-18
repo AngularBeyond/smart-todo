@@ -1,10 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import {
-  LucideArrowUpRight,
-  LucideBriefcaseBusiness,
-  LucideCodeXml,
-  LucideMessageCircle,
-} from '@lucide/angular';
+import { LucideArrowUpRight } from '@lucide/angular';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
 
@@ -12,9 +7,6 @@ import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
   selector: 'app-about-page',
   imports: [
     LucideArrowUpRight,
-    LucideBriefcaseBusiness,
-    LucideCodeXml,
-    LucideMessageCircle,
     HlmSeparator,
   ],
   templateUrl: './about-page.component.html',

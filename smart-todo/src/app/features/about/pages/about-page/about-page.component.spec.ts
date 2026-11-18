@@ -80,6 +80,7 @@ describe('AboutPageComponent', () => {
       expect(anchor.getAttribute('target')).toBe('_blank');
       expect(anchor.getAttribute('rel')).toBe('noreferrer');
       expect(anchor.textContent).toContain(expectedLink.label);
+      expect(anchor.querySelector('svg')).not.toBeNull();
     });
   });
 

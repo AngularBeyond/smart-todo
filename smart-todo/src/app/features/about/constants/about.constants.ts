@@ -33,21 +33,16 @@ export const CREATOR_LINKS: CreatorLinkItem[] = [
   {
     label: 'GitHub repository',
     href: 'https://github.com/AngularBeyond/smart-todo',
-    iconName: 'code',
+    iconName: 'github',
   },
   {
     label: 'Twitter / X',
     href: 'https://x.com/marcotello',
-    iconName: 'message',
+    iconName: 'twitter',
   },
   {
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/in/marcotello/',
-    iconName: 'briefcase',
-  },
-  {
-    label: 'Creator GitHub',
-    href: 'https://github.com/marcotello',
-    iconName: 'code',
+    iconName: 'linkedin',
   },
 ];
