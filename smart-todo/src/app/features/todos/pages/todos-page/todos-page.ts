@@ -5,6 +5,7 @@ import {
   ElementRef,
   HostListener,
   inject,
+  OnDestroy,
   signal,
   untracked,
   ViewChild,
@@ -68,7 +69,7 @@ import { TodoItem } from '../../models';
   styleUrl: './todos-page.scss',
   templateUrl: './todos-page.html',
 })
-export class TodosPage {
+export class TodosPage implements OnDestroy {
   @ViewChild('filterInput') filterInputRef?: ElementRef<HTMLInputElement>;
 
   private readonly route = inject(ActivatedRoute);
@@ -229,6 +230,10 @@ export class TodosPage {
       todoId: item.id,
       targetIndex: event.currentIndex,
     });
+  }
+
+  ngOnDestroy(): void {
+    this.store.flushPendingDeletion();
   }
 }
 
