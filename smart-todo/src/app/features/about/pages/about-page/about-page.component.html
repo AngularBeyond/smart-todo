@@ -52,17 +52,18 @@
   <section class="grid gap-8 border-b border-border py-10 md:grid-cols-[0.7fr_1.3fr]">
     <div>
       <p class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Built with</p>
-      <h2 class="mt-3 text-2xl font-semibold">A modern, readable stack</h2>
+      <h2 class="mt-3 text-2xl font-semibold">Engineered for agentic scale</h2>
       <p class="mt-2 text-sm leading-6 text-muted-foreground">
-        Carefully selected technologies engineered for long-term maintainability, strict typing, and high performance.
+        Purposefully engineered to bridge autonomous AI agents with Angular, following open standards to deliver a
+        superior user experience.
       </p>
     </div>
     <div class="grid gap-3 sm:grid-cols-2">
       @for (tech of technologies; track tech.name) {
-        <div class="border border-border bg-card p-4 transition-colors hover:border-primary/40">
-          <p class="font-medium">{{ tech.name }}</p>
-          <p class="mt-1 text-xs text-muted-foreground">{{ tech.detail }}</p>
-        </div>
+      <div class="border border-border bg-card p-4 transition-colors hover:border-primary/40">
+        <p class="font-medium">{{ tech.name }}</p>
+        <p class="mt-1 text-xs text-muted-foreground">{{ tech.detail }}</p>
+      </div>
       }
     </div>
   </section>
@@ -78,25 +79,19 @@
     </div>
     <div class="grid gap-2">
       @for (link of links; track link.label) {
-        <a
-          [href]="link.href"
-          target="_blank"
-          rel="noreferrer"
-          class="group flex items-center gap-3 border-b border-border py-3 text-sm transition-colors hover:text-primary"
-        >
-          @if (link.iconName === 'code') {
-            <svg lucideCodeXml class="size-4 shrink-0"></svg>
-          } @else if (link.iconName === 'message') {
-            <svg lucideMessageCircle class="size-4 shrink-0"></svg>
-          } @else if (link.iconName === 'briefcase') {
-            <svg lucideBriefcaseBusiness class="size-4 shrink-0"></svg>
-          }
-          <span>{{ link.label }}</span>
-          <svg
-            lucideArrowUpRight
-            class="ml-auto size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-          ></svg>
-        </a>
+      <a [href]="link.href" target="_blank" rel="noreferrer"
+        class="group flex items-center gap-3 border-b border-border py-3 text-sm transition-colors hover:text-primary">
+        @if (link.iconName === 'code') {
+        <svg lucideCodeXml class="size-4 shrink-0"></svg>
+        } @else if (link.iconName === 'message') {
+        <svg lucideMessageCircle class="size-4 shrink-0"></svg>
+        } @else if (link.iconName === 'briefcase') {
+        <svg lucideBriefcaseBusiness class="size-4 shrink-0"></svg>
+        }
+        <span>{{ link.label }}</span>
+        <svg lucideArrowUpRight
+          class="ml-auto size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"></svg>
+      </a>
       }
     </div>
   </section>

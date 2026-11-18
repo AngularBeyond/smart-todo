@@ -50,7 +50,7 @@ describe('AboutPageComponent', () => {
 
   it('should render the modern stack section with all 5 real technology cards', () => {
     expect(element.textContent).toContain('Built with');
-    expect(element.textContent).toContain('A modern, readable stack');
+    expect(element.textContent).toContain('Engineered for agentic scale');
 
     for (const tech of TECHNOLOGIES) {
       expect(element.textContent).toContain(tech.name);
