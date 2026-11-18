@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import {
   LucideArrowUpRight,
   LucideBriefcaseBusiness,
-  LucideCode2,
+  LucideCodeXml,
   LucideDatabase,
   LucideLayers,
   LucideMessageCircle,
@@ -19,7 +19,7 @@ import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
   imports: [
     LucideArrowUpRight,
     LucideBriefcaseBusiness,
-    LucideCode2,
+    LucideCodeXml,
     LucideDatabase,
     LucideLayers,
     LucideMessageCircle,

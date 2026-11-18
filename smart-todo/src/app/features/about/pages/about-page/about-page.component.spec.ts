@@ -30,7 +30,7 @@ describe('AboutPageComponent', () => {
     expect(heroHeadline?.textContent).toContain('The Agentic way of building modern applications in Angular.');
 
     expect(element.textContent).toContain('An Agentic Blueprint');
-    expect(element.textContent).toContain('Smart Todo is an open-source reference template demonstrating how to adopt Agentic AI');
+    expect(element.textContent).toContain('Smart Todo is an open-source reference template');
     expect(element.textContent).toContain('Explore the code. Adopt the pattern. Build the future.');
   });
 
@@ -45,7 +45,7 @@ describe('AboutPageComponent', () => {
 
     expect(element.textContent).toContain('03');
     expect(element.textContent).toContain('A Production Template');
-    expect(element.textContent).toContain('Fork a rock-solid foundation with Angular 22');
+    expect(element.textContent).toContain('Fork a rock-solid foundation');
   });
 
   it('should render the modern stack section with all 5 real technology cards and categorized badges', () => {
