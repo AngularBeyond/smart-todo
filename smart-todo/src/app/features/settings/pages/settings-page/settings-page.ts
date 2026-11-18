@@ -48,8 +48,6 @@ export class SettingsPage {
     return listNames.length > 0 ? listNames : ['My Tasks', 'Personal', 'Work'];
   });
 
-  readonly taskLimitPresets = [10, 20, 30, 40] as const;
-
   setTheme(nextMode: 'light' | 'dark'): void {
     this.store.setAppearance(nextMode);
     this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
@@ -57,9 +55,5 @@ export class SettingsPage {
 
   setDefaultList(name: string): void {
     this.store.setDefaultList(name);
-  }
-
-  setDailyTaskLimit(limit: number): void {
-    this.store.setDailyTaskLimit(limit);
   }
 }
