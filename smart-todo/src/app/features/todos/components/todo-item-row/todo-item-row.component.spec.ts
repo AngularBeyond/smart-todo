@@ -157,6 +157,12 @@ describe('TodoItemRowComponent', () => {
     expect(deleteSpy).toHaveBeenCalled();
   });
 
+  it('has responsive opacity classes on delete button for mobile visibility', () => {
+    const deleteBtn = fixture.nativeElement.querySelector('button[aria-label^="Delete task"]') as HTMLButtonElement;
+    expect(deleteBtn.className).toContain('opacity-100');
+    expect(deleteBtn.className).toContain('sm:opacity-0');
+  });
+
   it('renders listName badge when listName is present on todo', () => {
     componentRef.setInput('todo', { ...mockActiveTodo, listName: 'Personal Projects' });
     fixture.detectChanges();
