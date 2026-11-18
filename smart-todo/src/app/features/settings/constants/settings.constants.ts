@@ -6,4 +6,5 @@ export const DEFAULT_SETTINGS: WorkspaceSettings = {
   notifications: true,
   defaultList: 'My Tasks',
   dailyTaskLimit: 40,
+  maxLists: 3,
 };
