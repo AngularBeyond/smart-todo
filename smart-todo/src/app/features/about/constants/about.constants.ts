@@ -36,7 +36,7 @@ export const CREATOR_LINKS: CreatorLinkItem[] = [
     iconName: 'github',
   },
   {
-    label: 'Twitter / X',
+    label: 'X (Twitter)',
     href: 'https://x.com/marcotello',
     iconName: 'twitter',
   },
