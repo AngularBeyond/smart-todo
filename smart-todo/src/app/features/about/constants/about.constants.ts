@@ -36,22 +36,30 @@ export const TECHNOLOGIES: TechnologyItem[] = [
 export const CREATOR_LINKS: CreatorLinkItem[] = [
   {
     label: 'GitHub repository',
+    description: 'Explore the source code, open issues, and star the template on GitHub',
     href: 'https://github.com/AngularBeyond/smart-todo',
     iconName: 'code',
+    badge: 'Open Source',
   },
   {
     label: 'Twitter / X',
+    description: 'Follow creator announcements, releases, and discussions',
     href: 'https://x.com/marcotello',
     iconName: 'message',
+    badge: 'Social',
   },
   {
     label: 'LinkedIn',
+    description: 'Connect with Marco Tello for professional updates and networking',
     href: 'https://www.linkedin.com/in/marcotello/',
     iconName: 'briefcase',
+    badge: 'Network',
   },
   {
     label: 'Creator GitHub',
+    description: 'Check out other open-source projects, repositories, and contributions',
     href: 'https://github.com/marcotello',
     iconName: 'code',
+    badge: 'Profile',
   },
 ];

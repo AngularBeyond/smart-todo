@@ -7,6 +7,8 @@ export interface TechnologyItem {
 
 export interface CreatorLinkItem {
   label: string;
+  description: string;
   href: string;
   iconName: 'code' | 'message' | 'briefcase';
+  badge: string;
 }

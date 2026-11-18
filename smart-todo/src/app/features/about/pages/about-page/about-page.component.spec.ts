@@ -65,7 +65,7 @@ describe('AboutPageComponent', () => {
     expect(badges.length).toBe(TECHNOLOGIES.length);
   });
 
-  it('should render all external project and creator links with security attributes', () => {
+  it('should render all external project and creator links with security attributes, badges, and descriptions', () => {
     expect(element.textContent).toContain('Keep exploring');
     expect(element.textContent).toContain('Find the source');
 
@@ -78,6 +78,8 @@ describe('AboutPageComponent', () => {
       expect(anchor.getAttribute('target')).toBe('_blank');
       expect(anchor.getAttribute('rel')).toBe('noreferrer');
       expect(anchor.textContent).toContain(expectedLink.label);
+      expect(anchor.textContent).toContain(expectedLink.description);
+      expect(anchor.textContent).toContain(expectedLink.badge);
     });
   });
 
