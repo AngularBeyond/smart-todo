@@ -94,29 +94,26 @@ describe('SettingsPage', () => {
     expect((component as any).store.settings().appearance).toBe('dark');
   });
 
-  it('should render task defaults card with default list, daily task limit indicator, and save button', () => {
+  it('should render task defaults card with allowed lists limit, daily task limit indicator, and save button', () => {
     expect(element.textContent).toContain('Task defaults');
     expect(element.textContent).toContain('Keep new tasks quick, structured, and consistent.');
-    expect(element.textContent).toContain('Default list');
+    expect(element.textContent).toContain('Number of allowed lists');
+    expect(element.textContent).toContain('Maximum lists in workspace');
+    expect(element.textContent).toContain('3 lists');
+    expect(element.textContent).toContain('Maximum quota allowed is 3 lists per account.');
+    expect(element.textContent).not.toContain('Default list');
     expect(element.textContent).toContain('Daily task limit');
+    expect(element.textContent).toContain('Active capacity cap per list');
     expect(element.textContent).toContain('40 tasks');
     expect(element.textContent).toContain('Maximum quota allowed is 40 tasks per list.');
     expect(element.textContent).toContain('Preferences saved');
-
-    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
-    const limitPreset10 = Array.from(buttons).find((b) => b.textContent?.trim() === '10');
-    expect(limitPreset10).toBeUndefined();
   });
 
-  it('should update default list when a list preset button is clicked', () => {
+  it('should not render configurable buttons for list limit or daily task limit', () => {
     const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
-    const personalBtn = Array.from(buttons).find((b) => b.textContent?.trim() === 'Personal');
-
-    expect(personalBtn).toBeTruthy();
-    personalBtn?.click();
-    fixture.detectChanges();
-
-    expect((component as any).store.settings().defaultList).toBe('Personal');
+    const buttonTexts = Array.from(buttons).map((b) => b.textContent?.trim());
+    expect(buttonTexts).not.toContain('Personal');
+    expect(buttonTexts).not.toContain('10');
   });
 
   it('should mark saved when Preferences saved button is clicked', () => {
@@ -128,10 +125,5 @@ describe('SettingsPage', () => {
     const markSavedSpy = vi.spyOn((component as any).store, 'markSaved');
     saveBtn?.click();
     expect(markSavedSpy).toHaveBeenCalled();
-  });
-
-  it('should update default list when called directly', () => {
-    component.setDefaultList('Work');
-    expect((component as any).store.settings().defaultList).toBe('Work');
   });
 });

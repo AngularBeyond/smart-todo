@@ -102,37 +102,24 @@
         </div>
 
         <div class="flex flex-col gap-5">
-          <!-- Default List Selection -->
-          <div class="flex flex-col gap-3">
+          <!-- Number of Allowed Lists -->
+          <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground shrink-0">
                   <svg lucideListTodo class="size-4"></svg>
                 </span>
                 <div>
-                  <span class="block text-sm font-medium">Default list</span>
-                  <span class="block text-xs text-muted-foreground">Target list for captured tasks</span>
+                  <span class="block text-sm font-medium">Number of allowed lists</span>
+                  <span class="block text-xs text-muted-foreground">Maximum lists in workspace</span>
                 </div>
               </div>
-              <span hlmBadge variant="secondary" class="font-medium text-xs">{{ store.settings().defaultList }}</span>
+              <span hlmBadge variant="secondary" class="font-mono text-xs">{{ store.settings().maxLists }} lists</span>
             </div>
 
-            <div class="grid grid-cols-3 gap-2">
-              @for (listName of availableLists(); track listName) {
-                <button
-                  type="button"
-                  (click)="setDefaultList(listName)"
-                  class="flex items-center justify-center truncate border px-2.5 py-2 text-xs font-medium transition-colors cursor-pointer"
-                  [class.border-primary]="store.settings().defaultList === listName"
-                  [class.bg-primary/10]="store.settings().defaultList === listName"
-                  [class.text-primary]="store.settings().defaultList === listName"
-                  [class.border-border]="store.settings().defaultList !== listName"
-                  [class.text-muted-foreground]="store.settings().defaultList !== listName"
-                >
-                  {{ listName }}
-                </button>
-              }
-            </div>
+            <p class="text-[11px] text-muted-foreground">
+              Maximum quota allowed is 3 lists per account.
+            </p>
           </div>
 
           <div hlmSeparator class="my-3"></div>

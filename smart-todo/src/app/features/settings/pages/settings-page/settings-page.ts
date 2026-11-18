@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideArrowLeft,
@@ -11,7 +11,7 @@ import {
   LucideSun,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
-import { AppStore, themeChanged, TodoListsStore } from '@core';
+import { AppStore, themeChanged } from '@core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
@@ -41,19 +41,9 @@ export class SettingsPage {
   private readonly dispatcher = inject(Dispatcher);
   protected readonly appStore = inject(AppStore);
   protected readonly store = inject(SettingsStore);
-  protected readonly todoListsStore = inject(TodoListsStore, { optional: true });
-
-  readonly availableLists = computed(() => {
-    const listNames = this.todoListsStore?.lists().map((l) => l.name) ?? [];
-    return listNames.length > 0 ? listNames : ['My Tasks', 'Personal', 'Work'];
-  });
 
   setTheme(nextMode: 'light' | 'dark'): void {
     this.store.setAppearance(nextMode);
     this.dispatcher.dispatch(themeChanged({ mode: nextMode }));
-  }
-
-  setDefaultList(name: string): void {
-    this.store.setDefaultList(name);
   }
 }

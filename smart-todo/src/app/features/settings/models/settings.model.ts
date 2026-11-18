@@ -4,4 +4,5 @@ export interface WorkspaceSettings {
   notifications: boolean;
   defaultList: string;
   dailyTaskLimit: number;
+  maxLists: number;
 }
