@@ -137,6 +137,14 @@ describe('TodosPage', () => {
     expect(deleteSpy).toHaveBeenCalledWith(mockTodo);
   });
 
+  it('calls store.flushPendingDeletion on ngOnDestroy', () => {
+    const store = (component as any).store;
+    const flushSpy = vi.spyOn(store, 'flushPendingDeletion');
+
+    component.ngOnDestroy();
+    expect(flushSpy).toHaveBeenCalled();
+  });
+
   it('calls store.reorderActiveTodo on onDropActive when indices differ', () => {
     const store = (component as any).store;
     const reorderSpy = vi.spyOn(store, 'reorderActiveTodo');
