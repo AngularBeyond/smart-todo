@@ -6,7 +6,6 @@ import {
   LucideCheck,
   LucideChevronRight,
   LucideMoon,
-  LucideShield,
   LucideSun,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
@@ -25,7 +24,6 @@ import { SettingsStore } from '../../store';
     LucideCheck,
     LucideChevronRight,
     LucideMoon,
-    LucideShield,
     LucideSun,
     HlmButton,
     HlmBadge,

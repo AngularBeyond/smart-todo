@@ -54,6 +54,8 @@ describe('SettingsPage', () => {
     expect(element.textContent).toContain('Preferred theme');
     expect(element.textContent).toContain('Customize your workspace theme and appearance');
     expect(element.textContent).not.toContain('Start of week');
+    expect(element.textContent).not.toContain('Privacy & security');
+    expect(element.textContent).not.toContain('Account security');
   });
 
   it('should render light and dark theme buttons', () => {
