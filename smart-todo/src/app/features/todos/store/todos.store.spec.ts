@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Dispatcher, provideDispatcher } from '@ngrx/signals/events';
 import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { adjustListCounts, apiInfoOccurred, ApiResponse, HttpService } from '@core';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { adjustListCounts, apiInfoOccurred, ApiResponse, HttpService, ToastService } from '@core';
 import { DeleteTodoResponse, PaginatedTodosResponse, TodoItem, TodoResponse } from '../models';
 import { TodosStore } from './todos.store';
 
@@ -55,12 +55,28 @@ describe('TodosStore', () => {
     },
   };
 
+  let toastService: {
+    show: ReturnType<typeof vi.fn>;
+    success: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    info: ReturnType<typeof vi.fn>;
+    dismiss: ReturnType<typeof vi.fn>;
+  };
+
   beforeEach(() => {
     httpService = {
       get: vi.fn(),
       post: vi.fn(),
       patch: vi.fn(),
       delete: vi.fn(),
+    };
+
+    toastService = {
+      show: vi.fn().mockReturnValue('toast-123'),
+      success: vi.fn().mockReturnValue('toast-123'),
+      error: vi.fn().mockReturnValue('toast-123'),
+      info: vi.fn().mockReturnValue('toast-123'),
+      dismiss: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -70,6 +86,10 @@ describe('TodosStore', () => {
         {
           provide: HttpService,
           useValue: httpService,
+        },
+        {
+          provide: ToastService,
+          useValue: toastService,
         },
       ],
     });
@@ -443,14 +463,50 @@ describe('TodosStore', () => {
     });
   });
 
-  describe('deleteTodo', () => {
+  describe('deleteTodo with Undo and Toast', () => {
     beforeEach(() => {
+      vi.useFakeTimers();
       httpService.get.mockReturnValueOnce(of(mockInitialResponse));
       store.loadInitialForList('list-1');
       dispatchSpy.mockClear();
     });
 
-    it('deletes active todo and updates counts', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('optimistically removes active todo, updates counts, and shows toast with Undo action', () => {
+      store.deleteTodo(mockActiveTodo);
+
+      // Optimistically removed
+      expect(store.activeTodos()).toEqual([]);
+      expect(store.totalCount()).toBe(24);
+      expect(store.activeCount()).toBe(19);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({
+          listId: 'list-1',
+          totalDelta: -1,
+          activeDelta: -1,
+        }),
+      );
+
+      // Toast shown with Undo action and top-center position
+      expect(toastService.show).toHaveBeenCalledWith(
+        "Deleted 'Active Task 1'",
+        expect.objectContaining({
+          position: 'top-center',
+          duration: 4000,
+          action: expect.objectContaining({
+            label: 'Undo',
+          }),
+        }),
+      );
+
+      // HTTP delete has NOT been called yet while timer is running
+      expect(httpService.delete).not.toHaveBeenCalled();
+    });
+
+    it('commits backend deletion after 4000ms timer expires', () => {
       httpService.delete.mockReturnValue(
         of({
           success: true,
@@ -463,29 +519,134 @@ describe('TodosStore', () => {
       );
 
       store.deleteTodo(mockActiveTodo);
+      expect(httpService.delete).not.toHaveBeenCalled();
+
+      // Advance timer by 4000ms
+      vi.advanceTimersByTime(4000);
 
       expect(httpService.delete).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1');
-      expect(store.activeTodos()).toEqual([]);
       expect(store.totalCount()).toBe(24);
       expect(store.activeCount()).toBe(19);
-      expect(dispatchSpy).toHaveBeenCalledWith(
-        adjustListCounts({
-          listId: 'list-1',
-          totalDelta: -1,
-          activeDelta: -1,
-        }),
-      );
     });
 
-    it('rolls back when deletion fails', () => {
-      const error = new HttpErrorResponse({ status: 500 });
-      httpService.delete.mockReturnValue(throwError(() => error));
-
+    it('restores todo, restores counts, and shows "Task restored" toast when undo is clicked', () => {
       store.deleteTodo(mockActiveTodo);
+      dispatchSpy.mockClear();
 
+      // Retrieve the Undo action onClick handler from toast options
+      const toastCall = toastService.show.mock.calls[0];
+      const options = toastCall[1] as { action: { label: string; onClick: () => void } };
+      expect(options.action.label).toBe('Undo');
+
+      // Click Undo
+      options.action.onClick();
+
+      // Todo restored
+      expect(store.activeTodos().length).toBe(1);
       expect(store.activeTodos()[0].id).toBe('todo-1');
       expect(store.totalCount()).toBe(25);
       expect(store.activeCount()).toBe(20);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({
+          listId: 'list-1',
+          totalDelta: 1,
+          activeDelta: 1,
+        }),
+      );
+
+      // Toast dismissed and "Task restored" toast shown
+      expect(toastService.dismiss).toHaveBeenCalledWith('toast-123');
+      expect(toastService.show).toHaveBeenCalledWith(
+        'Task restored',
+        expect.objectContaining({
+          position: 'top-center',
+          duration: 3000,
+        }),
+      );
+
+      // Advance timer past 4000ms - HTTP delete must NEVER be called
+      vi.advanceTimersByTime(5000);
+      expect(httpService.delete).not.toHaveBeenCalled();
+    });
+
+    it('immediately flushes previous pending deletion when another todo is deleted', () => {
+      httpService.delete.mockReturnValue(of({ success: true }));
+
+      const secondTodo: TodoItem = {
+        ...mockActiveTodo,
+        id: 'todo-2',
+        text: 'Second Task',
+      };
+
+      store.deleteTodo(mockActiveTodo);
+      expect(httpService.delete).not.toHaveBeenCalled();
+
+      // Deleting a second todo immediately finalizes the first one
+      store.deleteTodo(secondTodo);
+
+      expect(httpService.delete).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1');
+      expect(toastService.dismiss).toHaveBeenCalledWith('toast-123');
+      expect(toastService.show).toHaveBeenCalledWith(
+        "Deleted 'Second Task'",
+        expect.any(Object),
+      );
+    });
+
+    it('flushes pending deletion when switching lists', () => {
+      httpService.delete.mockReturnValue(of({ success: true }));
+      httpService.get.mockReturnValueOnce(of(mockInitialResponse));
+
+      store.deleteTodo(mockActiveTodo);
+      expect(httpService.delete).not.toHaveBeenCalled();
+
+      // Switching list flushes pending deletion
+      store.loadInitialForList('list-2');
+
+      expect(httpService.delete).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1');
+    });
+
+    it('rolls back and displays error toast when backend deletion fails after timer', () => {
+      const error = new HttpErrorResponse({
+        status: 500,
+        error: { message: 'Server error' },
+      });
+      httpService.delete.mockReturnValue(throwError(() => error));
+
+      store.deleteTodo(mockActiveTodo);
+      dispatchSpy.mockClear();
+
+      vi.advanceTimersByTime(4000);
+
+      expect(httpService.delete).toHaveBeenCalledWith('/api/v1/lists/list-1/todos/todo-1');
+      // Rollback
+      expect(store.activeTodos()[0].id).toBe('todo-1');
+      expect(store.totalCount()).toBe(25);
+      expect(store.activeCount()).toBe(20);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        adjustListCounts({
+          listId: 'list-1',
+          totalDelta: 1,
+          activeDelta: 1,
+        }),
+      );
+      expect(toastService.error).toHaveBeenCalledWith('Server error', {
+        position: 'top-center',
+      });
+    });
+
+    it('truncates long task title in the toast message', () => {
+      const longTodo: TodoItem = {
+        ...mockActiveTodo,
+        id: 'todo-long',
+        text: 'This is an exceptionally long task title exceeding thirty characters',
+      };
+
+      store.deleteTodo(longTodo);
+
+      expect(toastService.show).toHaveBeenCalledWith(
+        "Deleted 'This is an exceptionally long …'",
+        expect.any(Object),
+      );
     });
   });
 

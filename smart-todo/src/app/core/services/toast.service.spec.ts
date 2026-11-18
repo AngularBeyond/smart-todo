@@ -21,5 +21,6 @@ describe('ToastService', () => {
     expect(() => service.success('success message', { position: 'top-center' })).not.toThrow();
     expect(() => service.error('error message', { position: 'top-center' })).not.toThrow();
     expect(() => service.info('info message', { position: 'top-center' })).not.toThrow();
+    expect(() => service.dismiss('123')).not.toThrow();
   });
 });
