@@ -94,13 +94,18 @@ describe('SettingsPage', () => {
     expect((component as any).store.settings().appearance).toBe('dark');
   });
 
-  it('should render task defaults card with default list, presets, and save button', () => {
+  it('should render task defaults card with default list, daily task limit indicator, and save button', () => {
     expect(element.textContent).toContain('Task defaults');
     expect(element.textContent).toContain('Keep new tasks quick, structured, and consistent.');
     expect(element.textContent).toContain('Default list');
     expect(element.textContent).toContain('Daily task limit');
+    expect(element.textContent).toContain('40 tasks');
     expect(element.textContent).toContain('Maximum quota allowed is 40 tasks per list.');
     expect(element.textContent).toContain('Preferences saved');
+
+    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
+    const limitPreset10 = Array.from(buttons).find((b) => b.textContent?.trim() === '10');
+    expect(limitPreset10).toBeUndefined();
   });
 
   it('should update default list when a list preset button is clicked', () => {
@@ -114,17 +119,6 @@ describe('SettingsPage', () => {
     expect((component as any).store.settings().defaultList).toBe('Personal');
   });
 
-  it('should update daily task limit when a preset button is clicked', () => {
-    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
-    const limit20Btn = Array.from(buttons).find((b) => b.textContent?.trim() === '20');
-
-    expect(limit20Btn).toBeTruthy();
-    limit20Btn?.click();
-    fixture.detectChanges();
-
-    expect((component as any).store.settings().dailyTaskLimit).toBe(20);
-  });
-
   it('should mark saved when Preferences saved button is clicked', () => {
     const saveBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((b) =>
       b.textContent?.includes('Preferences saved'),
@@ -136,11 +130,8 @@ describe('SettingsPage', () => {
     expect(markSavedSpy).toHaveBeenCalled();
   });
 
-  it('should update default list and daily task limit when called directly', () => {
+  it('should update default list when called directly', () => {
     component.setDefaultList('Work');
     expect((component as any).store.settings().defaultList).toBe('Work');
-
-    component.setDailyTaskLimit(30);
-    expect((component as any).store.settings().dailyTaskLimit).toBe(30);
   });
 });

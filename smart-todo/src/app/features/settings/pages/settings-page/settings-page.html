@@ -138,7 +138,7 @@
           <div hlmSeparator class="my-3"></div>
 
           <!-- Daily Task Limit -->
-          <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <span class="flex size-9 items-center justify-center bg-muted text-muted-foreground shrink-0">
@@ -152,22 +152,6 @@
               <span hlmBadge variant="secondary" class="font-mono text-xs">{{ store.settings().dailyTaskLimit }} tasks</span>
             </div>
 
-            <div class="grid grid-cols-4 gap-2">
-              @for (preset of taskLimitPresets; track preset) {
-                <button
-                  type="button"
-                  (click)="setDailyTaskLimit(preset)"
-                  class="flex items-center justify-center border px-2.5 py-2 font-mono text-xs font-medium transition-colors cursor-pointer"
-                  [class.border-primary]="store.settings().dailyTaskLimit === preset"
-                  [class.bg-primary/10]="store.settings().dailyTaskLimit === preset"
-                  [class.text-primary]="store.settings().dailyTaskLimit === preset"
-                  [class.border-border]="store.settings().dailyTaskLimit !== preset"
-                  [class.text-muted-foreground]="store.settings().dailyTaskLimit !== preset"
-                >
-                  {{ preset }}
-                </button>
-              }
-            </div>
             <p class="text-[11px] text-muted-foreground">
               Maximum quota allowed is 40 tasks per list.
             </p>
