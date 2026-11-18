@@ -48,24 +48,20 @@ describe('AboutPageComponent', () => {
     expect(element.textContent).toContain('Fork a rock-solid foundation');
   });
 
-  it('should render the modern stack section with all 5 real technology cards and categorized badges', () => {
+  it('should render the modern stack section with all 5 real technology cards', () => {
     expect(element.textContent).toContain('Built with');
     expect(element.textContent).toContain('A modern, readable stack');
 
     for (const tech of TECHNOLOGIES) {
       expect(element.textContent).toContain(tech.name);
       expect(element.textContent).toContain(tech.detail);
-      expect(element.textContent).toContain(tech.category);
     }
 
     const techCards = element.querySelectorAll('section:nth-of-type(3) .grid > div');
     expect(techCards.length).toBe(TECHNOLOGIES.length);
-
-    const badges = element.querySelectorAll('section:nth-of-type(3) [hlmBadge]');
-    expect(badges.length).toBe(TECHNOLOGIES.length);
   });
 
-  it('should render all external project and creator links with security attributes, badges, and descriptions', () => {
+  it('should render all external project and creator links with security attributes', () => {
     expect(element.textContent).toContain('Keep exploring');
     expect(element.textContent).toContain('Find the source');
 
@@ -78,8 +74,6 @@ describe('AboutPageComponent', () => {
       expect(anchor.getAttribute('target')).toBe('_blank');
       expect(anchor.getAttribute('rel')).toBe('noreferrer');
       expect(anchor.textContent).toContain(expectedLink.label);
-      expect(anchor.textContent).toContain(expectedLink.description);
-      expect(anchor.textContent).toContain(expectedLink.badge);
     });
   });
 

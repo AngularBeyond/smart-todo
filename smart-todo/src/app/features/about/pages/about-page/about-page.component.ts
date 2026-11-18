@@ -3,14 +3,8 @@ import {
   LucideArrowUpRight,
   LucideBriefcaseBusiness,
   LucideCodeXml,
-  LucideDatabase,
-  LucideLayers,
   LucideMessageCircle,
-  LucidePaintbrush,
-  LucideServer,
-  LucideSparkles,
 } from '@lucide/angular';
-import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
 
@@ -20,13 +14,7 @@ import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
     LucideArrowUpRight,
     LucideBriefcaseBusiness,
     LucideCodeXml,
-    LucideDatabase,
-    LucideLayers,
     LucideMessageCircle,
-    LucidePaintbrush,
-    LucideServer,
-    LucideSparkles,
-    HlmBadge,
     HlmSeparator,
   ],
   templateUrl: './about-page.component.html',
