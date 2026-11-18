@@ -1,11 +1,36 @@
 import { CreatorLinkItem, TechnologyItem } from '../models';
 
 export const TECHNOLOGIES: TechnologyItem[] = [
-  { name: 'Angular 22', detail: 'Zoneless reactive interface layer' },
-  { name: 'Spartan UI', detail: 'Accessible headless & styled components' },
-  { name: 'Tailwind CSS', detail: 'Utility-first styling & tokens' },
-  { name: 'NestJS 12+', detail: 'Modular transactional backend foundation' },
-  { name: 'Prisma ORM', detail: 'Type-safe database mapping & pooling' },
+  {
+    name: 'Angular 22',
+    category: 'Framework',
+    detail: 'Zoneless reactive interface layer with signal stores',
+    iconName: 'layers',
+  },
+  {
+    name: 'Spartan UI',
+    category: 'UI Primitives',
+    detail: 'Accessible headless and styled components with Tailwind',
+    iconName: 'sparkles',
+  },
+  {
+    name: 'Tailwind CSS',
+    category: 'Styling',
+    detail: 'Utility-first token-driven design system with dark mode',
+    iconName: 'paintbrush',
+  },
+  {
+    name: 'NestJS 12+',
+    category: 'Backend Runtime',
+    detail: 'Modular transactional backend foundation and API contracts',
+    iconName: 'server',
+  },
+  {
+    name: 'Prisma ORM',
+    category: 'Database ORM',
+    detail: 'Type-safe database mapping with TiDB cloud connectivity',
+    iconName: 'database',
+  },
 ];
 
 export const CREATOR_LINKS: CreatorLinkItem[] = [

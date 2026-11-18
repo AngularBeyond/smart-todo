@@ -48,17 +48,21 @@ describe('AboutPageComponent', () => {
     expect(element.textContent).toContain('Fork a rock-solid foundation with Angular 22');
   });
 
-  it('should render the modern stack section with all 5 real technology cards', () => {
+  it('should render the modern stack section with all 5 real technology cards and categorized badges', () => {
     expect(element.textContent).toContain('Built with');
     expect(element.textContent).toContain('A modern, readable stack');
 
     for (const tech of TECHNOLOGIES) {
       expect(element.textContent).toContain(tech.name);
       expect(element.textContent).toContain(tech.detail);
+      expect(element.textContent).toContain(tech.category);
     }
 
     const techCards = element.querySelectorAll('section:nth-of-type(3) .grid > div');
     expect(techCards.length).toBe(TECHNOLOGIES.length);
+
+    const badges = element.querySelectorAll('section:nth-of-type(3) [hlmBadge]');
+    expect(badges.length).toBe(TECHNOLOGIES.length);
   });
 
   it('should render all external project and creator links with security attributes', () => {
