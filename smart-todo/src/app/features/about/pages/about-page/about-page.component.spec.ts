@@ -59,6 +59,12 @@ describe('AboutPageComponent', () => {
 
     const techCards = element.querySelectorAll('section:nth-of-type(3) .grid > div');
     expect(techCards.length).toBe(TECHNOLOGIES.length);
+
+    const logoImages = element.querySelectorAll<HTMLImageElement>('section:nth-of-type(3) img');
+    expect(logoImages.length).toBe(TECHNOLOGIES.length);
+    logoImages.forEach((img, index) => {
+      expect(img.getAttribute('src')).toBe(TECHNOLOGIES[index].logoSrc);
+    });
   });
 
   it('should render all external project and creator links with security attributes', () => {

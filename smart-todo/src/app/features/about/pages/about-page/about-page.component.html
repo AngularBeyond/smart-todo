@@ -60,9 +60,21 @@
     </div>
     <div class="grid gap-3 sm:grid-cols-2">
       @for (tech of technologies; track tech.name) {
-      <div class="border border-border bg-card p-4 transition-colors hover:border-primary/40">
-        <p class="font-medium">{{ tech.name }}</p>
-        <p class="mt-1 text-xs text-muted-foreground">{{ tech.detail }}</p>
+      <div class="flex min-h-[96px] items-center justify-between gap-4 border border-border bg-card p-5 transition-colors hover:border-primary/40">
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-foreground">{{ tech.name }}</p>
+          <p class="mt-1 text-xs text-muted-foreground">{{ tech.detail }}</p>
+        </div>
+        @if (tech.logoSrc) {
+        <div class="flex size-10 shrink-0 items-center justify-center">
+          <img
+            [src]="tech.logoSrc"
+            [alt]="tech.name + ' logo'"
+            [class]="'size-8 object-contain ' + (tech.invertInDarkMode ? 'dark:invert' : '')"
+            loading="lazy"
+          />
+        </div>
+        }
       </div>
       }
     </div>

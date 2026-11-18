@@ -2,24 +2,30 @@ import { CreatorLinkItem, TechnologyItem } from '../models';
 
 export const TECHNOLOGIES: TechnologyItem[] = [
   {
-    name: 'Angular 22',
-    detail: 'Zoneless reactive interface layer',
+    name: 'Angular',
+    detail: 'Enterprise framework for web apps',
+    logoSrc: '/logos/angular.svg',
   },
   {
     name: 'Spartan UI',
     detail: 'Accessible headless & styled components',
+    logoSrc: '/logos/spartan.svg',
   },
   {
-    name: 'Tailwind CSS',
-    detail: 'Utility-first styling & tokens',
+    name: 'CopilotKit',
+    detail: 'Open-source UI stack for in-app AI agents',
+    logoSrc: '/logos/copilotkit.svg',
   },
   {
-    name: 'NestJS 12+',
-    detail: 'Modular transactional backend foundation',
+    name: 'NestJS',
+    detail: 'Progressive Node.js framework for backends',
+    logoSrc: '/logos/nestjs.svg',
   },
   {
-    name: 'Prisma ORM',
-    detail: 'Type-safe database mapping & pooling',
+    name: 'Mastra',
+    detail: 'Open-source TypeScript AI agent framework',
+    logoSrc: '/logos/mastra.svg',
+    invertInDarkMode: true,
   },
 ];
 
