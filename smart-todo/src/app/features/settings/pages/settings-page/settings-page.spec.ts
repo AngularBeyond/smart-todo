@@ -94,7 +94,7 @@ describe('SettingsPage', () => {
     expect((component as any).store.settings().appearance).toBe('dark');
   });
 
-  it('should render task defaults card with allowed lists limit, daily task limit indicator, and save button', () => {
+  it('should render task defaults card with allowed lists limit and daily task limit indicator', () => {
     expect(element.textContent).toContain('Task defaults');
     expect(element.textContent).toContain('Keep new tasks quick, structured, and consistent.');
     expect(element.textContent).toContain('Number of allowed lists');
@@ -106,24 +106,14 @@ describe('SettingsPage', () => {
     expect(element.textContent).toContain('Active capacity cap per list');
     expect(element.textContent).toContain('40 tasks');
     expect(element.textContent).toContain('Maximum quota allowed is 40 tasks per list.');
-    expect(element.textContent).toContain('Preferences saved');
+    expect(element.textContent).not.toContain('Preferences saved');
   });
 
-  it('should not render configurable buttons for list limit or daily task limit', () => {
+  it('should not render configurable buttons or save button in task defaults', () => {
     const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
     const buttonTexts = Array.from(buttons).map((b) => b.textContent?.trim());
     expect(buttonTexts).not.toContain('Personal');
     expect(buttonTexts).not.toContain('10');
-  });
-
-  it('should mark saved when Preferences saved button is clicked', () => {
-    const saveBtn = Array.from(element.querySelectorAll<HTMLButtonElement>('button')).find((b) =>
-      b.textContent?.includes('Preferences saved'),
-    );
-
-    expect(saveBtn).toBeTruthy();
-    const markSavedSpy = vi.spyOn((component as any).store, 'markSaved');
-    saveBtn?.click();
-    expect(markSavedSpy).toHaveBeenCalled();
+    expect(buttonTexts).not.toContain('Preferences saved');
   });
 });
