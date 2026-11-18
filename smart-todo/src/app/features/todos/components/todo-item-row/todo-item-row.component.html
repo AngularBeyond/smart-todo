@@ -89,7 +89,7 @@
     hlmBtn
     variant="ghost"
     size="icon"
-    class="size-8 opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+    class="size-8 shrink-0 text-muted-foreground/60 transition-opacity hover:text-destructive focus-visible:opacity-100 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
     (click)="onDelete()"
     [attr.aria-label]="'Delete task: ' + todo().text"
   >
