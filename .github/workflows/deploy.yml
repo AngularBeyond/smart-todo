@@ -268,6 +268,7 @@ jobs:
       - name: Calculate Next Version & Create Release
         env:
           GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ github.sha }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           CUSTOM_VERSION: ${{ inputs.release_version }}
         run: |
@@ -313,8 +314,20 @@ jobs:
             exit 0
           fi
 
-          # Create Git Tag and GitHub Release with auto-generated release notes
-          gh release create "$NEW_TAG" \
-            --target prod \
-            --title "$NEW_TAG — Production Release" \
-            --generate-notes
+          # Extract merged pull request description if available
+          PR_BODY=$(gh api repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls --jq '.[0].body' 2>/dev/null || echo "")
+
+          # Create Git Tag and GitHub Release with prepended PR notes and auto-generated changelog
+          if [ -n "$PR_BODY" ] && [ "$PR_BODY" != "null" ]; then
+            echo "$PR_BODY" > release_notes.md
+            gh release create "$NEW_TAG" \
+              --target prod \
+              --title "$NEW_TAG — Production Release" \
+              --notes-file release_notes.md \
+              --generate-notes
+          else
+            gh release create "$NEW_TAG" \
+              --target prod \
+              --title "$NEW_TAG — Production Release" \
+              --generate-notes
+          fi
