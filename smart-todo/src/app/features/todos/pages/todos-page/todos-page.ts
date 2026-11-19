@@ -5,6 +5,7 @@ import {
   ElementRef,
   HostListener,
   inject,
+  OnDestroy,
   signal,
   untracked,
   ViewChild,
@@ -18,14 +19,11 @@ import { CdkDrag, CdkDragDrop, CdkDragPlaceholder, CdkDropList } from '@angular/
 import {
   LucideSearch,
   LucideLoader2,
-  LucideStar,
-  LucideTrash,
   LucideX,
 } from '@lucide/angular';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmAlertDialogImports } from '@spartan-ng/helm/alert-dialog';
 import { Dispatcher } from '@ngrx/signals/events';
 import {
   AppStore,
@@ -34,7 +32,7 @@ import {
   TodoListsStore,
   toggleStarTodoList,
 } from '@core';
-import { InfiniteScrollSentinelDirective } from '@ui';
+import { AutoFocusDirective, HlmTooltip, InfiniteScrollSentinelDirective } from '@ui';
 import { TodosStore } from '../../store/todos.store';
 import {
   CompletedSectionComponent,
@@ -55,13 +53,12 @@ import { TodoItem } from '../../models';
     CdkDragPlaceholder,
     LucideSearch,
     LucideLoader2,
-    LucideStar,
-    LucideTrash,
     LucideX,
     HlmBadge,
     HlmButton,
     HlmInput,
-    HlmAlertDialogImports,
+    HlmTooltip,
+    AutoFocusDirective,
     InfiniteScrollSentinelDirective,
     ListHeaderComponent,
     TodoCreateBarComponent,
@@ -72,7 +69,7 @@ import { TodoItem } from '../../models';
   styleUrl: './todos-page.scss',
   templateUrl: './todos-page.html',
 })
-export class TodosPage {
+export class TodosPage implements OnDestroy {
   @ViewChild('filterInput') filterInputRef?: ElementRef<HTMLInputElement>;
 
   private readonly route = inject(ActivatedRoute);
@@ -92,6 +89,7 @@ export class TodosPage {
   private lastSelectedListId: string | null = null;
 
   readonly searchModel = signal({ query: '' });
+  readonly isSearchOpen = signal(false);
   readonly searchForm = form(this.searchModel, (s) => {
     debounce(s.query, 400);
   });
@@ -144,6 +142,26 @@ export class TodosPage {
     this.store.clearSearch();
   }
 
+  toggleSearch(): void {
+    const next = !this.isSearchOpen();
+    this.isSearchOpen.set(next);
+    if (!next) {
+      this.clearSearch();
+    } else {
+      setTimeout(() => {
+        this.filterInputRef?.nativeElement?.focus();
+      });
+    }
+  }
+
+  onSearchEscape(): void {
+    if (this.searchModel().query) {
+      this.clearSearch();
+    } else {
+      this.isSearchOpen.set(false);
+    }
+  }
+
   @HostListener('window:keydown', ['$event'])
   handleGlobalKeydown(event: KeyboardEvent): void {
     if (
@@ -152,7 +170,12 @@ export class TodosPage {
       (event.target as HTMLElement)?.tagName !== 'TEXTAREA'
     ) {
       event.preventDefault();
-      this.filterInputRef?.nativeElement?.focus();
+      if (!this.isSearchOpen()) {
+        this.isSearchOpen.set(true);
+      }
+      setTimeout(() => {
+        this.filterInputRef?.nativeElement?.focus();
+      });
     }
   }
 
@@ -207,6 +230,10 @@ export class TodosPage {
       todoId: item.id,
       targetIndex: event.currentIndex,
     });
+  }
+
+  ngOnDestroy(): void {
+    this.store.flushPendingDeletion();
   }
 }
 

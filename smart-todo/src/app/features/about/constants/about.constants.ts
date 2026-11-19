@@ -1,32 +1,48 @@
 import { CreatorLinkItem, TechnologyItem } from '../models';
 
 export const TECHNOLOGIES: TechnologyItem[] = [
-  { name: 'Angular 22', detail: 'Zoneless reactive interface layer' },
-  { name: 'Spartan UI', detail: 'Accessible headless & styled components' },
-  { name: 'Tailwind CSS', detail: 'Utility-first styling & tokens' },
-  { name: 'NestJS 12+', detail: 'Modular transactional backend foundation' },
-  { name: 'Prisma ORM', detail: 'Type-safe database mapping & pooling' },
+  {
+    name: 'Angular',
+    detail: 'Enterprise framework for web apps',
+    logoSrc: '/logos/angular.svg',
+  },
+  {
+    name: 'Spartan UI',
+    detail: 'Accessible headless & styled components',
+    logoSrc: '/logos/spartan.svg',
+  },
+  {
+    name: 'CopilotKit',
+    detail: 'Open-source UI stack for in-app AI agents',
+    logoSrc: '/logos/copilotkit.svg',
+  },
+  {
+    name: 'NestJS',
+    detail: 'Progressive Node.js framework for backends',
+    logoSrc: '/logos/nestjs.svg',
+  },
+  {
+    name: 'Mastra',
+    detail: 'Open-source TypeScript AI agent framework',
+    logoSrc: '/logos/mastra.svg',
+    invertInDarkMode: true,
+  },
 ];
 
 export const CREATOR_LINKS: CreatorLinkItem[] = [
   {
     label: 'GitHub repository',
     href: 'https://github.com/AngularBeyond/smart-todo',
-    iconName: 'code',
+    iconName: 'github',
   },
   {
-    label: 'Twitter / X',
+    label: 'X (Twitter)',
     href: 'https://x.com/marcotello',
-    iconName: 'message',
+    iconName: 'twitter',
   },
   {
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/in/marcotello/',
-    iconName: 'briefcase',
-  },
-  {
-    label: 'Creator GitHub',
-    href: 'https://github.com/marcotello',
-    iconName: 'code',
+    iconName: 'linkedin',
   },
 ];

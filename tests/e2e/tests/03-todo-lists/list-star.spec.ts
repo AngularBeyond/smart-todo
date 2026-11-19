@@ -55,15 +55,15 @@ test.describe('Todo Lists Starring & Pinning E2E', () => {
 
     // Initial default list "My Tasks" is selected and unstarred
     await expect(workspacePage.listHeaderTitleButton).toHaveText('My Tasks');
-    const headerStarBtn = page.locator('button[aria-label="Star list"]').first();
+    const headerStarBtn = page.locator('button[aria-label="Add to favorites"], button[aria-label="Star list"]').first();
     await expect(headerStarBtn).toBeVisible();
 
     // Click header star button
     await headerStarBtn.click();
     await page.waitForLoadState('networkidle');
 
-    // Header star button aria-label should switch to "Unstar list"
-    const headerUnstarBtn = page.locator('button[aria-label="Unstar list"]').first();
+    // Header star button aria-label should switch to "Remove from favorites"
+    const headerUnstarBtn = page.locator('button[aria-label="Remove from favorites"], button[aria-label="Unstar list"]').first();
     await expect(headerUnstarBtn).toBeVisible();
 
     // Verify sidebar shows "My Tasks" in Starred section

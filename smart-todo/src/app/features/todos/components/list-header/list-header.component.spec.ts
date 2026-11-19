@@ -81,4 +81,71 @@ describe('ListHeaderComponent', () => {
     expect(component.isEditingTitle()).toBe(false);
     expect(component.editingTitle()).toBe('');
   });
+
+  it('renders Star, Search, and Delete action buttons with tooltips next to active count badge', () => {
+    const starBtn = fixture.nativeElement.querySelector('button[aria-label="Add to favorites"]');
+    const searchBtn = fixture.nativeElement.querySelector('button[aria-label="Search tasks (/)"]');
+    const deleteBtn = fixture.nativeElement.querySelector('button[aria-label="Delete this list"]');
+
+    expect(starBtn).toBeTruthy();
+    expect(searchBtn).toBeTruthy();
+    expect(deleteBtn).toBeTruthy();
+
+    expect(deleteBtn.getAttribute('ng-reflect-hlm-tooltip') || deleteBtn.getAttribute('hlmtooltip') || deleteBtn.outerHTML).toContain('Delete this list');
+  });
+
+  it('emits toggleStar when star button is clicked', () => {
+    const toggleStarSpy = vi.fn();
+    component.toggleStar.subscribe(toggleStarSpy);
+
+    const starBtn = fixture.nativeElement.querySelector('button[aria-label="Add to favorites"]') as HTMLButtonElement;
+    starBtn.click();
+
+    expect(toggleStarSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders star button with active styling and remove tooltip when list is starred', () => {
+    fixture.componentRef.setInput('list', { ...mockList, isStarred: true });
+    fixture.detectChanges();
+
+    const starBtn = fixture.nativeElement.querySelector('button[aria-label="Remove from favorites"]') as HTMLButtonElement;
+    expect(starBtn).toBeTruthy();
+    expect(starBtn.classList.contains('text-amber-500')).toBe(true);
+  });
+
+  it('emits toggleSearch when search button is clicked', () => {
+    const toggleSearchSpy = vi.fn();
+    component.toggleSearch.subscribe(toggleSearchSpy);
+
+    const searchBtn = fixture.nativeElement.querySelector('button[aria-label="Search tasks (/)"]') as HTMLButtonElement;
+    searchBtn.click();
+
+    expect(toggleSearchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies active styling and close tooltip to search button when isSearchOpen is true', () => {
+    fixture.componentRef.setInput('isSearchOpen', true);
+    fixture.detectChanges();
+
+    const searchBtn = fixture.nativeElement.querySelector('button[aria-label="Close search (Esc)"]') as HTMLButtonElement;
+    expect(searchBtn).toBeTruthy();
+    expect(searchBtn.classList.contains('text-primary')).toBe(true);
+  });
+
+  it('emits deleteList when delete action is confirmed', () => {
+    const deleteListSpy = vi.fn();
+    component.deleteList.subscribe(deleteListSpy);
+
+    // Open the alert dialog
+    const deleteTrigger = fixture.nativeElement.querySelector('button[aria-label="Delete this list"]') as HTMLButtonElement;
+    deleteTrigger.click();
+    fixture.detectChanges();
+
+    // Find the confirm action button inside the portal/document
+    const confirmActionBtn = document.querySelector('button[hlmAlertDialogAction]') as HTMLButtonElement;
+    expect(confirmActionBtn).toBeTruthy();
+    confirmActionBtn.click();
+
+    expect(deleteListSpy).toHaveBeenCalledTimes(1);
+  });
 });

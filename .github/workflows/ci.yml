@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+      - prod
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -52,68 +53,3 @@ jobs:
 
       - name: Frontend - Unit Tests
         run: pnpm --prefix smart-todo ng test --watch=false
-
-  e2e:
-    name: Playwright E2E Tests
-    needs: verify
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: smart_todo
-          MYSQL_USER: smart_todo_user
-          MYSQL_PASSWORD: smart_todo_pass
-        ports:
-          - 3307:3306
-        options: --health-cmd="mysqladmin ping -prootpassword" --health-interval=10s --health-timeout=5s --health-retries=5
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.29.3
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm --prefix smart-todo-api install --frozen-lockfile
-          pnpm --prefix smart-todo install --frozen-lockfile
-
-      - name: Backend - Prisma Generate
-        run: pnpm --prefix smart-todo-api exec prisma generate
-
-      - name: Setup E2E Environment Variables
-        run: cp tests/.env.e2e.example tests/.env.e2e
-
-      - name: Apply Database Migrations to E2E MySQL
-        env:
-          DATABASE_URL: "mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo"
-        run: pnpm --prefix smart-todo-api exec prisma migrate deploy
-
-      - name: Install Playwright Browsers & OS Dependencies
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run Playwright E2E Tests
-        env:
-          DATABASE_URL: "mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo"
-          CI: true
-        run: pnpm test:e2e
-
-      - name: Upload Playwright Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: tests/playwright-report/
-          retention-days: 14

@@ -39,19 +39,22 @@ test.describe('About Page & Project Showcase E2E', () => {
     await expect(page.locator('h2:has-text("AG-UI & A2UI in Action")')).toBeVisible();
     await expect(page.locator('h2:has-text("A Production Template")')).toBeVisible();
 
-    // Verify 5 Real Technology Stack Cards
+    // Verify 5 Real Technology Stack Cards with Logos
     const techStacks = [
-      { name: 'Angular 22', detail: 'Zoneless reactive interface layer' },
-      { name: 'Spartan UI', detail: 'Accessible headless & styled components' },
-      { name: 'Tailwind CSS', detail: 'Utility-first styling & tokens' },
-      { name: 'NestJS 12+', detail: 'Modular transactional backend foundation' },
-      { name: 'Prisma ORM', detail: 'Type-safe database mapping & pooling' },
+      { name: 'Angular', detail: 'Enterprise framework for web apps', logo: '/logos/angular.svg' },
+      { name: 'Spartan UI', detail: 'Accessible headless & styled components', logo: '/logos/spartan.svg' },
+      { name: 'CopilotKit', detail: 'Open-source UI stack for in-app AI agents', logo: '/logos/copilotkit.svg' },
+      { name: 'NestJS', detail: 'Progressive Node.js framework for backends', logo: '/logos/nestjs.svg' },
+      { name: 'Mastra', detail: 'Open-source TypeScript AI agent framework', logo: '/logos/mastra.svg' },
     ];
 
     for (const tech of techStacks) {
       const card = aboutPage.getTechCard(tech.name);
       await expect(card).toBeVisible();
       await expect(card).toContainText(tech.detail);
+      const logo = aboutPage.getTechLogo(tech.name);
+      await expect(logo).toBeVisible();
+      await expect(logo).toHaveAttribute('src', tech.logo);
     }
 
     // Verify Footer
@@ -78,16 +81,12 @@ test.describe('About Page & Project Showcase E2E', () => {
         href: 'https://github.com/AngularBeyond/smart-todo',
       },
       {
-        label: 'Twitter / X',
+        label: 'X (Twitter)',
         href: 'https://x.com/marcotello',
       },
       {
         label: 'LinkedIn',
         href: 'https://www.linkedin.com/in/marcotello/',
-      },
-      {
-        label: 'Creator GitHub',
-        href: 'https://github.com/marcotello',
       },
     ];
 
@@ -97,6 +96,7 @@ test.describe('About Page & Project Showcase E2E', () => {
       await expect(link).toHaveAttribute('href', linkData.href);
       await expect(link).toHaveAttribute('target', '_blank');
       await expect(link).toHaveAttribute('rel', 'noreferrer');
+      await expect(link.locator('svg').first()).toBeVisible();
     }
   });
 

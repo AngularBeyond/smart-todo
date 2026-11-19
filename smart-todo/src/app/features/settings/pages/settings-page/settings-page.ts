@@ -3,15 +3,14 @@ import { RouterLink } from '@angular/router';
 import {
   LucideArrowLeft,
   LucideBell,
-  LucideCheck,
   LucideChevronRight,
+  LucideListTodo,
   LucideMoon,
-  LucideShield,
+  LucideSlidersHorizontal,
   LucideSun,
 } from '@lucide/angular';
 import { Dispatcher } from '@ngrx/signals/events';
 import { AppStore, themeChanged } from '@core';
-import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { SettingsStore } from '../../store';
@@ -22,12 +21,11 @@ import { SettingsStore } from '../../store';
     RouterLink,
     LucideArrowLeft,
     LucideBell,
-    LucideCheck,
     LucideChevronRight,
+    LucideListTodo,
     LucideMoon,
-    LucideShield,
+    LucideSlidersHorizontal,
     LucideSun,
-    HlmButton,
     HlmBadge,
     HlmSeparator,
   ],

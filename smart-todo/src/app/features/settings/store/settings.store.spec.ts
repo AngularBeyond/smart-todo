@@ -94,6 +94,20 @@ describe('SettingsStore', () => {
     expect(store.settings().startOfWeek).toBe('Monday');
   });
 
+  it('should update default list', () => {
+    expect(store.settings().defaultList).toBe('My Tasks');
+    store.setDefaultList('Work');
+    expect(store.settings().defaultList).toBe('Work');
+    expect(store.saved()).toBe(true);
+  });
+
+  it('should update daily task limit', () => {
+    expect(store.settings().dailyTaskLimit).toBe(40);
+    store.setDailyTaskLimit(20);
+    expect(store.settings().dailyTaskLimit).toBe(20);
+    expect(store.saved()).toBe(true);
+  });
+
   it('should mark saved state', () => {
     store.markSaved();
     expect(store.saved()).toBe(true);

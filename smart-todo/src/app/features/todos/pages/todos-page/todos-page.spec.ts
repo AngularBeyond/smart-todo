@@ -137,6 +137,14 @@ describe('TodosPage', () => {
     expect(deleteSpy).toHaveBeenCalledWith(mockTodo);
   });
 
+  it('calls store.flushPendingDeletion on ngOnDestroy', () => {
+    const store = (component as any).store;
+    const flushSpy = vi.spyOn(store, 'flushPendingDeletion');
+
+    component.ngOnDestroy();
+    expect(flushSpy).toHaveBeenCalled();
+  });
+
   it('calls store.reorderActiveTodo on onDropActive when indices differ', () => {
     const store = (component as any).store;
     const reorderSpy = vi.spyOn(store, 'reorderActiveTodo');
@@ -221,10 +229,16 @@ describe('TodosPage', () => {
     expect(fixture.nativeElement.textContent).toContain(expectedDate);
   });
 
-  it('renders filter tasks input and does not render removed buttons or footer info', () => {
+  it('hides filter tasks input by default and reveals it when toggled open', () => {
     const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('input[placeholder*="Filter tasks"]')).toBeFalsy();
+
+    component.toggleSearch();
+    fixture.detectChanges();
+
     const filterInput = el.querySelector('input[placeholder*="Filter tasks"]');
     expect(filterInput).toBeTruthy();
+    expect(filterInput?.classList.contains('w-full')).toBe(true);
 
     expect(el.querySelector('button[aria-label="More options"]')).toBeFalsy();
     expect(el.textContent).not.toContain('Good morning');
@@ -379,6 +393,44 @@ describe('TodosPage', () => {
 
     const row = fixture.nativeElement.querySelector('app-todo-item-row');
     expect(row).toBeTruthy();
+  });
+
+  it('opens search input when / global shortcut is pressed', () => {
+    expect(component.isSearchOpen()).toBe(false);
+
+    component.handleGlobalKeydown(new KeyboardEvent('keydown', { key: '/' }));
+    fixture.detectChanges();
+
+    expect(component.isSearchOpen()).toBe(true);
+    const filterInput = fixture.nativeElement.querySelector('input[placeholder*="Filter tasks"]');
+    expect(filterInput).toBeTruthy();
+  });
+
+  it('clears query on onSearchEscape when query has text, and closes search when query is empty', () => {
+    component.isSearchOpen.set(true);
+    component.searchModel.set({ query: 'groceries' });
+    fixture.detectChanges();
+
+    // Escape with text clears query first, keeping search open
+    component.onSearchEscape();
+    expect(component.searchModel().query).toBe('');
+    expect(component.isSearchOpen()).toBe(true);
+
+    // Escape with empty query closes search
+    component.onSearchEscape();
+    expect(component.isSearchOpen()).toBe(false);
+  });
+
+  it('clears query and resets search when toggled closed', () => {
+    component.isSearchOpen.set(true);
+    component.searchModel.set({ query: 'urgent' });
+    const store = (component as any).store;
+    const clearSpy = vi.spyOn(store, 'clearSearch');
+
+    component.toggleSearch();
+    expect(component.isSearchOpen()).toBe(false);
+    expect(component.searchModel().query).toBe('');
+    expect(clearSpy).toHaveBeenCalled();
   });
 });
 

@@ -15,10 +15,10 @@ export class AboutPage extends BasePage {
     super(page);
     this.heroSubhead = page.locator('text=An Agentic Blueprint');
     this.heroHeading = page.locator('h1:has-text("The Agentic way of building modern applications in Angular")');
-    this.heroDescription = page.locator('text=Smart Todo is an open-source reference template demonstrating how to adopt Agentic AI');
+    this.heroDescription = page.locator('text=Smart Todo is an open-source reference template demonstrating how to adopt Generative UI');
     this.heroCallout = page.locator('text=Explore the code. Adopt the pattern. Build the future.');
     this.valuePillars = page.locator('section:has-text("01") div:has(h2)');
-    this.techCards = page.locator('section:has-text("Built with") div.grid > div');
+    this.techCards = page.locator('section:has-text("Built with") .grid > div');
     this.externalLinks = page.locator('section:has-text("Keep exploring") a');
     this.footer = page.locator('footer:has-text("Smart Todo is made to be remixed for Agentic AI.")');
   }
@@ -33,6 +33,10 @@ export class AboutPage extends BasePage {
 
   getTechCard(name: string): Locator {
     return this.techCards.filter({ hasText: name });
+  }
+
+  getTechLogo(name: string): Locator {
+    return this.getTechCard(name).locator('img');
   }
 
   getExternalLink(label: string): Locator {

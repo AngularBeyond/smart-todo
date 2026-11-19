@@ -15,14 +15,60 @@ on:
           - all
           - web
           - api
+      release_version:
+        description: 'Explicit release version (e.g. v1.1.0) - leave empty for auto bump'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
+  verify-pr:
+    name: Verify PR Merge
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Ensure Commit Came From Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          echo "Checking commit: $COMMIT_SHA"
+          echo "Commit message: $COMMIT_MSG"
+
+          # Check 1: Commit message format (standard merge or squash merge)
+          if echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+|\(#[0-9]+\)"; then
+            echo "✓ Valid PR merge commit message detected."
+            exit 0
+          fi
+
+          # Check 2: Query GitHub API for associated merged PRs (handles rebase merges)
+          PR_COUNT=$(gh api repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls --jq '[.[] | select(.merged_at != null)] | length' 2>/dev/null || echo "0")
+          echo "Associated merged PRs found: $PR_COUNT"
+
+          if [ "$PR_COUNT" -gt 0 ]; then
+            echo "✓ Associated merged pull request confirmed via GitHub API."
+            exit 0
+          fi
+
+          echo "::error::Direct pushes to the 'prod' branch are forbidden! Deployments only run for merged Pull Requests."
+          exit 1
+
   filter:
     name: Detect Changed Services
+    needs: [verify-pr]
+    if: |
+      always() &&
+      (needs.verify-pr.result == 'success' || needs.verify-pr.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       api: ${{ steps.changes.outputs.api }}
@@ -48,9 +94,74 @@ jobs:
               - 'pnpm-lock.yaml'
               - '.github/workflows/deploy.yml'
 
+  e2e:
+    name: Playwright E2E Tests Gate
+    needs: filter
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: smart_todo
+          MYSQL_USER: smart_todo_user
+          MYSQL_PASSWORD: smart_todo_pass
+        ports:
+          - 3307:3306
+        options: --health-cmd="mysqladmin ping -prootpassword" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.29.3
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --prefix smart-todo-api install --frozen-lockfile
+          pnpm --prefix smart-todo install --frozen-lockfile
+
+      - name: Backend - Prisma Generate
+        run: pnpm --prefix smart-todo-api exec prisma generate
+
+      - name: Setup E2E Environment Variables
+        run: cp tests/.env.e2e.example tests/.env.e2e
+
+      - name: Apply Database Migrations to E2E MySQL
+        env:
+          DATABASE_URL: "mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo"
+        run: pnpm --prefix smart-todo-api exec prisma migrate deploy
+
+      - name: Install Playwright Browsers & OS Dependencies
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright E2E Tests
+        env:
+          DATABASE_URL: "mysql://smart_todo_user:smart_todo_pass@localhost:3307/smart_todo"
+          CI: true
+        run: pnpm test:e2e
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-deploy
+          path: tests/playwright-report/
+          retention-days: 14
+
   deploy-api:
     name: Deploy Backend API
-    needs: filter
+    needs: [filter, e2e]
     if: |
       (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'api')) ||
       (github.event_name == 'push' && needs.filter.outputs.api == 'true')
@@ -97,7 +208,7 @@ jobs:
 
   deploy-web:
     name: Deploy Frontend Web
-    needs: filter
+    needs: [filter, e2e]
     if: |
       (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'web')) ||
       (github.event_name == 'push' && needs.filter.outputs.web == 'true')
@@ -136,3 +247,87 @@ jobs:
           HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
         run: node infra/scripts/deploy-hostinger.mjs web
+
+  release:
+    name: Create GitHub Release & Tag
+    needs: [deploy-api, deploy-web]
+    if: |
+      always() &&
+      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped') &&
+      (needs.deploy-web.result == 'success' || needs.deploy-web.result == 'skipped') &&
+      !(needs.deploy-api.result == 'skipped' && needs.deploy-web.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Next Version & Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          CUSTOM_VERSION: ${{ inputs.release_version }}
+        run: |
+          # Fetch all remote tags
+          git fetch --tags
+
+          # Get latest tag (fallback to v1.0.0)
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # If custom version provided via workflow_dispatch, prioritize it
+          if [ -n "$CUSTOM_VERSION" ]; then
+            if [[ "$CUSTOM_VERSION" != v* ]]; then
+              NEW_TAG="v$CUSTOM_VERSION"
+            else
+              NEW_TAG="$CUSTOM_VERSION"
+            fi
+          elif echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1 | grep -q .; then
+            NEW_TAG=$(echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+          else
+            # Extract semver components
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            MAJOR=${MAJOR:-1}
+            MINOR=${MINOR:-0}
+            PATCH=${PATCH:-0}
+
+            if echo "$COMMIT_MSG" | grep -iqE "\[major\]|breaking"; then
+              NEW_TAG="v$((MAJOR + 1)).0.0"
+            elif echo "$COMMIT_MSG" | grep -iqE "\[patch\]|fix"; then
+              NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            else
+              # Default for production releases is minor bump
+              NEW_TAG="v${MAJOR}.$((MINOR + 1)).0"
+            fi
+          fi
+
+          echo "Target Release Tag: $NEW_TAG"
+
+          # Check if tag already exists
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "Tag $NEW_TAG already exists, skipping release creation."
+            exit 0
+          fi
+
+          # Extract merged pull request description if available
+          PR_BODY=$(gh api repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls --jq '.[0].body' 2>/dev/null || echo "")
+
+          # Create Git Tag and GitHub Release with prepended PR notes and auto-generated changelog
+          if [ -n "$PR_BODY" ] && [ "$PR_BODY" != "null" ]; then
+            echo "$PR_BODY" > release_notes.md
+            gh release create "$NEW_TAG" \
+              --target prod \
+              --title "$NEW_TAG — Production Release" \
+              --notes-file release_notes.md \
+              --generate-notes
+          else
+            gh release create "$NEW_TAG" \
+              --target prod \
+              --title "$NEW_TAG — Production Release" \
+              --generate-notes
+          fi

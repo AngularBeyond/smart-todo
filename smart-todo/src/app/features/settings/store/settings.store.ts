@@ -66,6 +66,24 @@ export const SettingsStore = signalStore(
         const next: ThemeMode = current === 'dark' ? 'light' : 'dark';
         this.setAppearance(next);
       },
+      setDefaultList(defaultList: string): void {
+        patchState(store, {
+          settings: {
+            ...store.settings(),
+            defaultList,
+          },
+          saved: true,
+        });
+      },
+      setDailyTaskLimit(dailyTaskLimit: number): void {
+        patchState(store, {
+          settings: {
+            ...store.settings(),
+            dailyTaskLimit,
+          },
+          saved: true,
+        });
+      },
       toggleStartOfWeek(): void {
         const next = store.settings().startOfWeek === 'Monday' ? 'Sunday' : 'Monday';
         patchState(store, {

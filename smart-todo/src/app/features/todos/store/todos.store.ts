@@ -15,6 +15,7 @@ import {
   setError,
   setFulfilled,
   setPending,
+  ToastService,
   withRequestStatus,
 } from '@core';
 import {
@@ -23,6 +24,15 @@ import {
   TodoItem,
   TodoResponse,
 } from '../models';
+
+export interface PendingDeletion {
+  todo: TodoItem;
+  listId: string;
+  originalIndex: number;
+  wasCompleted: boolean;
+  timerId: ReturnType<typeof setTimeout> | null;
+  toastId: string | number | null;
+}
 
 export interface TodosState {
   currentListId: string | null;
@@ -113,7 +123,143 @@ export const TodosStore = signalStore(
       store,
       httpService = inject(HttpService),
       dispatcher = inject(Dispatcher),
+      toastService = inject(ToastService),
     ) => {
+      let pendingDeletion: PendingDeletion | null = null;
+
+      const commitDeletion = (pending: PendingDeletion) => {
+        if (pending.timerId) {
+          clearTimeout(pending.timerId);
+          pending.timerId = null;
+        }
+        if (pendingDeletion === pending) {
+          pendingDeletion = null;
+        }
+
+        httpService
+          .delete<DeleteTodoResponse>(`/api/v1/lists/${pending.listId}/todos/${pending.todo.id}`)
+          .pipe(
+            tapResponse({
+              next: (response) => {
+                if (response.data?.counts) {
+                  patchState(store, {
+                    totalCount: response.data.counts.totalCount,
+                    activeCount: response.data.counts.activeCount,
+                    completedCount: response.data.counts.completedCount,
+                  });
+                }
+              },
+              error: (error: HttpErrorResponse) => {
+                if (pending.wasCompleted) {
+                  const currentCompleted = [...store.completedTodos()];
+                  const idx = Math.min(pending.originalIndex, currentCompleted.length);
+                  currentCompleted.splice(idx, 0, pending.todo);
+
+                  const currentSearch = [...store.searchCompletedTodos()];
+                  if (store.isSearching()) {
+                    currentSearch.splice(idx, 0, pending.todo);
+                  }
+
+                  patchState(store, {
+                    completedTodos: currentCompleted,
+                    searchCompletedTodos: currentSearch,
+                    totalCount: store.totalCount() + 1,
+                    completedCount: store.completedCount() + 1,
+                  });
+                  dispatcher.dispatch(adjustListCounts({ listId: pending.listId, totalDelta: 1, activeDelta: 0 }));
+                } else {
+                  const currentActive = [...store.activeTodos()];
+                  const idx = Math.min(pending.originalIndex, currentActive.length);
+                  currentActive.splice(idx, 0, pending.todo);
+
+                  const currentSearch = [...store.searchActiveTodos()];
+                  if (store.isSearching()) {
+                    currentSearch.splice(idx, 0, pending.todo);
+                  }
+
+                  patchState(store, {
+                    activeTodos: currentActive,
+                    searchActiveTodos: currentSearch,
+                    totalCount: store.totalCount() + 1,
+                    activeCount: store.activeCount() + 1,
+                  });
+                  dispatcher.dispatch(adjustListCounts({ listId: pending.listId, totalDelta: 1, activeDelta: 1 }));
+                }
+
+                const message =
+                  error.error?.message ||
+                  (typeof error.error === 'string' ? error.error : null) ||
+                  'Failed to delete task. Task restored.';
+                toastService.error(message, { position: 'top-center' });
+              },
+            }),
+          )
+          .subscribe();
+      };
+
+      const flushPendingDeletion = () => {
+        if (pendingDeletion) {
+          const current = pendingDeletion;
+          if (current.toastId) {
+            toastService.dismiss(current.toastId);
+          }
+          commitDeletion(current);
+        }
+      };
+
+      const undoDelete = () => {
+        if (!pendingDeletion) return;
+        const current = pendingDeletion;
+        if (current.timerId) {
+          clearTimeout(current.timerId);
+          current.timerId = null;
+        }
+        if (current.toastId) {
+          toastService.dismiss(current.toastId);
+        }
+        pendingDeletion = null;
+
+        if (current.wasCompleted) {
+          const currentCompleted = [...store.completedTodos()];
+          const idx = Math.min(current.originalIndex, currentCompleted.length);
+          currentCompleted.splice(idx, 0, current.todo);
+
+          const currentSearch = [...store.searchCompletedTodos()];
+          if (store.isSearching()) {
+            currentSearch.splice(idx, 0, current.todo);
+          }
+
+          patchState(store, {
+            completedTodos: currentCompleted,
+            searchCompletedTodos: currentSearch,
+            totalCount: store.totalCount() + 1,
+            completedCount: store.completedCount() + 1,
+          });
+          dispatcher.dispatch(adjustListCounts({ listId: current.listId, totalDelta: 1, activeDelta: 0 }));
+        } else {
+          const currentActive = [...store.activeTodos()];
+          const idx = Math.min(current.originalIndex, currentActive.length);
+          currentActive.splice(idx, 0, current.todo);
+
+          const currentSearch = [...store.searchActiveTodos()];
+          if (store.isSearching()) {
+            currentSearch.splice(idx, 0, current.todo);
+          }
+
+          patchState(store, {
+            activeTodos: currentActive,
+            searchActiveTodos: currentSearch,
+            totalCount: store.totalCount() + 1,
+            activeCount: store.activeCount() + 1,
+          });
+          dispatcher.dispatch(adjustListCounts({ listId: current.listId, totalDelta: 1, activeDelta: 1 }));
+        }
+
+        toastService.show('Task restored', {
+          position: 'top-center',
+          duration: 3000,
+        });
+      };
       const loadMoreCompletedTodos = rxMethod<void>(
         pipe(
           filter(() => {
@@ -163,6 +309,7 @@ export const TodosStore = signalStore(
       const loadInitialForList = rxMethod<string>(
         pipe(
           tap((listId) => {
+            flushPendingDeletion();
             patchState(
               store,
               {
@@ -227,6 +374,7 @@ export const TodosStore = signalStore(
       const loadInitialAllTodos = rxMethod<void>(
         pipe(
           tap(() => {
+            flushPendingDeletion();
             patchState(
               store,
               {
@@ -291,6 +439,7 @@ export const TodosStore = signalStore(
       const loadInitialStarredTodos = rxMethod<void>(
         pipe(
           tap(() => {
+            flushPendingDeletion();
             patchState(
               store,
               {
@@ -629,9 +778,17 @@ export const TodosStore = signalStore(
     const deleteTodo = rxMethod<TodoItem>(
       pipe(
         filter((todo) => (!!store.currentListId() || !!todo?.listId) && !!todo),
-        concatMap((todo) => {
+        tap((todo) => {
+          if (pendingDeletion) {
+            flushPendingDeletion();
+          }
+
           const listId = todo.listId || store.currentListId()!;
           const wasCompleted = todo.isCompleted;
+
+          const originalIndex = wasCompleted
+            ? store.completedTodos().findIndex((t) => t.id === todo.id)
+            : store.activeTodos().findIndex((t) => t.id === todo.id);
 
           if (wasCompleted) {
             patchState(store, {
@@ -651,46 +808,45 @@ export const TodosStore = signalStore(
             dispatcher.dispatch(adjustListCounts({ listId, totalDelta: -1, activeDelta: -1 }));
           }
 
-          return httpService
-            .delete<DeleteTodoResponse>(`/api/v1/lists/${listId}/todos/${todo.id}`)
-            .pipe(
-              tapResponse({
-                next: (response) => {
-                  if (response.data?.counts) {
-                    patchState(store, {
-                      totalCount: response.data.counts.totalCount,
-                      activeCount: response.data.counts.activeCount,
-                      completedCount: response.data.counts.completedCount,
-                    });
-                  }
-                },
-                error: (error: HttpErrorResponse) => {
-                  // Rollback
-                  if (wasCompleted) {
-                    patchState(store, {
-                      completedTodos: [todo, ...store.completedTodos()],
-                      searchCompletedTodos: [todo, ...store.searchCompletedTodos()],
-                      totalCount: store.totalCount() + 1,
-                      completedCount: store.completedCount() + 1,
-                    });
-                    dispatcher.dispatch(adjustListCounts({ listId, totalDelta: 1, activeDelta: 0 }));
-                  } else {
-                    patchState(store, {
-                      activeTodos: [todo, ...store.activeTodos()],
-                      searchActiveTodos: [todo, ...store.searchActiveTodos()],
-                      totalCount: store.totalCount() + 1,
-                      activeCount: store.activeCount() + 1,
-                    });
-                    dispatcher.dispatch(adjustListCounts({ listId, totalDelta: 1, activeDelta: 1 }));
-                  }
-                  const message =
-                    error.error?.message ||
-                    (typeof error.error === 'string' ? error.error : null) ||
-                    HTTP_ERROR_MESSAGES.UNKNOWN_ERROR;
-                  patchState(store, setError(message));
-                },
-              }),
-            );
+          const title = todo.text.length > 30 ? `${todo.text.slice(0, 30)}…` : todo.text;
+
+          const pending: PendingDeletion = {
+            todo,
+            listId,
+            originalIndex: originalIndex >= 0 ? originalIndex : 0,
+            wasCompleted,
+            timerId: null,
+            toastId: null,
+          };
+
+          pending.timerId = setTimeout(() => {
+            if (pendingDeletion === pending) {
+              commitDeletion(pending);
+            }
+          }, 4000);
+
+          pending.toastId = toastService.show(`Deleted '${title}'`, {
+            position: 'top-center',
+            duration: 4000,
+            action: {
+              label: 'Undo',
+              onClick: () => {
+                undoDelete();
+              },
+            },
+            onDismiss: () => {
+              if (pendingDeletion === pending) {
+                commitDeletion(pending);
+              }
+            },
+            onAutoClose: () => {
+              if (pendingDeletion === pending) {
+                commitDeletion(pending);
+              }
+            },
+          });
+
+          pendingDeletion = pending;
         }),
       ),
     );
@@ -836,6 +992,8 @@ export const TodosStore = signalStore(
       updateTodoText,
       toggleTodoCompletion,
       deleteTodo,
+      undoDelete,
+      flushPendingDeletion,
       reorderActiveTodo,
       searchTodos,
       toggleCompletedSection(): void {

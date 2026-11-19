@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "pnpm run vercel-build",
+  "outputDirectory": "smart-todo/dist/smart-todo/browser",
+  "installCommand": "pnpm install && pnpm --prefix smart-todo-api install && pnpm --prefix smart-todo install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -77,7 +77,7 @@ test.describe('Todo Items Search Filter & Highlighting E2E', () => {
     await expect(todosPage.completedRows).toHaveCount(0);
   });
 
-  test('focuses filter input via global "/" shortcut', async ({ page }) => {
+  test('reveals and focuses filter input via global "/" shortcut and closes on Escape', async ({ page }) => {
     const authPage = new AuthPage(page);
     const todosPage = new TodosPage(page);
     const user = generateUser('todo_filter_shortcut');
@@ -86,13 +86,18 @@ test.describe('Todo Items Search Filter & Highlighting E2E', () => {
     await authPage.register(user);
     await expect(page).toHaveURL(/\/(\?.*)?$/);
 
-    // Ensure filter input is not focused initially
-    await expect(todosPage.searchInput).not.toBeFocused();
+    // Search input is hidden by default
+    await expect(todosPage.searchInput).toBeHidden();
 
     // Press '/' key
     await page.keyboard.press('/');
 
-    // Verify search input is focused
+    // Verify search input is revealed and focused
+    await expect(todosPage.searchInput).toBeVisible();
     await expect(todosPage.searchInput).toBeFocused();
+
+    // Press Escape to close search
+    await page.keyboard.press('Escape');
+    await expect(todosPage.searchInput).toBeHidden();
   });
 });

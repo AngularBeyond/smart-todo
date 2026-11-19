@@ -14,6 +14,7 @@ export class TodosPage extends BasePage {
   readonly completedBadge: Locator;
   readonly completedRows: Locator;
   readonly searchInput: Locator;
+  readonly toggleSearchButton: Locator;
   readonly clearSearchButton: Locator;
   readonly searchSpinner: Locator;
 
@@ -30,6 +31,7 @@ export class TodosPage extends BasePage {
     this.completedBadge = page.locator('app-completed-section span[hlmbadge]');
     this.completedRows = page.locator('app-completed-section app-todo-item-row');
     this.searchInput = page.locator('input[placeholder="Filter tasks (press / to focus)"]');
+    this.toggleSearchButton = page.locator('button[aria-label*="Search tasks"], button[aria-label*="Close search"]');
     this.clearSearchButton = page.locator('button[aria-label="Clear filter"]');
     this.searchSpinner = page.locator('svg.animate-spin');
   }
@@ -98,7 +100,14 @@ export class TodosPage extends BasePage {
     const row = this.getActiveRow(text);
     await row.hover();
     const deleteBtn = row.locator('button[aria-label^="Delete task"]');
+    const deleteResponsePromise = this.page
+      .waitForResponse(
+        (resp) => resp.url().includes('/todos/') && resp.request().method() === 'DELETE',
+        { timeout: 8000 },
+      )
+      .catch(() => null);
     await deleteBtn.click();
+    await deleteResponsePromise;
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -108,6 +117,14 @@ export class TodosPage extends BasePage {
   }
 
   async search(query: string): Promise<void> {
+    if (!(await this.searchInput.isVisible())) {
+      if (await this.toggleSearchButton.isVisible()) {
+        await this.toggleSearchButton.click();
+      } else {
+        await this.page.keyboard.press('/');
+      }
+      await this.searchInput.waitFor({ state: 'visible' });
+    }
     await this.searchInput.fill(query);
     // Allow debounce and network request to finish
     await this.page.waitForTimeout(450);

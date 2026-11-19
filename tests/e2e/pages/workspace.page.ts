@@ -18,7 +18,7 @@ export class WorkspacePage extends BasePage {
     this.sidebar = new SidebarComponent(page);
     this.listHeaderTitleButton = page.locator('app-list-header h1 button');
     this.listTitleEditInput = page.locator('input#edit-list-title-input');
-    this.deleteListButton = page.locator('button[aria-label="Delete list"]');
+    this.deleteListButton = page.locator('button[aria-label="Delete this list"], button[aria-label="Delete list"]');
     this.alertDialogContent = page.locator('hlm-alert-dialog-content');
     this.confirmDeleteButton = page.locator('button:has-text("Delete List")');
     this.cancelDeleteButton = page.locator('button:has-text("Cancel")');

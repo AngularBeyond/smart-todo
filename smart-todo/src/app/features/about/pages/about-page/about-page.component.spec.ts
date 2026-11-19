@@ -30,7 +30,7 @@ describe('AboutPageComponent', () => {
     expect(heroHeadline?.textContent).toContain('The Agentic way of building modern applications in Angular.');
 
     expect(element.textContent).toContain('An Agentic Blueprint');
-    expect(element.textContent).toContain('Smart Todo is an open-source reference template demonstrating how to adopt Agentic AI');
+    expect(element.textContent).toContain('Smart Todo is an open-source reference template');
     expect(element.textContent).toContain('Explore the code. Adopt the pattern. Build the future.');
   });
 
@@ -45,12 +45,12 @@ describe('AboutPageComponent', () => {
 
     expect(element.textContent).toContain('03');
     expect(element.textContent).toContain('A Production Template');
-    expect(element.textContent).toContain('Fork a rock-solid foundation with Angular 22');
+    expect(element.textContent).toContain('Fork a rock-solid foundation');
   });
 
   it('should render the modern stack section with all 5 real technology cards', () => {
     expect(element.textContent).toContain('Built with');
-    expect(element.textContent).toContain('A modern, readable stack');
+    expect(element.textContent).toContain('Engineered for agentic scale');
 
     for (const tech of TECHNOLOGIES) {
       expect(element.textContent).toContain(tech.name);
@@ -59,6 +59,12 @@ describe('AboutPageComponent', () => {
 
     const techCards = element.querySelectorAll('section:nth-of-type(3) .grid > div');
     expect(techCards.length).toBe(TECHNOLOGIES.length);
+
+    const logoImages = element.querySelectorAll<HTMLImageElement>('section:nth-of-type(3) img');
+    expect(logoImages.length).toBe(TECHNOLOGIES.length);
+    logoImages.forEach((img, index) => {
+      expect(img.getAttribute('src')).toBe(TECHNOLOGIES[index].logoSrc);
+    });
   });
 
   it('should render all external project and creator links with security attributes', () => {
@@ -74,6 +80,7 @@ describe('AboutPageComponent', () => {
       expect(anchor.getAttribute('target')).toBe('_blank');
       expect(anchor.getAttribute('rel')).toBe('noreferrer');
       expect(anchor.textContent).toContain(expectedLink.label);
+      expect(anchor.querySelector('svg')).not.toBeNull();
     });
   });
 

@@ -54,6 +54,8 @@ describe('SettingsPage', () => {
     expect(element.textContent).toContain('Preferred theme');
     expect(element.textContent).toContain('Customize your workspace theme and appearance');
     expect(element.textContent).not.toContain('Start of week');
+    expect(element.textContent).not.toContain('Privacy & security');
+    expect(element.textContent).not.toContain('Account security');
   });
 
   it('should render light and dark theme buttons', () => {
@@ -90,5 +92,28 @@ describe('SettingsPage', () => {
     component.setTheme('dark');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(themeChanged({ mode: 'dark' }));
     expect((component as any).store.settings().appearance).toBe('dark');
+  });
+
+  it('should render task defaults card with allowed lists limit and daily task limit indicator', () => {
+    expect(element.textContent).toContain('Task defaults');
+    expect(element.textContent).toContain('Keep new tasks quick, structured, and consistent.');
+    expect(element.textContent).toContain('Number of allowed lists');
+    expect(element.textContent).toContain('Maximum lists in workspace');
+    expect(element.textContent).toContain('3 lists');
+    expect(element.textContent).toContain('Maximum quota allowed is 3 lists per account.');
+    expect(element.textContent).not.toContain('Default list');
+    expect(element.textContent).toContain('Daily task limit');
+    expect(element.textContent).toContain('Active capacity cap per list');
+    expect(element.textContent).toContain('40 tasks');
+    expect(element.textContent).toContain('Maximum quota allowed is 40 tasks per list.');
+    expect(element.textContent).not.toContain('Preferences saved');
+  });
+
+  it('should not render configurable buttons or save button in task defaults', () => {
+    const buttons = element.querySelectorAll<HTMLButtonElement>('button[type="button"]');
+    const buttonTexts = Array.from(buttons).map((b) => b.textContent?.trim());
+    expect(buttonTexts).not.toContain('Personal');
+    expect(buttonTexts).not.toContain('10');
+    expect(buttonTexts).not.toContain('Preferences saved');
   });
 });
