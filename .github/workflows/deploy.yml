@@ -206,9 +206,65 @@ jobs:
           JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
         run: node infra/scripts/deploy-hostinger.mjs api
 
+  version:
+    name: Calculate Release Version
+    needs: [verify-pr]
+    if: |
+      always() &&
+      (needs.verify-pr.result == 'success' || needs.verify-pr.result == 'skipped')
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.calc.outputs.tag }}
+      version: ${{ steps.calc.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Next Version
+        id: calc
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          CUSTOM_VERSION: ${{ inputs.release_version }}
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          if [ -n "$CUSTOM_VERSION" ]; then
+            if [[ "$CUSTOM_VERSION" != v* ]]; then
+              NEW_TAG="v$CUSTOM_VERSION"
+            else
+              NEW_TAG="$CUSTOM_VERSION"
+            fi
+          elif echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1 | grep -q .; then
+            NEW_TAG=$(echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+          else
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            MAJOR=${MAJOR:-1}
+            MINOR=${MINOR:-0}
+            PATCH=${PATCH:-0}
+
+            if echo "$COMMIT_MSG" | grep -iqE "\[major\]|breaking"; then
+              NEW_TAG="v$((MAJOR + 1)).0.0"
+            elif echo "$COMMIT_MSG" | grep -iqE "\[patch\]|fix"; then
+              NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            else
+              NEW_TAG="v${MAJOR}.$((MINOR + 1)).0"
+            fi
+          fi
+
+          echo "Target Release Tag: $NEW_TAG"
+          PLAIN_VERSION="${NEW_TAG#v}"
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$PLAIN_VERSION" >> "$GITHUB_OUTPUT"
+
   deploy-web:
     name: Deploy Frontend Web
-    needs: [filter, e2e]
+    needs: [filter, e2e, version]
     if: |
       (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'web')) ||
       (github.event_name == 'push' && needs.filter.outputs.web == 'true')
@@ -232,6 +288,10 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --prefix smart-todo install --frozen-lockfile
 
+      - name: Inject Release Version
+        run: |
+          echo "export const APP_VERSION = '${{ needs.version.outputs.version }}';" > smart-todo/src/environments/version.ts
+
       - name: Build Angular Frontend
         run: pnpm web:build
 
@@ -250,7 +310,7 @@ jobs:
 
   release:
     name: Create GitHub Release & Tag
-    needs: [deploy-api, deploy-web]
+    needs: [deploy-api, deploy-web, version]
     if: |
       always() &&
       (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped') &&
@@ -265,47 +325,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Calculate Next Version & Create Release
+      - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
           COMMIT_SHA: ${{ github.sha }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-          CUSTOM_VERSION: ${{ inputs.release_version }}
+          NEW_TAG: ${{ needs.version.outputs.tag }}
         run: |
-          # Fetch all remote tags
-          git fetch --tags
-
-          # Get latest tag (fallback to v1.0.0)
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          echo "Latest tag: $LATEST_TAG"
-
-          # If custom version provided via workflow_dispatch, prioritize it
-          if [ -n "$CUSTOM_VERSION" ]; then
-            if [[ "$CUSTOM_VERSION" != v* ]]; then
-              NEW_TAG="v$CUSTOM_VERSION"
-            else
-              NEW_TAG="$CUSTOM_VERSION"
-            fi
-          elif echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1 | grep -q .; then
-            NEW_TAG=$(echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-          else
-            # Extract semver components
-            VERSION=${LATEST_TAG#v}
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-            MAJOR=${MAJOR:-1}
-            MINOR=${MINOR:-0}
-            PATCH=${PATCH:-0}
-
-            if echo "$COMMIT_MSG" | grep -iqE "\[major\]|breaking"; then
-              NEW_TAG="v$((MAJOR + 1)).0.0"
-            elif echo "$COMMIT_MSG" | grep -iqE "\[patch\]|fix"; then
-              NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
-            else
-              # Default for production releases is minor bump
-              NEW_TAG="v${MAJOR}.$((MINOR + 1)).0"
-            fi
-          fi
-
           echo "Target Release Tag: $NEW_TAG"
 
           # Check if tag already exists

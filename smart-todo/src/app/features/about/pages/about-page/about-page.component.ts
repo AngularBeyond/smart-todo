@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { LucideArrowUpRight } from '@lucide/angular';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
+import { environment } from '../../../../../environments/environment';
 import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
 
 @Component({
@@ -16,4 +17,5 @@ import { CREATOR_LINKS, TECHNOLOGIES } from '../../constants';
 export class AboutPageComponent {
   readonly technologies = TECHNOLOGIES;
   readonly links = CREATOR_LINKS;
+  readonly version = environment.version;
 }

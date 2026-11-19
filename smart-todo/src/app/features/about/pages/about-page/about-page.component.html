@@ -118,6 +118,24 @@
   <div hlmSeparator class="my-2"></div>
   <footer class="flex flex-col gap-3 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
     <span>Smart Todo is made to be remixed for Agentic AI.</span>
-    <span class="font-mono uppercase tracking-wider">Open template · 2026</span>
+    <div class="flex items-center gap-2">
+      <a
+        href="https://github.com/AngularBeyond/smart-todo/releases"
+        target="_blank"
+        rel="noreferrer"
+        class="font-mono transition-colors hover:text-foreground"
+      >
+        v{{ version }}
+      </a>
+      <span>·</span>
+      <a
+        href="https://github.com/AngularBeyond/smart-todo/blob/main/LICENSE"
+        target="_blank"
+        rel="noreferrer"
+        class="transition-colors hover:text-foreground hover:underline underline-offset-4"
+      >
+        Released under MIT
+      </a>
+    </div>
   </footer>
 </div>
