@@ -59,7 +59,7 @@ test.describe('About Page & Project Showcase E2E', () => {
 
     // Verify Footer
     await expect(aboutPage.footer).toBeVisible();
-    await expect(page.locator('text=Open template · 2026')).toBeVisible();
+    await expect(page.locator('text=Released under MIT')).toBeVisible();
   });
 
   test('verifies external links security attributes, labels, and target URLs', async ({ page }) => {

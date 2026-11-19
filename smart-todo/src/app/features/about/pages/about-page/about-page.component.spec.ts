@@ -84,10 +84,21 @@ describe('AboutPageComponent', () => {
     });
   });
 
-  it('should render the template footer with remix notice and year badge', () => {
+  it('should render the template footer with remix notice, version link, and MIT license link', () => {
     const footer = element.querySelector('footer');
     expect(footer).not.toBeNull();
     expect(footer?.textContent).toContain('Smart Todo is made to be remixed for Agentic AI.');
-    expect(footer?.textContent).toContain('Open template · 2026');
+    expect(footer?.textContent).toContain(`v${component.version}`);
+    expect(footer?.textContent).toContain('Released under MIT');
+
+    const versionLink = footer?.querySelector<HTMLAnchorElement>('a[href*="releases"]');
+    expect(versionLink).not.toBeNull();
+    expect(versionLink?.getAttribute('target')).toBe('_blank');
+    expect(versionLink?.getAttribute('rel')).toBe('noreferrer');
+
+    const licenseLink = footer?.querySelector<HTMLAnchorElement>('a[href*="LICENSE"]');
+    expect(licenseLink).not.toBeNull();
+    expect(licenseLink?.getAttribute('target')).toBe('_blank');
+    expect(licenseLink?.getAttribute('rel')).toBe('noreferrer');
   });
 });
