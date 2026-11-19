@@ -97,4 +97,28 @@ test.describe('Settings & Theme Persistence E2E', () => {
     await settingsPage.toggleNotifications();
     await expect(settingsPage.notificationsBadge).toHaveText(initialText || 'Off');
   });
+
+  test('renders redesigned task defaults and verifies absence of privacy & security section', async ({ page }) => {
+    const authPage = new AuthPage(page);
+    const settingsPage = new SettingsPage(page);
+    const user = generateUser('settings_defaults');
+
+    await authPage.gotoRegister();
+    await authPage.register(user);
+    await expect(page).toHaveURL(/\/(\?.*)?$/);
+
+    await settingsPage.gotoSettings();
+
+    // Verify Task Defaults card and quotas
+    await expect(settingsPage.taskDefaultsCard).toBeVisible();
+    await expect(settingsPage.allowedListsBadge).toHaveText('3 lists');
+    await expect(settingsPage.dailyTaskLimitBadge).toHaveText('40 tasks');
+
+    // Verify Privacy & security section is completely absent
+    await expect(page.locator('text=Privacy & security')).toBeHidden();
+    await expect(page.locator('text=Account security')).toBeHidden();
+
+    // Verify Preferences Saved button is absent
+    await expect(page.locator('button:has-text("Preferences saved")')).toBeHidden();
+  });
 });
