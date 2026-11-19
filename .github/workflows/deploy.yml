@@ -15,6 +15,11 @@ on:
           - all
           - web
           - api
+      release_version:
+        description: 'Explicit release version (e.g. v1.1.0) - leave empty for auto bump'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: deploy-production
@@ -242,3 +247,74 @@ jobs:
           HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
           HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
         run: node infra/scripts/deploy-hostinger.mjs web
+
+  release:
+    name: Create GitHub Release & Tag
+    needs: [deploy-api, deploy-web]
+    if: |
+      always() &&
+      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped') &&
+      (needs.deploy-web.result == 'success' || needs.deploy-web.result == 'skipped') &&
+      !(needs.deploy-api.result == 'skipped' && needs.deploy-web.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Next Version & Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          CUSTOM_VERSION: ${{ inputs.release_version }}
+        run: |
+          # Fetch all remote tags
+          git fetch --tags
+
+          # Get latest tag (fallback to v1.0.0)
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # If custom version provided via workflow_dispatch, prioritize it
+          if [ -n "$CUSTOM_VERSION" ]; then
+            if [[ "$CUSTOM_VERSION" != v* ]]; then
+              NEW_TAG="v$CUSTOM_VERSION"
+            else
+              NEW_TAG="$CUSTOM_VERSION"
+            fi
+          elif echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1 | grep -q .; then
+            NEW_TAG=$(echo "$COMMIT_MSG" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+          else
+            # Extract semver components
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            MAJOR=${MAJOR:-1}
+            MINOR=${MINOR:-0}
+            PATCH=${PATCH:-0}
+
+            if echo "$COMMIT_MSG" | grep -iqE "\[major\]|breaking"; then
+              NEW_TAG="v$((MAJOR + 1)).0.0"
+            elif echo "$COMMIT_MSG" | grep -iqE "\[patch\]|fix"; then
+              NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            else
+              # Default for production releases is minor bump
+              NEW_TAG="v${MAJOR}.$((MINOR + 1)).0"
+            fi
+          fi
+
+          echo "Target Release Tag: $NEW_TAG"
+
+          # Check if tag already exists
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "Tag $NEW_TAG already exists, skipping release creation."
+            exit 0
+          fi
+
+          # Create Git Tag and GitHub Release with auto-generated release notes
+          gh release create "$NEW_TAG" \
+            --target prod \
+            --title "$NEW_TAG — Production Release" \
+            --generate-notes
