@@ -88,11 +88,12 @@ describe('AboutPageComponent', () => {
     const footer = element.querySelector('footer');
     expect(footer).not.toBeNull();
     expect(footer?.textContent).toContain('Smart Todo is made to be remixed for Agentic AI.');
-    expect(footer?.textContent).toContain(`v${component.version}`);
+    expect(footer?.textContent).toContain(component.versionLabel);
     expect(footer?.textContent).toContain('Released under MIT');
 
-    const versionLink = footer?.querySelector<HTMLAnchorElement>('a[href*="releases"]');
+    const versionLink = footer?.querySelector<HTMLAnchorElement>('a.font-mono');
     expect(versionLink).not.toBeNull();
+    expect(versionLink?.getAttribute('href')).toBe(component.versionUrl);
     expect(versionLink?.getAttribute('target')).toBe('_blank');
     expect(versionLink?.getAttribute('rel')).toBe('noreferrer');
 
@@ -100,5 +101,27 @@ describe('AboutPageComponent', () => {
     expect(licenseLink).not.toBeNull();
     expect(licenseLink?.getAttribute('target')).toBe('_blank');
     expect(licenseLink?.getAttribute('rel')).toBe('noreferrer');
+  });
+
+  it('should compute versionLabel and versionUrl correctly for commit SHAs and semver', () => {
+    // Commit with prefix
+    Object.defineProperty(component, 'version', { value: 'commit 50841d0', configurable: true });
+    expect(component.versionLabel).toBe('commit 50841d0');
+    expect(component.versionUrl).toBe('https://github.com/AngularBeyond/smart-todo/commit/50841d0');
+
+    // Raw short commit SHA
+    Object.defineProperty(component, 'version', { value: '50841d0', configurable: true });
+    expect(component.versionLabel).toBe('commit 50841d0');
+    expect(component.versionUrl).toBe('https://github.com/AngularBeyond/smart-todo/commit/50841d0');
+
+    // Standard semver
+    Object.defineProperty(component, 'version', { value: '1.2.0', configurable: true });
+    expect(component.versionLabel).toBe('v1.2.0');
+    expect(component.versionUrl).toBe('https://github.com/AngularBeyond/smart-todo/releases');
+
+    // Prefixed semver
+    Object.defineProperty(component, 'version', { value: 'v1.2.0', configurable: true });
+    expect(component.versionLabel).toBe('v1.2.0');
+    expect(component.versionUrl).toBe('https://github.com/AngularBeyond/smart-todo/releases');
   });
 });

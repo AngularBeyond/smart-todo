@@ -120,12 +120,12 @@
     <span>Smart Todo is made to be remixed for Agentic AI.</span>
     <div class="flex items-center gap-2">
       <a
-        href="https://github.com/AngularBeyond/smart-todo/releases"
+        [href]="versionUrl"
         target="_blank"
         rel="noreferrer"
         class="font-mono transition-colors hover:text-foreground"
       >
-        v{{ version }}
+        {{ versionLabel }}
       </a>
       <span>·</span>
       <a

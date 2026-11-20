@@ -6,7 +6,7 @@
     "start": "ng serve",
     "start:tunnel": "ng serve --configuration tunnel",
     "build": "ng build",
-    "build:staging": "ng build --configuration staging",
+    "build:staging": "node scripts/inject-staging-version.mjs && ng build --configuration staging",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
