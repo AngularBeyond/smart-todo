@@ -187,3 +187,4 @@ If you build an AI agent integration, experiment with AG-UI widgets, or remix th
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+By downloading, cloning, or using this repository, you agree to the terms and disclaimers outlined in the license.
