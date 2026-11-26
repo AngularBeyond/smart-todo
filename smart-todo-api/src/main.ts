@@ -13,6 +13,7 @@ async function bootstrap() {
   const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:4200')
     .split(',')
     .map((url) => url.trim())
+    .concat(['https://smart-todo.net', 'https://www.smart-todo.net'])
     .filter(Boolean);
 
   app.enableCors({

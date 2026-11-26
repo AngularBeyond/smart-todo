@@ -40,9 +40,11 @@ export async function bootstrapServer(): Promise<(req: IncomingMessage, res: Ser
           }
         }
 
-        // Allow any Vercel deployment (*.vercel.app) or local development origins
+        // Allow any Vercel deployment (*.vercel.app), smart-todo.net, or local development origins
         if (
           origin.endsWith('.vercel.app') ||
+          origin.endsWith('.smart-todo.net') ||
+          origin === 'https://smart-todo.net' ||
           origin.includes('localhost') ||
           origin.includes('127.0.0.1')
         ) {
