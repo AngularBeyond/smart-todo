@@ -11,6 +11,7 @@
 | **Shortcut Epic 12** | [Epic 1573: EPIC-12: User Registration Email Verification Flow](https://app.shortcut.com/marcotello/epic/1573) |
 | **Shortcut Epic 13** | [Epic 1574: EPIC-13: Self-Service Forgot Password & Reset Flow](https://app.shortcut.com/marcotello/epic/1574) |
 | **Shortcut Epic 14** | [Epic 1575: EPIC-14: Two-Factor Authentication (2FA) with Email OTP](https://app.shortcut.com/marcotello/epic/1575) |
+| **Shortcut Epic 15** | [Epic 1593: EPIC-15: Domain Migration to smart-todo.net & Infrastructure Cutover](https://app.shortcut.com/marcotello/epic/1593) |
 
 ---
 
@@ -215,3 +216,63 @@ flowchart TD
   - [ ] Frontend Vitest unit tests for component, store, and guard.
   - [ ] Playwright E2E spec (`tests/e2e/tests/01-auth/two-factor.spec.ts`).
   - [ ] Verify successful 2FA login, invalid OTP error banners, attempt decrement counter, and 5th-attempt lockout.
+
+---
+
+## 7. EPIC-15: Domain Migration to smart-todo.net & Infrastructure Cutover
+
+* **Shortcut Epic:** [Epic 1593](https://app.shortcut.com/marcotello/epic/1593)
+
+### Stories Breakdown
+
+#### [STORY-15.1](https://app.shortcut.com/marcotello/story/1594): Cloudflare Zone Setup & DNS Routing for smart-todo.net
+* **Type:** Chore / Infrastructure
+* **Description:** Configure Cloudflare nameservers, DNS records, and SSL/TLS proxying for smart-todo.net.
+* **Tasks:**
+  - [ ] Add `smart-todo.net` to Cloudflare account and update nameservers in Hostinger.
+  - [ ] Create apex A record (`@`) pointing to Hostinger IP (`89.116.192.181`, Proxied / Orange Cloud).
+  - [ ] Create API subdomain A record (`api`) pointing to Hostinger IP (`89.116.192.181`, Proxied / Orange Cloud).
+  - [ ] Configure SSL/TLS encryption mode to Full (Strict), enable Always Use HTTPS and Automatic HTTPS Rewrites.
+  - [ ] Verify global DNS resolution via `dns.google`.
+
+#### [STORY-15.2](https://app.shortcut.com/marcotello/story/1595): AWS SES Domain Identity & DKIM/SPF/DMARC Setup for smart-todo.net
+* **Type:** Chore / Cloud
+* **Description:** Establish production transactional email infrastructure for smart-todo.net in AWS SES and configure authentication records.
+* **Tasks:**
+  - [ ] Register domain identity `smart-todo.net` in AWS SES (`us-west-1`) with Easy DKIM (`RSA_2048_BIT`).
+  - [ ] Add 3 DKIM CNAME records to Cloudflare zone (DNS Only / Grey Cloud).
+  - [ ] Add SPF TXT record at apex (`@`): `v=spf1 include:amazonses.com ~all`.
+  - [ ] Add DMARC TXT record at `_dmarc`: `v=DMARC1; p=none; sp=none;`.
+  - [ ] Update `.env.ses` with `EMAIL_FROM_ADDRESS=noreply@smart-todo.net`.
+  - [ ] Verify SES domain identity and DKIM status transitions to `SUCCESS`.
+
+#### [STORY-15.3](https://app.shortcut.com/marcotello/story/1596): Hostinger Environment, Node.js Container & Database Provisioning
+* **Type:** Chore / Infrastructure
+* **Description:** Provision Hostinger hosting containers, static website root, and the production MySQL database for smart-todo.net.
+* **Tasks:**
+  - [ ] Add `smart-todo.net` website in Hostinger control panel with static web root for frontend.
+  - [ ] Set up Node.js 22 application runtime container on Hostinger for `api.smart-todo.net`.
+  - [ ] Provision production MySQL database on Hostinger for `smart-todo.net`.
+  - [ ] Generate database user credentials and verify remote access / connection pooling.
+
+#### [STORY-15.4](https://app.shortcut.com/marcotello/story/1597): Database Data Migration, GitHub Actions Cutover & Live Deployment
+* **Type:** Feature / DevOps
+* **Description:** Migrate existing database records, refactor CI/CD pipelines, cut over application environment configs, and deploy to smart-todo.net.
+* **Tasks:**
+  - [ ] Export all table data (users, accounts, todo lists, todos) from legacy database on Hostinger.
+  - [ ] Apply `prisma migrate deploy` to new production database and import all existing records.
+  - [ ] Update frontend `environment.prod.ts` to `https://api.smart-todo.net/api/v1`.
+  - [ ] Update backend CORS origin configuration in `smart-todo-api` to allow `https://smart-todo.net`.
+  - [ ] Refactor `deploy.yml` and `deploy-hostinger.mjs` to use `smart-todo.net` and `api.smart-todo.net` as targets.
+  - [ ] Update repository GitHub Secrets (`DATABASE_URL`, `FRONTEND_DOMAIN`, `API_DOMAIN`).
+  - [ ] Trigger deployment via GitHub Actions and verify live web app and API health.
+
+#### [STORY-15.5](https://app.shortcut.com/marcotello/story/1598): Legacy Subdomain Decommissioning & Infrastructure Cleanup
+* **Type:** Chore / Infrastructure
+* **Description:** Clean up legacy Smart Todo resources, DNS entries, and database on angularbeyond.com to restore the blog to a pristine state.
+* **Tasks:**
+  - [ ] Remove DNS records for `smart-todo` and `todo-api` from `angularbeyond.com` Cloudflare zone.
+  - [ ] Clean up AWS SES DKIM CNAMEs on `angularbeyond.com` and revert SPF to pure Google Workspace.
+  - [ ] Delete legacy subdomains and application folders on Hostinger (`smart-todo.angularbeyond.com`, `todo-api.angularbeyond.com`).
+  - [ ] Drop the legacy MySQL database on Hostinger after verifying data integrity on `smart-todo.net`.
+
