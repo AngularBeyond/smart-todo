@@ -26,9 +26,15 @@ export const getEmailConfig = (configService: ConfigService): EmailConfig => {
     transport = 'ses';
   }
 
-  const region = configService.get<string>('AWS_REGION', 'us-east-1');
-  const accessKeyId = configService.get<string>('AWS_ACCESS_KEY_ID');
-  const secretAccessKey = configService.get<string>('AWS_SECRET_ACCESS_KEY');
+  const region =
+    configService.get<string>('AWS_SES_REGION') ||
+    configService.get<string>('AWS_REGION', 'us-east-1');
+  const accessKeyId =
+    configService.get<string>('AWS_SES_ACCESS_KEY_ID') ||
+    configService.get<string>('AWS_ACCESS_KEY_ID');
+  const secretAccessKey =
+    configService.get<string>('AWS_SES_SECRET_ACCESS_KEY') ||
+    configService.get<string>('AWS_SECRET_ACCESS_KEY');
 
   const fromAddress = configService.get<string>('EMAIL_FROM_ADDRESS', 'noreply@smart-todo.net');
   const fromName = configService.get<string>('EMAIL_FROM_NAME', 'Smart Todo');

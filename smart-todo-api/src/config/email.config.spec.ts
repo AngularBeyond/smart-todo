@@ -73,4 +73,18 @@ describe('EmailConfig', () => {
     expect(config.aws.accessKeyId).toBe('AKIA_TEST_KEY');
     expect(config.aws.secretAccessKey).toBe('SECRET_TEST_KEY');
   });
+
+  it('should support AWS_SES_* prefix for AWS credentials', () => {
+    mockConfigService.get = (key: string, defaultValue?: any) => {
+      if (key === 'AWS_SES_REGION') return 'eu-central-1';
+      if (key === 'AWS_SES_ACCESS_KEY_ID') return 'AKIA_SES_KEY';
+      if (key === 'AWS_SES_SECRET_ACCESS_KEY') return 'SECRET_SES_KEY';
+      return defaultValue;
+    };
+
+    const config = getEmailConfig(mockConfigService as ConfigService);
+    expect(config.aws.region).toBe('eu-central-1');
+    expect(config.aws.accessKeyId).toBe('AKIA_SES_KEY');
+    expect(config.aws.secretAccessKey).toBe('SECRET_SES_KEY');
+  });
 });
