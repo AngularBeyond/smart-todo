@@ -15,6 +15,7 @@ import { ProfileModule } from './modules/profile/profile.module.js';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
 import { TodoListsModule } from './modules/todo-lists/todo-lists.module.js';
 import { TodosModule } from './modules/todos/todos.module.js';
+import { EmailModule } from './modules/email/email.module.js';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TodosModule } from './modules/todos/todos.module.js';
     MaintenanceModule,
     TodoListsModule,
     TodosModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
