@@ -3,12 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { EmailService } from './email.service.js';
 import { AwsSesTransport } from './transports/aws-ses.transport.js';
 import { LocalLoggerTransport } from './transports/local-logger.transport.js';
+import { EmailTemplateEngine } from './templates/email-template.engine.js';
 
 describe('EmailService', () => {
   let service: EmailService;
   let mockConfigService: Partial<ConfigService>;
   let mockAwsSesTransport: Partial<AwsSesTransport>;
   let mockLocalLoggerTransport: Partial<LocalLoggerTransport>;
+  let templateEngine: EmailTemplateEngine;
 
   beforeEach(() => {
     mockConfigService = {
@@ -28,10 +30,13 @@ describe('EmailService', () => {
       send: vi.fn().mockResolvedValue({ success: true, messageId: 'local-123' }),
     };
 
+    templateEngine = new EmailTemplateEngine();
+
     service = new EmailService(
       mockConfigService as ConfigService,
       mockAwsSesTransport as AwsSesTransport,
       mockLocalLoggerTransport as LocalLoggerTransport,
+      templateEngine,
     );
   });
 
@@ -81,5 +86,53 @@ describe('EmailService', () => {
 
     const optionsPassed = (mockLocalLoggerTransport.send as any).mock.calls[0][0];
     expect(optionsPassed.from).toBe('custom-sender@example.com');
+  });
+
+  it('should render and dispatch verification email', async () => {
+    const result = await service.sendVerificationEmail(
+      'alice@example.com',
+      'Alice',
+      'https://smart-todo.net/verify?token=123',
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockLocalLoggerTransport.send).toHaveBeenCalledTimes(1);
+
+    const callArgs = (mockLocalLoggerTransport.send as any).mock.calls[0][0];
+    expect(callArgs.to).toBe('alice@example.com');
+    expect(callArgs.subject).toBe('Verify your email address - Smart Todo');
+    expect(callArgs.html).toContain('Alice');
+    expect(callArgs.html).toContain('https://smart-todo.net/verify?token=123');
+  });
+
+  it('should render and dispatch password reset email', async () => {
+    const result = await service.sendPasswordResetEmail(
+      'bob@example.com',
+      'Bob',
+      'https://smart-todo.net/reset?token=xyz',
+      2,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockLocalLoggerTransport.send).toHaveBeenCalledTimes(1);
+
+    const callArgs = (mockLocalLoggerTransport.send as any).mock.calls[0][0];
+    expect(callArgs.to).toBe('bob@example.com');
+    expect(callArgs.subject).toBe('Reset your password - Smart Todo');
+    expect(callArgs.html).toContain('Bob');
+    expect(callArgs.html).toContain('2 hours');
+  });
+
+  it('should render and dispatch 2FA OTP email', async () => {
+    const result = await service.sendOtpEmail('charlie@example.com', 'Charlie', '654321', 15);
+
+    expect(result.success).toBe(true);
+    expect(mockLocalLoggerTransport.send).toHaveBeenCalledTimes(1);
+
+    const callArgs = (mockLocalLoggerTransport.send as any).mock.calls[0][0];
+    expect(callArgs.to).toBe('charlie@example.com');
+    expect(callArgs.subject).toBe('654321 is your Smart Todo verification code');
+    expect(callArgs.html).toContain('654321');
+    expect(callArgs.html).toContain('15 minutes');
   });
 });
