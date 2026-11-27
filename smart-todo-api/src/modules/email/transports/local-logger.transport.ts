@@ -8,6 +8,7 @@ export class LocalLoggerTransport implements EmailTransport {
   private readonly logger = new Logger(LocalLoggerTransport.name);
 
   async send(options: EmailOptions): Promise<EmailSendResult> {
+    const startTime = Date.now();
     const recipients = Array.isArray(options.to) ? options.to.join(', ') : options.to;
     const messageId = `local-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -19,6 +20,8 @@ export class LocalLoggerTransport implements EmailTransport {
     return {
       success: true,
       messageId,
+      attempts: 1,
+      durationMs: Date.now() - startTime,
     };
   }
 }

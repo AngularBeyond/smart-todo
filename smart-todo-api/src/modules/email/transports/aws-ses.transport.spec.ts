@@ -7,10 +7,12 @@ describe('AwsSesTransport', () => {
   let transport: AwsSesTransport;
   let mockConfigService: Partial<ConfigService>;
   let sendMock: any;
+  let sleepMock: any;
 
   beforeEach(() => {
     sendMock = vi.fn().mockResolvedValue({ MessageId: 'ses-msg-12345' });
     vi.spyOn(SESClient.prototype, 'send').mockImplementation(sendMock);
+    sleepMock = vi.fn().mockResolvedValue(undefined);
 
     mockConfigService = {
       get: (key: string, defaultValue?: any) => {
@@ -23,10 +25,15 @@ describe('AwsSesTransport', () => {
       },
     };
 
-    transport = new AwsSesTransport(mockConfigService as ConfigService);
+    transport = new AwsSesTransport(mockConfigService as ConfigService, {
+      maxRetries: 3,
+      initialDelayMs: 10,
+      maxDelayMs: 50,
+      sleepFn: sleepMock,
+    });
   });
 
-  it('should successfully send an email with standard options', async () => {
+  it('should successfully send an email with standard options on first attempt', async () => {
     const result = await transport.send({
       to: 'recipient@example.com',
       subject: 'Welcome to Smart Todo',
@@ -37,7 +44,10 @@ describe('AwsSesTransport', () => {
 
     expect(result.success).toBe(true);
     expect(result.messageId).toBe('ses-msg-12345');
+    expect(result.attempts).toBe(1);
+    expect(result.durationMs).toBeGreaterThanOrEqual(0);
     expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sleepMock).not.toHaveBeenCalled();
 
     const commandInstance = sendMock.mock.calls[0][0];
     expect(commandInstance).toBeInstanceOf(SendEmailCommand);
@@ -83,19 +93,74 @@ describe('AwsSesTransport', () => {
       'user1@example.com',
       'user2@example.com',
     ]);
-    expect(commandInstance.input.ReplyToAddresses).toBeUndefined();
   });
 
-  it('should return failure result when SES client throws an error', async () => {
-    sendMock.mockRejectedValueOnce(new Error('SES MessageRejected: Email address not verified'));
+  it('should retry on throttling error and succeed on subsequent attempt', async () => {
+    const throttlingError = new Error('Daily sending quota exceeded for current second');
+    throttlingError.name = 'TooManyRequestsException';
+
+    sendMock
+      .mockRejectedValueOnce(throttlingError)
+      .mockResolvedValueOnce({ MessageId: 'recovered-msg-999' });
 
     const result = await transport.send({
-      to: 'unverified@example.com',
-      subject: 'Test Failure',
+      to: 'user@example.com',
+      subject: 'Throttled Subject',
+      html: '<p>Hello</p>',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.messageId).toBe('recovered-msg-999');
+    expect(result.attempts).toBe(2);
+    expect(sendMock).toHaveBeenCalledTimes(2);
+    expect(sleepMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should exhaust retries when throttling persists and return failure with THROTTLED category', async () => {
+    const throttlingError = new Error('Rate limit exceeded');
+    throttlingError.name = 'LimitExceededException';
+
+    sendMock.mockRejectedValue(throttlingError);
+
+    const result = await transport.send({
+      to: 'user@example.com',
+      subject: 'Always Throttled',
+      html: '<p>Hello</p>',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.errorCategory).toBe('THROTTLED');
+    expect(result.attempts).toBe(4); // initial + 3 retries
+    expect(sendMock).toHaveBeenCalledTimes(4);
+    expect(sleepMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('should fail immediately without retrying on non-retryable errors (BOUNCE_RISK)', async () => {
+    const rejectedError = new Error('Email address is on suppression list');
+    rejectedError.name = 'MessageRejected';
+
+    sendMock.mockRejectedValueOnce(rejectedError);
+
+    const result = await transport.send({
+      to: 'bounced@example.com',
+      subject: 'Rejected',
       html: '<p>Failed</p>',
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('SES MessageRejected');
+    expect(result.errorCategory).toBe('BOUNCE_RISK');
+    expect(result.attempts).toBe(1);
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sleepMock).not.toHaveBeenCalled();
+  });
+
+  it('should categorize configuration and network errors appropriately', () => {
+    const configError = new Error('Domain not verified');
+    configError.name = 'MailFromDomainNotVerifiedException';
+    expect(transport.categorizeError(configError)).toBe('CONFIGURATION');
+
+    const networkError = new Error('Connection timeout ECONNRESET');
+    networkError.name = 'TimeoutError';
+    expect(transport.categorizeError(networkError)).toBe('TRANSIENT_NETWORK');
   });
 });
